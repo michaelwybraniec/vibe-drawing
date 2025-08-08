@@ -102,7 +102,7 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
   - [x] 0.5 Basic scaffold: index.html, src/main.ts, base CSS reset [Tech: HTML/CSS, TypeScript]
   - [x] 0.6 Mobile readiness: meta viewport, touch-action: none, passive listeners [Tech: HTML/CSS]
   - [x] 0.7 Capability detection & guards (Pointer Events, Vibration API, DPR) [Tech: TypeScript]
-  - [ ] 0.8 Error handling/logging strategy; feature flags [Tech: TypeScript]
+  - [x] 0.8 Error handling/logging strategy; feature flags [Tech: TypeScript]
 
 - [ ] 1. Canvas Drawing [Tech: HTML5 Canvas, Pointer Events/Hammer.js]
   - [ ] 1.1 As a user, I can draw on the canvas using touch input so that I can sketch freely. [Tech: HTML5 Canvas, Pointer Events/Hammer.js]

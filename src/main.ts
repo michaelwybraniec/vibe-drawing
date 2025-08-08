@@ -1,11 +1,66 @@
 import { getDevicePixelRatio } from './capabilities.js';
 import { vibrateForSpeed, stopVibration } from './haptics.js';
+import { getMode, setMode, type Mode } from './state.js';
+import { startRecording, stopRecording, isRecording, pushPoint, type Recording } from './recording.js';
 
 let ctx: CanvasRenderingContext2D | null = null;
 
 type Point = { x: number; y: number; t: number; speed?: number };
 let isDrawing = false;
 let points: Point[] = [];
+let _currentRecording: Recording | null = null;
+let playbackTimer: number | null = null;
+
+function bindUI(): void {
+  const select = document.getElementById('mode-select') as HTMLSelectElement | null;
+  const recStart = document.getElementById('btn-rec-start') as HTMLButtonElement | null;
+  const recStop = document.getElementById('btn-rec-stop') as HTMLButtonElement | null;
+  const playBtn = document.getElementById('btn-play') as HTMLButtonElement | null;
+  const pauseBtn = document.getElementById('btn-pause') as HTMLButtonElement | null;
+  const stopBtn = document.getElementById('btn-stop') as HTMLButtonElement | null;
+  const recControls = document.getElementById('record-controls');
+  const pbControls = document.getElementById('playback-controls');
+
+  const updateControls = () => {
+    const m = getMode();
+    if (recControls) recControls.style.display = m === 'record' ? 'inline-flex' : 'none';
+    if (pbControls) pbControls.style.display = m === 'playback' ? 'inline-flex' : 'none';
+  };
+
+  select?.addEventListener('change', () => {
+    setMode(select.value as Mode);
+    updateControls();
+  });
+
+  recStart?.addEventListener('click', () => {
+    if (isRecording()) return;
+    startRecording(performance.now());
+  });
+
+  recStop?.addEventListener('click', () => {
+    if (!isRecording()) return;
+    _currentRecording = stopRecording();
+  });
+
+  playBtn?.addEventListener('click', () => {
+    // playback scheduler stub (implemented later)
+  });
+  pauseBtn?.addEventListener('click', () => {
+    if (playbackTimer != null) {
+      window.clearTimeout(playbackTimer);
+      playbackTimer = null;
+    }
+  });
+  stopBtn?.addEventListener('click', () => {
+    if (playbackTimer != null) {
+      window.clearTimeout(playbackTimer);
+      playbackTimer = null;
+    }
+    stopVibration();
+  });
+
+  updateControls();
+}
 
 let currentWidth = 4;
 const minWidth = 2;
@@ -119,6 +174,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     const { x, y } = getCanvasPoint(canvas, e.clientX, e.clientY);
     points.push({ x, y, t: e.timeStamp });
     currentWidth = ctx ? ctx.lineWidth : currentWidth;
+    if (getMode() === 'record' && !isRecording()) startRecording(performance.now());
   });
 
   canvas.addEventListener('pointermove', (e: PointerEvent) => {
@@ -129,7 +185,10 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     drawLatestSmoothedSegment();
     updateWidthFromSpeed();
     const latest = points[points.length - 1]!;
-    vibrateForSpeed(latest.speed);
+    if (getMode() === 'live') vibrateForSpeed(latest.speed);
+    if (getMode() === 'record' && isRecording()) {
+      pushPoint(performance.now(), { x: latest.x, y: latest.y, speed: latest.speed, width: currentWidth });
+    }
   });
 
   const end = (e: PointerEvent) => {
@@ -158,6 +217,7 @@ function init(): void {
   window.addEventListener('resize', handleResize);
 
   attachPointerHandlers(canvas);
+  bindUI();
 }
 
 document.addEventListener('DOMContentLoaded', init);

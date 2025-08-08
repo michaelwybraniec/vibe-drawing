@@ -2,10 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+    />
     <title>Vibe Drawing</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <header class="toolbar">
+      <label>
+        Mode:
+        <select id="mode-select">
+          <option value="live" selected>vibe-drawing (live)</option>
+          <option value="record">composition (record)</option>
+          <option value="playback">composition (playback)</option>
+        </select>
+      </label>
+      <div class="controls" id="record-controls">
+        <button id="btn-rec-start" type="button">Start Rec</button>
+        <button id="btn-rec-stop" type="button">Stop Rec</button>
+      </div>
+      <div class="controls" id="playback-controls">
+        <button id="btn-play" type="button">Play</button>
+        <button id="btn-pause" type="button">Pause</button>
+        <button id="btn-stop" type="button">Stop</button>
+      </div>
+      <span id="hint-haptics" aria-live="polite"></span>
+    </header>
     <main id="app">
       <canvas id="app-canvas"></canvas>
     </main>

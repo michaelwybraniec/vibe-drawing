@@ -96,7 +96,7 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
 ## Project Backlog
 
 - [ ] 0. Project Initialization [Tech: Node.js, TypeScript, ESLint, Prettier, GitHub Actions, HTML/CSS]
-  - [ ] 0.1 Repo setup: .editorconfig, .gitignore, LICENSE, README anchors [Tech: Git]
+  - [x] 0.1 Repo setup: .editorconfig, .gitignore, LICENSE, README anchors [Tech: Git]
   - [ ] 0.2 TypeScript baseline: tsconfig.json with strict mode [Tech: TypeScript]
   - [ ] 0.3 Lint/format: ESLint + Prettier + scripts + pre-commit hooks [Tech: ESLint, Prettier, Husky]
   - [ ] 0.4 CI: GitHub Actions for build/lint [Tech: GitHub Actions]
@@ -297,6 +297,8 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
     3.3. Check for blockers before proceeding, and confirm additional plan with human.
 
     3.4. Mark the current step 'check' [ ] as done before you start.
+
+    3.5 If there were some task that were unplanned and you had to add it according to best practices, not it in unplanned tasks and tell human.
 
 4. **check**
 

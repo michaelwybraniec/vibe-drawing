@@ -236,6 +236,13 @@ function init(): void {
 
   attachPointerHandlers(canvas);
   bindUI();
+
+  // register service worker for PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      /* ignore */
+    });
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);

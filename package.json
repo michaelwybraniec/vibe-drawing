@@ -32,5 +32,6 @@
     "lint-staged": "^16.1.5",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2"
-  }
+  },
+  "type": "module"
 }

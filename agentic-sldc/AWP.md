@@ -115,9 +115,9 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
     - [ ] 1.1.7 Manual device test for continuity and latency. [Tech: Manual QA]
   - [ ] 1.2 Stroke thickness accounts for drawing speed. [Tech: HTML5 Canvas]
     - [ ] 1.2.1 Acceptance: Faster strokes appear thinner (or thicker, per chosen mapping) consistently. [Tech: HTML5 Canvas]
-    - [ ] 1.2.2 Compute instantaneous speed between successive points (px/ms). [Tech: JavaScript]
-    - [ ] 1.2.3 Map speed → lineWidth via configurable function with clamps. [Tech: HTML5 Canvas]
-    - [ ] 1.2.4 Stabilize width changes (low-pass filter to avoid jitter). [Tech: JavaScript]
+    - [x] 1.2.2 Compute instantaneous speed between successive points (px/ms). [Tech: JavaScript]
+    - [x] 1.2.3 Map speed → lineWidth via configurable function with clamps. [Tech: HTML5 Canvas]
+    - [x] 1.2.4 Stabilize width changes (low-pass filter to avoid jitter). [Tech: JavaScript]
     - [ ] 1.2.5 Profile performance on low-end devices. [Tech: Manual QA]
 
 - [ ] 2. Haptic Feedback Engine [Tech: Vibration API]

@@ -2,9 +2,14 @@ import { getDevicePixelRatio } from './capabilities.js';
 
 let ctx: CanvasRenderingContext2D | null = null;
 
-type Point = { x: number; y: number; t: number };
+type Point = { x: number; y: number; t: number; speed?: number };
 let isDrawing = false;
 let points: Point[] = [];
+
+let currentWidth = 4;
+const minWidth = 2;
+const maxWidth = 10;
+const smoothingFactor = 0.25; // low-pass filter alpha
 
 function getCanvasPoint(canvas: HTMLCanvasElement, clientX: number, clientY: number): { x: number; y: number } {
   const rect = canvas.getBoundingClientRect();
@@ -47,6 +52,37 @@ function drawLatestSmoothedSegment(): void {
   ctx.stroke();
 }
 
+function distance(a: Point, b: Point): number {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  return Math.hypot(dx, dy);
+}
+
+function updateLatestSpeed(): void {
+  const len = points.length;
+  if (len < 2) return;
+  const prev = points[len - 2]!;
+  const last = points[len - 1]!;
+  const dt = Math.max(0.001, last.t - prev.t);
+  const d = distance(prev, last);
+  last.speed = d / dt; // px per ms
+}
+
+function mapSpeedToWidth(speed: number | undefined): number {
+  if (speed == null) return currentWidth;
+  // Invert mapping: faster → thinner. Tune k to taste.
+  const k = 200; // scaling constant for px/ms
+  const w = maxWidth - Math.min(maxWidth - minWidth, speed * k);
+  return Math.max(minWidth, Math.min(maxWidth, w));
+}
+
+function updateWidthFromSpeed(): void {
+  const last = points[points.length - 1]!;
+  const target = mapSpeedToWidth(last.speed);
+  currentWidth = currentWidth + (target - currentWidth) * smoothingFactor;
+  if (ctx) ctx.lineWidth = currentWidth;
+}
+
 function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): void {
   const dpr = getDevicePixelRatio();
   const { width: cssWidth, height: cssHeight } = canvas.getBoundingClientRect();
@@ -81,13 +117,16 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     points = [];
     const { x, y } = getCanvasPoint(canvas, e.clientX, e.clientY);
     points.push({ x, y, t: e.timeStamp });
+    currentWidth = ctx ? ctx.lineWidth : currentWidth;
   });
 
   canvas.addEventListener('pointermove', (e: PointerEvent) => {
     if (!isDrawing) return;
     const { x, y } = getCanvasPoint(canvas, e.clientX, e.clientY);
     points.push({ x, y, t: e.timeStamp });
+    updateLatestSpeed();
     drawLatestSmoothedSegment();
+    updateWidthFromSpeed();
   });
 
   const end = (e: PointerEvent) => {

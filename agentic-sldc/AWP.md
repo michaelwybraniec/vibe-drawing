@@ -286,7 +286,7 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
 
     2.4. Follow conventional commit standards.
 
-    2.5. Include relevant files.
+    2.5. Include relevant files and messages by checking git status what was changed in file with git diff?
 
 3. **next**
 

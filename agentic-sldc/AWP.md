@@ -98,7 +98,7 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
   - [x] 0.1 Repo setup: .editorconfig, .gitignore, LICENSE, README anchors [Tech: Git]
   - [x] 0.2 TypeScript baseline: tsconfig.json with strict mode [Tech: TypeScript]
   - [x] 0.3 Lint/format: ESLint + Prettier + scripts + pre-commit hooks [Tech: ESLint, Prettier, Husky]
-  - [ ] 0.4 CI: GitHub Actions for build/lint [Tech: GitHub Actions]
+  - [x] 0.4 CI: GitHub Actions for build/lint [Tech: GitHub Actions]
   - [ ] 0.5 Basic scaffold: index.html, src/main.ts, base CSS reset [Tech: HTML/CSS, TypeScript]
   - [ ] 0.6 Mobile readiness: meta viewport, touch-action: none, passive listeners [Tech: HTML/CSS]
   - [ ] 0.7 Capability detection & guards (Pointer Events, Vibration API, DPR) [Tech: TypeScript]

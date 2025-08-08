@@ -16,4 +16,5 @@ body {
   height: 100%;
   display: block;
   background: #fff;
+  touch-action: none; /* prevent browser gestures from interrupting drawing */
 }

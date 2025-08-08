@@ -2,6 +2,15 @@ import { getDevicePixelRatio } from './capabilities.js';
 
 let ctx: CanvasRenderingContext2D | null = null;
 
+type Point = { x: number; y: number; t: number };
+let isDrawing = false;
+let points: Point[] = [];
+
+function getCanvasPoint(canvas: HTMLCanvasElement, clientX: number, clientY: number): { x: number; y: number } {
+  const rect = canvas.getBoundingClientRect();
+  return { x: clientX - rect.left, y: clientY - rect.top };
+}
+
 function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): void {
   const dpr = getDevicePixelRatio();
   const { width: cssWidth, height: cssHeight } = canvas.getBoundingClientRect();
@@ -14,7 +23,6 @@ function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): void {
   }
 
   if (ctx) {
-    // Map drawing units to CSS pixels for consistent sizing
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 }
@@ -23,12 +31,37 @@ function initContext(canvas: HTMLCanvasElement): void {
   ctx = canvas.getContext('2d');
   if (!ctx) return;
 
-  // Default drawing styles
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = '#111';
   ctx.fillStyle = '#fff';
-  ctx.lineWidth = 4; // in CSS pixel units; DPR transform maps appropriately
+  ctx.lineWidth = 4;
+}
+
+function attachPointerHandlers(canvas: HTMLCanvasElement): void {
+  canvas.addEventListener('pointerdown', (e: PointerEvent) => {
+    canvas.setPointerCapture(e.pointerId);
+    isDrawing = true;
+    points = [];
+    const { x, y } = getCanvasPoint(canvas, e.clientX, e.clientY);
+    points.push({ x, y, t: e.timeStamp });
+  });
+
+  canvas.addEventListener('pointermove', (e: PointerEvent) => {
+    if (!isDrawing) return;
+    const { x, y } = getCanvasPoint(canvas, e.clientX, e.clientY);
+    points.push({ x, y, t: e.timeStamp });
+  });
+
+  const end = (e: PointerEvent) => {
+    if (!isDrawing) return;
+    isDrawing = false;
+    canvas.releasePointerCapture(e.pointerId);
+  };
+
+  canvas.addEventListener('pointerup', end);
+  canvas.addEventListener('pointercancel', end);
+  canvas.addEventListener('pointerleave', end);
 }
 
 function init(): void {
@@ -41,9 +74,10 @@ function init(): void {
     resizeCanvasToDisplaySize(canvas);
   };
 
-  // Initial size and on resize
   handleResize();
   window.addEventListener('resize', handleResize);
+
+  attachPointerHandlers(canvas);
 }
 
 document.addEventListener('DOMContentLoaded', init);

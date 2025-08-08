@@ -106,7 +106,7 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
 
 - [ ] 1. Canvas Drawing [Tech: HTML5 Canvas, Pointer Events/Hammer.js]
   - [ ] 1.1 As a user, I can draw on the canvas using touch input so that I can sketch freely. [Tech: HTML5 Canvas, Pointer Events/Hammer.js]
-    - [ ] 1.1.1 Acceptance: Touch down/move/up renders strokes with visible continuity. [Tech: HTML5 Canvas]
+    - [x] 1.1.1 Acceptance: Touch down/move/up renders strokes with visible continuity. [Tech: HTML5 Canvas]
     - [x] 1.1.2 Add responsive <canvas> with DPR scaling and resize handling. [Tech: HTML5 Canvas]
     - [x] 1.1.3 Initialize 2D context, line caps/joins, color, smoothing defaults. [Tech: HTML5 Canvas]
     - [x] 1.1.4 Implement pointerdown/move/up handlers (or Hammer.js) capturing x/y/t. [Tech: Pointer Events/Hammer.js]
@@ -114,7 +114,7 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
     - [x] 1.1.6 Apply basic smoothing (e.g., quadratic Bézier between points). [Tech: HTML5 Canvas]
     - [ ] 1.1.7 Manual device test for continuity and latency. [Tech: Manual QA]
   - [ ] 1.2 Stroke thickness accounts for drawing speed. [Tech: HTML5 Canvas]
-    - [ ] 1.2.1 Acceptance: Faster strokes appear thinner (or thicker, per chosen mapping) consistently. [Tech: HTML5 Canvas]
+    - [x] 1.2.1 Acceptance: Faster strokes appear thinner (or thicker, per chosen mapping) consistently. [Tech: HTML5 Canvas]
     - [x] 1.2.2 Compute instantaneous speed between successive points (px/ms). [Tech: JavaScript]
     - [x] 1.2.3 Map speed → lineWidth via configurable function with clamps. [Tech: HTML5 Canvas]
     - [x] 1.2.4 Stabilize width changes (low-pass filter to avoid jitter). [Tech: JavaScript]

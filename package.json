@@ -1,0 +1,36 @@
+{
+  "name": "vibe-drawing",
+  "version": "1.0.0",
+  "description": "A mobile-first haptic drawing web app for invisible heroes. Built using the Agentic Workflow Protocol (AWP) by the OVERVIBING.COM community.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install",
+    "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
+    "format": "prettier --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/michaelwybraniec/vibe-drawing.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/michaelwybraniec/vibe-drawing/issues"
+  },
+  "homepage": "https://github.com/michaelwybraniec/vibe-drawing#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.39.0",
+    "@typescript-eslint/parser": "^8.39.0",
+    "eslint": "^9.33.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.5",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2"
+  }
+}

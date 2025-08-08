@@ -23,6 +23,30 @@ function drawLatestSegment(): void {
   ctx.stroke();
 }
 
+function midpoint(p: Point, q: Point): { x: number; y: number } {
+  return { x: (p.x + q.x) / 2, y: (p.y + q.y) / 2 };
+}
+
+function drawLatestSmoothedSegment(): void {
+  if (!ctx) return;
+  const len = points.length;
+  if (len === 2) {
+    // First segment fallback
+    drawLatestSegment();
+    return;
+  }
+  if (len < 3) return;
+  const p0 = points[len - 3]!;
+  const p1 = points[len - 2]!;
+  const p2 = points[len - 1]!;
+  const m1 = midpoint(p0, p1);
+  const m2 = midpoint(p1, p2);
+  ctx.beginPath();
+  ctx.moveTo(m1.x, m1.y);
+  ctx.quadraticCurveTo(p1.x, p1.y, m2.x, m2.y);
+  ctx.stroke();
+}
+
 function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): void {
   const dpr = getDevicePixelRatio();
   const { width: cssWidth, height: cssHeight } = canvas.getBoundingClientRect();
@@ -63,7 +87,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     if (!isDrawing) return;
     const { x, y } = getCanvasPoint(canvas, e.clientX, e.clientY);
     points.push({ x, y, t: e.timeStamp });
-    drawLatestSegment();
+    drawLatestSmoothedSegment();
   });
 
   const end = (e: PointerEvent) => {

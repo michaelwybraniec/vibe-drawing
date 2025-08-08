@@ -1,4 +1,4 @@
-import { getDevicePixelRatio } from './capabilities.js';
+import { getDevicePixelRatio, supportsVibration } from './capabilities.js';
 import { vibrateForSpeed, stopVibration } from './haptics.js';
 import { getMode, setMode, type Mode } from './state.js';
 import { startRecording, stopRecording, isRecording, pushPoint, type Recording } from './recording.js';
@@ -18,8 +18,10 @@ function bindUI(): void {
   const playBtn = document.getElementById('btn-play') as HTMLButtonElement | null;
   const pauseBtn = document.getElementById('btn-pause') as HTMLButtonElement | null;
   const stopBtn = document.getElementById('btn-stop') as HTMLButtonElement | null;
+  const testVibrate = document.getElementById('btn-test-vibrate') as HTMLButtonElement | null;
   const recControls = document.getElementById('record-controls');
   const pbControls = document.getElementById('playback-controls');
+  const hint = document.getElementById('hint-haptics') as HTMLSpanElement | null;
 
   const updateControls = () => {
     const m = getMode();
@@ -59,7 +61,23 @@ function bindUI(): void {
     stopVibration();
   });
 
+  testVibrate?.addEventListener('click', () => {
+    if (!supportsVibration()) {
+      if (hint) hint.textContent = 'Haptics not supported on this device/browser.';
+      return;
+    }
+    const ok = navigator.vibrate(30);
+    if (ok === false && hint) {
+      hint.textContent = 'Vibration blocked by browser settings (try enabling system haptics or reducing motion off).';
+    }
+  });
+
   updateControls();
+
+  // initial hint
+  if (!supportsVibration() && hint) {
+    hint.textContent = 'Haptics not supported on this device/browser.';
+  }
 }
 
 let currentWidth = 4;

@@ -1,3 +1,76 @@
+# Project Code Summary
+
+## .cursor/mcp.json
+
+```json
+{
+  "mcpServers": {
+    "sdlc": {
+      "command": "node",
+      "args": ["/Users/michaelwybraniec/Documents/GitHub/mcp-agentic-sdlc/dist/index.js"]
+    }
+  }
+} 
+```
+
+## .vscode/settings.json
+
+```json
+{
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#a88197",
+    "activityBar.background": "#a88197",
+    "activityBar.foreground": "#15202b",
+    "activityBar.inactiveForeground": "#15202b99",
+    "activityBarBadge.background": "#525e41",
+    "activityBarBadge.foreground": "#e7e7e7",
+    "commandCenter.border": "#e7e7e799",
+    "sash.hoverBorder": "#a88197",
+    "statusBar.background": "#91657e",
+    "statusBar.foreground": "#e7e7e7",
+    "statusBarItem.hoverBackground": "#a88197",
+    "statusBarItem.remoteBackground": "#91657e",
+    "statusBarItem.remoteForeground": "#e7e7e7",
+    "titleBar.activeBackground": "#91657e",
+    "titleBar.activeForeground": "#e7e7e7",
+    "titleBar.inactiveBackground": "#91657e99",
+    "titleBar.inactiveForeground": "#e7e7e799"
+  },
+  "peacock.color": "#91657e"
+}
+```
+
+## README.md
+
+```markdown
+
+# "Vibe Drawing" is a haptic drawing app for invisible heroes. App is made with Agentic Workflow Protocol made by overvibing.com community
+
+This web application allows users to draw with their fingers and feel haptic feedback.
+
+## Features
+
+- **Drawing:** Users can draw freely on the canvas.
+- **Haptic Feedback:** Vibrations change in real-time based on drawing speed and thickness.
+- **Two Modes:**
+  - Live drawing with immediate feedback
+  - Record and playback drawings with vibrations
+
+## Technologies
+
+- HTML5 Canvas
+- Vibration API
+- Hammer.js
+
+## Deployment
+
+The app can be deployed as static files on platforms like GitHub Pages.
+
+```
+
+## agentic-sldc/AWP.md
+
+```markdown
 # Agentic Workflow Protocol (AWP)
 
 ## Hard instructions for AI agents
@@ -96,8 +169,8 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
 ## Project Backlog
 
 - [ ] 0. Project Initialization [Tech: Node.js, TypeScript, ESLint, Prettier, GitHub Actions, HTML/CSS]
-  - [x] 0.1 Repo setup: .editorconfig, .gitignore, LICENSE, README anchors [Tech: Git]
-  - [x] 0.2 TypeScript baseline: tsconfig.json with strict mode [Tech: TypeScript]
+  - [ ] 0.1 Repo setup: .editorconfig, .gitignore, LICENSE, README anchors [Tech: Git]
+  - [ ] 0.2 TypeScript baseline: tsconfig.json with strict mode [Tech: TypeScript]
   - [ ] 0.3 Lint/format: ESLint + Prettier + scripts + pre-commit hooks [Tech: ESLint, Prettier, Husky]
   - [ ] 0.4 CI: GitHub Actions for build/lint [Tech: GitHub Actions]
   - [ ] 0.5 Basic scaffold: index.html, src/main.ts, base CSS reset [Tech: HTML/CSS, TypeScript]
@@ -286,7 +359,7 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
 
     2.4. Follow conventional commit standards.
 
-    2.5. Include relevant files and messages by checking git status what was changed in file with git diff?
+    2.5. Include relevant files.
 
 3. **next**
 
@@ -297,8 +370,6 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
     3.3. Check for blockers before proceeding, and confirm additional plan with human.
 
     3.4. Mark the current step 'check' [ ] as done before you start.
-
-    3.5 If there were some task that were unplanned and you had to add it according to best practices, not it in unplanned tasks and tell human.
 
 4. **check**
 
@@ -336,3 +407,6 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
 - **examples:**
   - feat(api 3.1): add API endpoint
   - docs(readme 5.1): expand documentation
+
+```
+

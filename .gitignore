@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Builds
+/dist/
+/build/
+/.vite/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Misc
+.DS_Store
+coverage/
+.tmp/
+.sass-cache/
+
+# Editors
+.vscode/*
+!.vscode/settings.json

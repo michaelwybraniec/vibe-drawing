@@ -11,6 +11,18 @@ function getCanvasPoint(canvas: HTMLCanvasElement, clientX: number, clientY: num
   return { x: clientX - rect.left, y: clientY - rect.top };
 }
 
+function drawLatestSegment(): void {
+  if (!ctx) return;
+  const len = points.length;
+  if (len < 2) return;
+  const a = points[len - 2]!;
+  const b = points[len - 1]!;
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
+  ctx.stroke();
+}
+
 function resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): void {
   const dpr = getDevicePixelRatio();
   const { width: cssWidth, height: cssHeight } = canvas.getBoundingClientRect();
@@ -51,6 +63,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     if (!isDrawing) return;
     const { x, y } = getCanvasPoint(canvas, e.clientX, e.clientY);
     points.push({ x, y, t: e.timeStamp });
+    drawLatestSegment();
   });
 
   const end = (e: PointerEvent) => {

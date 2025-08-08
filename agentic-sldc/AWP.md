@@ -107,7 +107,7 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
 - [ ] 1. Canvas Drawing [Tech: HTML5 Canvas, Pointer Events/Hammer.js]
   - [ ] 1.1 As a user, I can draw on the canvas using touch input so that I can sketch freely. [Tech: HTML5 Canvas, Pointer Events/Hammer.js]
     - [ ] 1.1.1 Acceptance: Touch down/move/up renders strokes with visible continuity. [Tech: HTML5 Canvas]
-    - [ ] 1.1.2 Add responsive <canvas> with DPR scaling and resize handling. [Tech: HTML5 Canvas]
+    - [x] 1.1.2 Add responsive <canvas> with DPR scaling and resize handling. [Tech: HTML5 Canvas]
     - [ ] 1.1.3 Initialize 2D context, line caps/joins, color, smoothing defaults. [Tech: HTML5 Canvas]
     - [ ] 1.1.4 Implement pointerdown/move/up handlers (or Hammer.js) capturing x/y/t. [Tech: Pointer Events/Hammer.js]
     - [ ] 1.1.5 Buffer stroke points and draw incrementally on move/end. [Tech: HTML5 Canvas]

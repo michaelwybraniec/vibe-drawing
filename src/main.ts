@@ -1,4 +1,5 @@
 import { getDevicePixelRatio } from './capabilities.js';
+import { vibrateForSpeed, stopVibration } from './haptics.js';
 
 let ctx: CanvasRenderingContext2D | null = null;
 
@@ -127,12 +128,15 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     updateLatestSpeed();
     drawLatestSmoothedSegment();
     updateWidthFromSpeed();
+    const latest = points[points.length - 1]!;
+    vibrateForSpeed(latest.speed);
   });
 
   const end = (e: PointerEvent) => {
     if (!isDrawing) return;
     isDrawing = false;
     canvas.releasePointerCapture(e.pointerId);
+    stopVibration();
   };
 
   canvas.addEventListener('pointerup', end);

@@ -8,7 +8,9 @@
     "prepare": "husky install",
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "format": "prettier --write .",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "tsc",
+    "serve": "npx http-server -c-1 -p 5173"
   },
   "repository": {
     "type": "git",

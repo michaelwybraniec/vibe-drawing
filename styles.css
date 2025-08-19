@@ -388,6 +388,8 @@ body {
   -webkit-tap-highlight-color: transparent;
   /* Set default cursor for web app */
   cursor: crosshair;
+  /* Fallback background color in case JavaScript doesn't load */
+  background: #151e35;
 }
 
 #app {

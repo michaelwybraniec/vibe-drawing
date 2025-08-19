@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-content"
+    />
+    <title>Vibe Drawing</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/logo-48-BU1sDc45.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/logo-48-BU1sDc45.png" />
+    <link rel="apple-touch-icon" href="/assets/logo-192-CWUpS7GR.png" />
+    <link rel="shortcut icon" href="/assets/logo-144-DoUTajmE.png" />
+
+    <link rel="manifest" href="/assets/manifest-Qk1oj1_M.webmanifest" />
+    <meta name="theme-color" content="#111111" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,700;1,300&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" crossorigin src="/assets/index-DFzT1i8F.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-UFcM3uJx.css">
+  </head>
+  <body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+      <div class="splash-content">
+        <img src="/assets/logo-192-CWUpS7GR.png" alt="VIBE DRAWING Logo" class="splash-logo" />
+        <!-- <div class="loading-text">Loading...</div> -->
+        <div class="progress-bar">
+          <div class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ONE-FRONT Link - Always visible after loading -->
+    <div class="one-front-credit">
+      by ONE-FRONT
+      <span class="info-icon" onclick="showInfoPopup()">ℹ</span>
+    </div>
+
+    <!-- Info Popup -->
+    <div id="info-popup" class="info-popup">
+      <div class="info-popup-content">
+        <span class="close-popup" onclick="hideInfoPopup()">&times;</span>
+
+        <h3>Hello! 👋</h3>
+
+        <div class="popup-section">
+          <p>Welcome to <strong>VIBE DRAWING</strong>.</p>
+          <p>
+            This app is made by Human and AI pair programming (called VIBE-CODING) and Agentic
+            Workflow Protocol (AWP) to prevent getting lost in the scaled development flow (called
+            OVERVIBING).
+          </p>
+        </div>
+
+        <div class="popup-section">
+          <div class="audience-grid">
+            <div class="audience-item">
+              <strong>Web App</strong> is made for VIBE architects, developers and creators who want
+              to quickly vibe-out the diagrams at the brainstorming meetings.
+            </div>
+            <div class="audience-item">
+              <strong>Mobile Apps</strong> are designed for vibing children who perceive the world
+              differently and "see" the art of another kind.
+            </div>
+          </div>
+        </div>
+
+        <!-- <div class="popup-section">
+          <h4>Built with AWP</h4>
+          <p>This app is made by Human and AI pair programming (called VIBE-CODING) and Agentic Workflow Protocol (AWP) to prevent getting lost in the scaled development flow (called OVERVIBING).
+        </div> -->
+
+        <hr />
+
+        <div class="popup-section">
+          <p>
+            <strong>Do you like it? </strong> ->
+            <a href="https://ko-fi.com/mikedev" target="_blank">Buy me a coffee.</a>
+          </p>
+          <p>
+            <strong>Want to hire me? </strong> ->
+            <a href="https://www.linkedin.com/in/one-front/" target="_blank"
+              >$400 - friends and family discount, $600-1000 - regular price.</a
+            >
+          </p>
+        </div>
+
+        <div class="signature">
+          <p>— Mike</p>
+          <a href="https://one-front.com/" target="_blank">ONE-FRONT</a>
+        </div>
+      </div>
+    </div>
+
+    <main id="app">
+      <canvas id="app-canvas"></canvas>
+
+      <div class="tools-container">
+        <div class="left-controls">
+          <div class="control-group">
+            <span class="control-label">📳</span>
+            <input
+              type="range"
+              id="vibration-knob"
+              min="0"
+              max="1"
+              step="0.1"
+              value="1"
+              class="knob-slider"
+              aria-label="Vibration intensity"
+            />
+          </div>
+        </div>
+        <button id="style-switch" class="tool-button">🌀</button>
+        <div class="tools">
+          <!-- <div id="thickness-value" class="thickness-value">1.0</div> -->
+          <input
+            type="range"
+            id="thickness-slider"
+            min="0.2"
+            max="5.0"
+            step="0.2"
+            value="1.0"
+            class="thickness-slider"
+          />
+        </div>
+        <button id="eraser" class="tool-button">🧽</button>
+        <button id="clear-canvas" class="clear-button">🗑️</button>
+      </div>
+
+      <div class="style-buttons-container" style="display: none">
+        <button id="style-1" class="style-button active">Style 1</button>
+        <button id="style-2" class="style-button">Style 2</button>
+        <button id="style-3" class="style-button">Style 3</button>
+      </div>
+    </main>
+  </body>
+</html>

@@ -6,15 +6,15 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     hostname: 'localhost',
-    iosScheme: 'capacitor'
+    iosScheme: 'capacitor',
   },
   ios: {
     contentInset: 'automatic',
     scrollEnabled: false,
     allowsLinkPreview: false,
     handleApplicationNotifications: false,
-    backgroundColor: '#151E35'
-  }
+    backgroundColor: '#151E35',
+  },
 };
 
-export default config; 
+export default config;

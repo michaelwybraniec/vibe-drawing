@@ -47,4 +47,4 @@ export function setFlag<K extends keyof FeatureFlags>(key: K, value: FeatureFlag
 
 export function getAllFlags(): FeatureFlags {
   return { ...flags };
-} 
+}

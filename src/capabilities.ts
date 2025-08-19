@@ -18,4 +18,4 @@ export function getCapabilities() {
     vibration: supportsVibration(),
     devicePixelRatio: getDevicePixelRatio(),
   } as const;
-} 
+}

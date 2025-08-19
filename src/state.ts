@@ -8,4 +8,4 @@ export function getMode(): Mode {
 
 export function setMode(next: Mode): void {
   mode = next;
-} 
+}

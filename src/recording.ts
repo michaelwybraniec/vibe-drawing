@@ -1,4 +1,11 @@
-export type RecordedPoint = { t: number; x: number; y: number; pressure?: number; speed?: number; width?: number };
+export type RecordedPoint = {
+  t: number;
+  x: number;
+  y: number;
+  pressure?: number;
+  speed?: number;
+  width?: number;
+};
 export type Recording = { startedAt: number; points: RecordedPoint[] };
 
 let current: Recording | null = null;
@@ -23,4 +30,4 @@ export function pushPoint(now: number, p: PointWithoutTime): void {
   if (!current) return;
   const rel = now - current.startedAt;
   current.points.push({ ...p, t: rel });
-} 
+}

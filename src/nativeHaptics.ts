@@ -7,9 +7,10 @@ export type NativeHapticsPlugin = {
 };
 
 export const NativeHaptics = registerPlugin<NativeHapticsPlugin>('NativeHaptics', {
-  web: () => ({
-    async start() {},
-    async update() {},
-    async stop() {},
-  } as NativeHapticsPlugin),
-}); 
+  web: () =>
+    ({
+      async start() {},
+      async update() {},
+      async stop() {},
+    }) as NativeHapticsPlugin,
+});

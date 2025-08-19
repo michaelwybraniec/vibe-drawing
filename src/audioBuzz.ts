@@ -44,4 +44,4 @@ export function audioStop(): void {
   }
   osc = null;
   gain = null;
-} 
+}

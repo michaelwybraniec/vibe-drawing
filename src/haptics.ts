@@ -39,7 +39,7 @@ function combinedIntensity(speed?: number, pressure?: number): number {
   const speedInt = speedToIntensity(speed);
   const pressureInt = pressureToIntensity(pressure);
   // Combine speed and pressure with pressure having more weight (60/40 split)
-  return Math.max(0.1, Math.min(1, (pressureInt * 0.6) + (speedInt * 0.4)));
+  return Math.max(0.1, Math.min(1, pressureInt * 0.6 + speedInt * 0.4));
 }
 
 function speedToDur(speed?: number, pressure?: number): number {
@@ -60,8 +60,10 @@ function speedToStyle(speed?: number, pressure?: number): 'light' | 'medium' | '
 }
 
 function tick() {
-  console.log(`Haptic tick - platform: ${platform}, usingNativeHaptics: ${usingNativeHaptics}, HapticsBasic: ${!!HapticsBasic}`);
-  
+  console.log(
+    `Haptic tick - platform: ${platform}, usingNativeHaptics: ${usingNativeHaptics}, HapticsBasic: ${!!HapticsBasic}`,
+  );
+
   // Try native haptics first for better pressure control
   if (platform !== 'web' && !usingNativeHaptics) {
     try {
@@ -73,20 +75,29 @@ function tick() {
       // Fall back to basic haptics
     }
   }
-  
+
   if (HapticsBasic) {
     if (platform === 'ios') {
       console.log(`iOS haptic impact: ${iosStyle}`);
-      HapticsBasic.impact({ style: iosStyle }).catch((e: any) => console.log(`iOS haptic failed: ${e}`));
+      HapticsBasic.impact({ style: iosStyle }).catch((e: any) =>
+        console.log(`iOS haptic failed: ${e}`),
+      );
     } else if (platform === 'android') {
       console.log(`Android vibrate: ${durMs}ms`);
-      HapticsBasic.vibrate({ duration: durMs }).catch((e: any) => console.log(`Android haptic failed: ${e}`));
+      HapticsBasic.vibrate({ duration: durMs }).catch((e: any) =>
+        console.log(`Android haptic failed: ${e}`),
+      );
     } else if (supportsVibration()) {
       console.log(`Web vibrate: ${durMs}ms`);
       navigator.vibrate(durMs);
     } else {
       console.log(`Audio fallback: ${durMs / 40}`);
-      if (!usingAudio) { usingAudio = true; audioStart(0.4); } else { audioUpdate(durMs / 40); }
+      if (!usingAudio) {
+        usingAudio = true;
+        audioStart(0.4);
+      } else {
+        audioUpdate(durMs / 40);
+      }
     }
     return;
   }
@@ -96,7 +107,12 @@ function tick() {
     navigator.vibrate(durMs);
   } else {
     console.log(`Fallback audio: ${durMs / 40}`);
-    if (!usingAudio) { usingAudio = true; audioStart(0.4); } else { audioUpdate(durMs / 40); }
+    if (!usingAudio) {
+      usingAudio = true;
+      audioStart(0.4);
+    } else {
+      audioUpdate(durMs / 40);
+    }
   }
 }
 
@@ -107,10 +123,10 @@ export function hapticsConstantStart(): void {
     hapticsUpdate();
     return;
   }
-  
+
   usingAudio = false;
   usingNativeHaptics = false;
-  
+
   // Try native haptics first for continuous pressure-based feedback
   if (platform !== 'web') {
     try {
@@ -125,11 +141,13 @@ export function hapticsConstantStart(): void {
       // Fall back to discrete haptics
     }
   }
-  
+
   // optional pre-tap
   if (HapticsBasic && platform === 'ios') {
     console.log(`iOS pre-tap`);
-    HapticsBasic.impact({ style: 'medium' }).catch((e: any) => console.log(`iOS pre-tap failed: ${e}`));
+    HapticsBasic.impact({ style: 'medium' }).catch((e: any) =>
+      console.log(`iOS pre-tap failed: ${e}`),
+    );
   }
   tick();
   timerId = window.setInterval(tick, tickMs);
@@ -139,16 +157,18 @@ export function hapticsConstantStart(): void {
 
 export function hapticsUpdate(speed?: number, pressure?: number): void {
   if (!getFlag('hapticsEnabled')) return;
-  
+
   const newIntensity = combinedIntensity(speed, pressure);
   const intensityChanged = Math.abs(currentIntensity - newIntensity) > 0.05; // Only update if significant change
   currentIntensity = newIntensity;
-  
+
   // Debug log occasionally if debug mode is enabled
   if (getFlag('debug') && Math.random() < 0.05) {
-    console.log(`hapticsUpdate - speed: ${speed?.toFixed(3)}, pressure: ${pressure?.toFixed(3)}, intensity: ${newIntensity.toFixed(3)}`);
+    console.log(
+      `hapticsUpdate - speed: ${speed?.toFixed(3)}, pressure: ${pressure?.toFixed(3)}, intensity: ${newIntensity.toFixed(3)}`,
+    );
   }
-  
+
   // Update native haptics if using continuous mode and intensity changed significantly
   if (usingNativeHaptics && intensityChanged) {
     try {
@@ -163,13 +183,13 @@ export function hapticsUpdate(speed?: number, pressure?: number): void {
       usingNativeHaptics = false;
     }
   }
-  
+
   // Only update discrete haptic parameters if intensity changed
   if (intensityChanged || !timerId) {
     durMs = speedToDur(speed, pressure);
     iosStyle = speedToStyle(speed, pressure);
     const nextTick = speedToTick(speed, pressure);
-    
+
     if (Math.abs(nextTick - tickMs) > 2 && timerId != null) {
       tickMs = nextTick;
       window.clearInterval(timerId);
@@ -178,7 +198,7 @@ export function hapticsUpdate(speed?: number, pressure?: number): void {
       tickMs = nextTick;
     }
   }
-  
+
   if (usingAudio) audioUpdate(combinedIntensity(speed, pressure));
 }
 
@@ -192,13 +212,16 @@ export function hapticsStop(): void {
     }
     usingNativeHaptics = false;
   }
-  
+
   if (timerId != null) {
     window.clearInterval(timerId);
     timerId = null;
   }
   if (supportsVibration()) navigator.vibrate(0);
-  if (usingAudio) { usingAudio = false; audioStop(); }
-  
+  if (usingAudio) {
+    usingAudio = false;
+    audioStop();
+  }
+
   isHapticsRunning = false; // Reset the running state
-} 
+}

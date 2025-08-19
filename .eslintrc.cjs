@@ -20,7 +20,10 @@ module.exports = {
   ],
   rules: {
     'unused-imports/no-unused-imports': 'error',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/no-unused-vars': [
+      'error',
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+    ],
     'import/order': [
       'warn',
       {
@@ -31,4 +34,4 @@ module.exports = {
     ],
   },
   ignorePatterns: ['dist', 'node_modules'],
-}; 
+};

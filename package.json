@@ -9,8 +9,18 @@
     "lint": "eslint . --ext .ts,.tsx --max-warnings=0",
     "format": "prettier --write .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "build": "tsc",
-    "serve": "npx http-server -c-1 -p 5173"
+    "build": "vite build",
+    "serve": "npx http-server -c-1 -p 5173",
+    "dev": "vite",
+    "preview": "vite preview",
+    "cap:sync": "cap sync",
+    "cap:ios": "cap open ios",
+    "cap:android": "cap open android",
+    "ios:build": "npm run build && npx cap sync ios",
+    "ios:open": "npm run ios:build && npx cap open ios",
+    "ios": "npm run build && npx cap sync ios && npx cap open ios",
+    "android:build": "npm run build && npx cap sync android",
+    "android:open": "npm run android:build && npx cap open android"
   },
   "repository": {
     "type": "git",
@@ -24,6 +34,7 @@
   },
   "homepage": "https://github.com/michaelwybraniec/vibe-drawing#readme",
   "devDependencies": {
+    "@capacitor/cli": "^7.4.2",
     "@typescript-eslint/eslint-plugin": "^8.39.0",
     "@typescript-eslint/parser": "^8.39.0",
     "eslint": "^9.33.0",
@@ -33,7 +44,14 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.1.5",
     "prettier": "^3.6.2",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vite": "^7.1.1"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@capacitor/android": "^7.4.2",
+    "@capacitor/core": "^7.4.2",
+    "@capacitor/haptics": "^7.0.2",
+    "@capacitor/ios": "^7.4.2"
+  }
 }

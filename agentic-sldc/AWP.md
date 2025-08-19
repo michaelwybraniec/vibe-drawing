@@ -213,10 +213,36 @@ Michael Wybraniec (ONE-FRONT.COM, OVERVIBING.COM)
   - [ ] 14.1 GitHub Pages workflow (build + deploy). [Tech: GitHub Actions]
   - [ ] 14.2 Tagging/version stamp in UI. [Tech: TypeScript]
 
+- [ ] 15. Native Apps (Capacitor) [Tech: Capacitor, Xcode, Android Studio]
+  - [ ] 15.1 Initialize Capacitor config and platforms [Tech: Capacitor]
+    - [ ] 15.1.1 cap init (appId, appName) and capacitor.config.ts (webDir: dist) [Tech: Capacitor]
+    - [ ] 15.1.2 Add iOS/Android platforms; sync web build [Tech: Capacitor]
+  - [ ] 15.2 Native haptics bridge [Tech: @capacitor/haptics]
+    - [ ] 15.2.1 Detect native runtime and call Haptics plugin [Tech: TypeScript]
+    - [ ] 15.2.2 Map speed→intensity/signal pattern; throttle/stop [Tech: TypeScript]
+  - [ ] 15.3 Android build & sideload [Tech: Android Studio]
+    - [ ] 15.3.1 Generate debug APK for local install [Tech: Gradle]
+    - [ ] 15.3.2 Create release keystore; sign release APK/AAB [Tech: keytool, Gradle]
+    - [ ] 15.3.3 Sideload instructions (enable Unknown Sources; adb install) [Tech: Docs]
+  - [ ] 15.4 iOS build & distribution [Tech: Xcode]
+    - [ ] 15.4.1 Configure signing/team; run on device [Tech: Xcode]
+    - [ ] 15.4.2 TestFlight build (recommended for external testers) [Tech: App Store Connect]
+    - [ ] 15.4.3 Ad-hoc .ipa (registered UDIDs, provisioning profile) [Tech: Xcode]
+    - [ ] 15.4.4 Enterprise/MDM distribution (if available) [Tech: MDM]
+    - [ ] 15.4.5 Optional: Sideload via AltStore/Sideloadly (dev account; user action) [Tech: Docs]
+  - [ ] 15.5 Store readiness (optional) [Tech: Play Console, App Store Connect]
+    - [ ] 15.5.1 Prepare metadata, privacy, screenshots [Tech: Docs]
+    - [ ] 15.5.2 Upload AAB/IPA for review [Tech: Store Portals]
+
 ## Unplanned Tasks
 
 - [ ] U.1: Unplanned task, Name, Title, Description, etc.
 - [ ] U.2: Unplanned task, Name, Title, Description, etc.
+- [ ] U.3: PWA installability: add manifest and service worker for offline/install [Done in code]
+- [ ] U.4: iOS Safari vibration unsupported; add audio haptic fallback using WebAudio [Pending]
+- [ ] U.5: Native wrapper (Capacitor) to access true haptics on iOS/Android [In progress]
+- [ ] U.6: Adjust build tooling to Vite for Capacitor integration [In progress]
+- [ ] U.7: Add native Haptics plugin mapping speed→intensity [Planned]
 
 ## Release Milestones
 

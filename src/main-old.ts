@@ -1,6 +1,6 @@
 import { hapticsConstantStart } from './haptics.js';
 import { StyleManager } from './styles/styleManager.js';
-import { DrawingPoint } from './styles/baseStyle.js';
+import { DrawingPoint, StyleContext } from './styles/baseStyle.js';
 
 // Debug: Check if JavaScript is loading
 console.log('🎨 Vibe Drawing app starting...');
@@ -40,20 +40,11 @@ const _isMobile = 'ontouchstart' in window && window.navigator.maxTouchPoints > 
 let currentSizeLevel = 2; // 0=tiny, 1=small, 2=medium, 3=large, 4=huge (5 sizes total)
 const sizeMultipliers = [0.2, 0.4, 0.7, 1.0, 1.5]; // 5 size multipliers for web app - reduced sizes
 
-// Size smoothing variables
-let lastSizeMultiplier = 0.25;
-const sizeSmoothingFactor = 0.15;
-
 // Thickness control
 let thicknessMultiplier = 1.0; // Global thickness multiplier (0.5 to 3.0)
 
 // Eraser mode
 let isEraserMode = false;
-
-// Style tracking variables
-let currentStyle = 1;
-let isStyle2Active = false;
-let lavaLines: any[] = [];
 
 function calculateSizeMultiplier(width: number, height: number): number {
   const touchArea = Math.sqrt(width * height);
@@ -417,10 +408,11 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
     return;
   }
 
-  // Clear any ongoing animations
-  if (animationId) {
-    cancelAnimationFrame(animationId);
-    animationId = null;
+  // Clear flame animation system
+  _flames = [];
+  if (_animationId) {
+    cancelAnimationFrame(_animationId);
+    _animationId = null;
   }
 
   console.log('Clearing canvas, size:', canvas.width, 'x', canvas.height);
@@ -962,7 +954,7 @@ let randomStyleParams = {
   sizeMultiplier: 1.0,
 };
 
-function _generateRandomStyle1Parameters(): void {
+function generateRandomStyle1Parameters(): void {
   // Generate aggressive, vibrant pen styles with high contrast and intensity
   const hue = Math.floor(Math.random() * 360); // Full color spectrum
 
@@ -1087,71 +1079,38 @@ function init(): void {
   const styleSwitchButton = document.getElementById('style-switch');
   if (styleSwitchButton) {
     const styleSwitchHandler = () => {
-      // Randomize current style parameters for unexpected variations
-      _generateRandomStyle1Parameters();
+      // Generate new random style parameters ONLY - no drawing
+      generateRandomStyle1Parameters();
 
       // Change to a random size (0-4 for 5 sizes)
       currentSizeLevel = Math.floor(Math.random() * 5);
 
-      // Update button icon to show current style
-      const currentStyle = styleManager.getCurrentStyle();
-      styleSwitchButton.textContent = currentStyle.icon;
-      
       // Generate random color for the button
       const randomHue = Math.floor(Math.random() * 360);
       styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
 
+      // No animation needed
+
       const sizeNames = ['tiny', 'small', 'medium', 'large', 'huge'];
-      console.log(`🎨 Randomized ${currentStyle.name} style and changed to ${sizeNames[currentSizeLevel]} size!`);
+      console.log(`Generated new random style and changed to ${sizeNames[currentSizeLevel]} size!`);
 
       // Don't clear canvas - preserve existing drawing
     };
 
     // Add multiple event listeners for better mobile responsiveness
-    let lastTapTime = 0;
-    const doubleTapDelay = 300; // milliseconds
-    
-    const handleStyleInteraction = (e: Event) => {
-      e.preventDefault();
-      const currentTime = new Date().getTime();
-      const timeDiff = currentTime - lastTapTime;
-      
-      if (timeDiff < doubleTapDelay) {
-        // Double tap - switch to next drawing style
-        styleManager.nextStyle();
-        const newStyle = styleManager.getCurrentStyle();
-        styleSwitchButton.textContent = newStyle.icon;
-        
-        // Also randomize the new style
-        _generateRandomStyle1Parameters();
-        currentSizeLevel = Math.floor(Math.random() * 5);
-        
-        // Update title
-        styleSwitchButton.title = `Current: ${newStyle.name}\nSingle tap: Randomize settings\nDouble tap: Switch style`;
-        
-        console.log(`🎨 Switched to ${newStyle.name} style and randomized settings!`);
-      } else {
-        // Single tap - randomize current style
-        styleSwitchHandler();
-      }
-      
-      lastTapTime = currentTime;
-    };
-    
-    styleSwitchButton.addEventListener('click', handleStyleInteraction);
-    styleSwitchButton.addEventListener('touchstart', handleStyleInteraction);
+    styleSwitchButton.addEventListener('click', styleSwitchHandler);
+    styleSwitchButton.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Prevent default touch behavior
+      styleSwitchHandler();
+    });
     styleSwitchButton.addEventListener('touchend', (e) => {
       e.preventDefault(); // Prevent default touch behavior
     });
 
-    // Initialize with current style icon and color
-    const currentStyle = styleManager.getCurrentStyle();
-    styleSwitchButton.textContent = currentStyle.icon;
+    // Initialize with random parameters and button color
+    generateRandomStyle1Parameters();
     const randomHue = Math.floor(Math.random() * 360);
     styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
-    
-    // Add title for user guidance
-    styleSwitchButton.title = `Current: ${currentStyle.name}\nSingle tap: Randomize settings\nDouble tap: Switch style`;
   }
 
   // Thickness slider functionality

@@ -24,7 +24,7 @@ setTimeout(() => {
 let ctx: CanvasRenderingContext2D | null = null;
 let isDrawing = false;
 let points: DrawingPoint[] = [];
-let animationId: number | null = null;
+let _animationId: number | null = null;
 
 // Style management
 const styleManager = new StyleManager();

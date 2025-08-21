@@ -43,7 +43,7 @@ export class ParticleStyle implements DrawingStyle {
       const touchWidth = point.width || 1;
       const touchHeight = point.height || 1;
       const sizeVariation = 0.95 + Math.random() * 0.1;
-      const pulseScale = 1 + Math.sin((Date.now() + index * 40) / 160) * 0.03;
+      const pulseScale = 1 + Math.sin((Date.now() + _index * 40) / 160) * 0.03;
       const finalSize = (touchWidth / 2) * sizeVariation * pulseScale;
       const finalHeight = (touchHeight / 2) * sizeVariation * pulseScale;
 

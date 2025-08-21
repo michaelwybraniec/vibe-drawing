@@ -16,7 +16,7 @@ export class ParticleStyle implements DrawingStyle {
 
   onMove(points: DrawingPoint[], context: StyleContext): void {
     console.log('🎨 ParticleStyle.onMove called');
-    const { ctx, isEraserMode, thicknessMultiplier, currentSizeLevel, sizeMultipliers, isWebApp } =
+    const { ctx, isEraserMode, thicknessMultiplier: _thicknessMultiplier, currentSizeLevel: _currentSizeLevel, sizeMultipliers: _sizeMultipliers, isWebApp: _isWebApp } =
       context;
 
     if (!this.previousPoint) return;
@@ -76,7 +76,7 @@ export class ParticleStyle implements DrawingStyle {
     ctx.restore();
   }
 
-  onEnd(context: StyleContext): void {
+  onEnd(_context: StyleContext): void {
     console.log('🎨 Particle style ended');
   }
 
@@ -109,7 +109,7 @@ export class ParticleStyle implements DrawingStyle {
     }
   }
 
-  private getCurrentColor(multiplier: number): string {
+  private getCurrentColor(_multiplier: number): string {
     const hue = (Date.now() * 0.1) % 360;
     const saturation = 80 + Math.sin(Date.now() * 0.001) * 20;
     const lightness = 50 + Math.sin(Date.now() * 0.002) * 30;

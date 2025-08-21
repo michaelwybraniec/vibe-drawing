@@ -14,7 +14,7 @@
     <link rel="apple-touch-icon" href="/vibe-drawing/assets/logo-192-CWUpS7GR.png" />
     <link rel="shortcut icon" href="/vibe-drawing/assets/logo-144-DoUTajmE.png" />
 
-    <link rel="manifest" href="/vibe-drawing/assets/manifest-Qk1oj1_M.webmanifest" />
+    <link rel="manifest" href="/vibe-drawing/assets/manifest-CWOO1il0.webmanifest" />
     <meta name="theme-color" content="#111111" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -22,8 +22,8 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,700;1,300&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/vibe-drawing/assets/index-CRREuzns.js"></script>
-    <link rel="stylesheet" crossorigin href="/vibe-drawing/assets/index-DunYEzOr.css">
+    <script type="module" crossorigin src="/vibe-drawing/assets/index-DYjNeYKN.js"></script>
+    <link rel="stylesheet" crossorigin href="/vibe-drawing/assets/index-DaFh2Ky0.css">
   </head>
   <body>
     <!-- Splash Screen -->
@@ -103,7 +103,7 @@
       <canvas id="app-canvas"></canvas>
 
       <div class="tools-container">
-        <div class="left-controls">
+        <!-- <div class="tool-group">
           <div class="control-group">
             <span class="control-label">📳</span>
             <input
@@ -117,10 +117,20 @@
               aria-label="Vibration intensity"
             />
           </div>
+          <div class="tool-label">Haptic</div>
+        </div> -->
+
+        <div class="tool-group">
+          <button id="style-switch" class="tool-button">🌀</button>
+          <div class="tool-label">Randomize</div>
         </div>
-        <button id="style-switch" class="tool-button">🌀</button>
-        <div class="tools">
-          <!-- <div id="thickness-value" class="thickness-value">1.0</div> -->
+
+        <div class="tool-group">
+          <button id="style-selector" class="tool-button">1</button>
+          <div class="tool-label">Style</div>
+        </div>
+
+        <div class="tool-group">
           <input
             type="range"
             id="thickness-slider"
@@ -130,9 +140,18 @@
             value="1.0"
             class="thickness-slider"
           />
+          <div class="tool-label">Size</div>
         </div>
-        <button id="eraser" class="tool-button">🧽</button>
-        <button id="clear-canvas" class="clear-button">🗑️</button>
+
+        <div class="tool-group">
+          <button id="eraser" class="tool-button">🧽</button>
+          <div class="tool-label">Erase</div>
+        </div>
+
+        <div class="tool-group">
+          <button id="clear-canvas" class="clear-button">🗑️</button>
+          <div class="tool-label">Clear</div>
+        </div>
       </div>
 
       <div class="style-buttons-container" style="display: none">

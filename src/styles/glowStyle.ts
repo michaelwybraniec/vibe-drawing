@@ -16,13 +16,13 @@ export class GlowStyle implements DrawingStyle {
     maxLife: number;
   }> = [];
 
-  onStart(point: DrawingPoint, context: StyleContext): void {
+  onStart(_point: DrawingPoint, _context: StyleContext): void {
     console.log('🎨 Glow style started');
     this.glowTrails = [];
   }
 
   onMove(points: DrawingPoint[], context: StyleContext): void {
-    const { ctx, isEraserMode, thicknessMultiplier, currentSizeLevel, sizeMultipliers, isWebApp } =
+    const { ctx, isEraserMode, thicknessMultiplier: _thicknessMultiplier, currentSizeLevel: _currentSizeLevel, sizeMultipliers: _sizeMultipliers, isWebApp: _isWebApp } =
       context;
 
     if (points.length < 2) return;
@@ -49,7 +49,7 @@ export class GlowStyle implements DrawingStyle {
 
       // Calculate final size
       const touchWidth = point.width || 1;
-      const touchHeight = point.height || 1;
+      const _touchHeight = point.height || 1;
       const sizeVariation = 0.9 + Math.random() * 0.2;
       const finalSize = (touchWidth / 2) * sizeVariation * sizeMultiplier;
 
@@ -115,11 +115,11 @@ export class GlowStyle implements DrawingStyle {
     ctx.restore();
   }
 
-  onEnd(context: StyleContext): void {
+  onEnd(_context: StyleContext): void {
     console.log('🎨 Glow style ended');
   }
 
-  onClear(context: StyleContext): void {
+  onClear(_context: StyleContext): void {
     this.glowTrails = [];
   }
 

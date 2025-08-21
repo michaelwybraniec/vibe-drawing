@@ -39,7 +39,7 @@ export class LavaStyle implements DrawingStyle {
   }
 
   onMove(points: DrawingPoint[], context: StyleContext): void {
-    const { ctx } = context;
+    const { ctx: _ctx } = context;
 
     if (!this.currentLavaLine) return;
 

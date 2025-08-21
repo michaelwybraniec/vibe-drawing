@@ -25,7 +25,7 @@ export class ParticleStyle implements DrawingStyle {
     ctx.globalCompositeOperation = 'source-over';
 
     // Draw each point as a particle
-    points.forEach((point) => {
+    points.forEach((point, index) => {
       if (!this.previousPoint) return;
 
       const t = (point.t - this.previousPoint.t) / 16; // Normalize time

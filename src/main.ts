@@ -273,6 +273,9 @@ let glitchTrail: Array<{
 }> = [];
 let lastGlitchTime = 0;
 
+// Global twinkling stars for background (not used - using CSS instead)
+let _backgroundStars: Array<{x: number; y: number; size: number; twinklePhase: number; twinkleSpeed: number}> = [];
+
 function drawGlitchEffect(
   ctx: CanvasRenderingContext2D,
   x: number,
@@ -1080,7 +1083,7 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Add some subtle stars in the background
+  // Add some subtle twinkling stars in the background
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
   for (let i = 0; i < 50; i++) {
     const x = Math.random() * canvas.width;
@@ -1094,6 +1097,8 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
   ctx.lineWidth = 10;
   console.log('Canvas cleared and background drawn');
 }
+
+
 
 // Debug function for Apple Pencil testing
 function debugPointerEvent(e: PointerEvent): void {
@@ -1195,32 +1200,92 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
       const currentStyleIndex = styleManager.getCurrentStyleIndex();
       if (currentStyleIndex === 1) {
         // Style 2 (Lava)
-        // Style 2: Draw initial flame with enhanced size sensitivity
-        const baseSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-        const enhancedSizeMultiplier =
-          baseSizeMultiplier * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
-        drawFlameEffect(ctx, x, y, enhancedSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 2
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+          // Style 2: Draw initial flame with enhanced size sensitivity
+          const baseSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+          const enhancedSizeMultiplier =
+            baseSizeMultiplier * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
+          drawFlameEffect(ctx, x, y, enhancedSizeMultiplier, touchWidth, touchHeight);
+        }
       } else if (currentStyleIndex === 2) {
         // Style 3 (Glitch)
-        // Style 3: GLITCH EFFECT
-        const glitchSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-        drawGlitchEffect(ctx, x, y, glitchSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 3
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+          // Style 3: GLITCH EFFECT
+          const glitchSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+          drawGlitchEffect(ctx, x, y, glitchSizeMultiplier, touchWidth, touchHeight);
+        }
       } else if (currentStyleIndex === 3) {
         // Style 4 (Fire)
-        // Style 4: EPIC FIRE EFFECT
-        const fireSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-        drawFireEffect(ctx, x, y, fireSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 4
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+          // Style 4: EPIC FIRE EFFECT
+          const fireSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+          drawFireEffect(ctx, x, y, fireSizeMultiplier, touchWidth, touchHeight);
+        }
       } else if (currentStyleIndex === 4) {
         // Style 5 (Water)
-        // Style 5: WATER SHAPE STYLO
-        const waterSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-        drawWaterEffect(ctx, x, y, waterSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 5
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+          // Style 5: WATER SHAPE STYLO
+          const waterSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+          drawWaterEffect(ctx, x, y, waterSizeMultiplier, touchWidth, touchHeight);
+        }
       } else if (currentStyleIndex === 5) {
         // Style 6 (Epic)
-        // Style 6: EPIC COSMIC STORM
-        const epicSizeMultiplier =
-          calculateSizeMultiplier(touchWidth, touchHeight) * (1 + currentSizeLevel * 0.01);
-        drawEpicEffect(ctx, x, y, epicSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 6
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+          // Style 6: EPIC COSMIC STORM
+          const epicSizeMultiplier =
+            calculateSizeMultiplier(touchWidth, touchHeight) * (1 + currentSizeLevel * 0.01);
+          drawEpicEffect(ctx, x, y, epicSizeMultiplier, touchWidth, touchHeight);
+        }
       } else {
         // Style 1 & other styles: Regular smooth dot
         ctx.save();
@@ -1241,14 +1306,15 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
 
         // Paint main ellipse with pulsing effect and HD quality (same for drawing and erasing)
         const pulseScale = 1 + Math.sin(Date.now() / 200) * 0.1; // Gentle pulsing
-        const radiusX = (touchWidth / 2) * pulseScale;
-        const radiusY = (touchHeight / 2) * pulseScale;
+        const eraserMultiplier = isEraserMode ? 3.0 : 1.0; // Make eraser 3x bigger
+        const radiusX = (touchWidth / 2) * pulseScale * eraserMultiplier;
+        const radiusY = (touchHeight / 2) * pulseScale * eraserMultiplier;
 
         // Set eraser mode or drawing mode
         if (isEraserMode) {
-          // Eraser: draw with dark blue background color
-          ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = '#A8A8DB'; // Dark blue background color
+          // Eraser: use destination-out to erase
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Fully opaque black for erasing
         } else {
           // Normal drawing mode
           ctx.globalCompositeOperation = 'source-over';
@@ -1256,12 +1322,21 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
         }
 
         // Create radial gradient for HD quality
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, Math.max(radiusX, radiusY));
-        gradient.addColorStop(0, getCurrentColor(downMultiplier));
-        gradient.addColorStop(0.7, getCurrentColor(downMultiplier * 0.8));
-        gradient.addColorStop(1, getCurrentColor(downMultiplier * 0.6));
-
-        ctx.fillStyle = gradient;
+        if (isEraserMode) {
+          // For eraser, use a simple black gradient
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, Math.max(radiusX, radiusY));
+          gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
+          gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.8)');
+          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+          ctx.fillStyle = gradient;
+        } else {
+          // For drawing, use the normal color gradient
+          const gradient = ctx.createRadialGradient(x, y, 0, x, y, Math.max(radiusX, radiusY));
+          gradient.addColorStop(0, getCurrentColor(downMultiplier));
+          gradient.addColorStop(0.7, getCurrentColor(downMultiplier * 0.8));
+          gradient.addColorStop(1, getCurrentColor(downMultiplier * 0.6));
+          ctx.fillStyle = gradient;
+        }
         ctx.beginPath();
         ctx.ellipse(
           x,
@@ -1999,6 +2074,8 @@ function init(): void {
   document.getElementById('style-1')?.addEventListener('click', () => setActiveStyle(1));
   document.getElementById('style-2')?.addEventListener('click', () => setActiveStyle(2));
   document.getElementById('style-3')?.addEventListener('click', () => setActiveStyle(3));
+
+
 }
 
 document.addEventListener('DOMContentLoaded', init);

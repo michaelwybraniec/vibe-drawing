@@ -9,7 +9,7 @@ export class ParticleStyle implements DrawingStyle {
   private sizeSmoothingFactor = 0.15;
   private previousPoint: DrawingPoint | null = null;
 
-  onStart(point: DrawingPoint, context: StyleContext): void {
+  onStart(point: DrawingPoint, _context: StyleContext): void {
     console.log('🎨 Particle style started');
     this.previousPoint = point;
   }
@@ -33,7 +33,7 @@ export class ParticleStyle implements DrawingStyle {
       if (t <= 0) return;
 
       // Calculate size multiplier
-      const sizeMultiplier = this.calculateSizeMultiplier(point, context);
+      const _sizeMultiplier = this.calculateSizeMultiplier(point, context);
 
       // Interpolate position
       const dotX = this.previousPoint.x + (point.x - this.previousPoint.x) * t;
@@ -81,12 +81,12 @@ export class ParticleStyle implements DrawingStyle {
   }
 
   private calculateSizeMultiplier(point: DrawingPoint, context: StyleContext): number {
-    const { isWebApp, currentSizeLevel, sizeMultipliers, thicknessMultiplier } = context;
+    const { isWebApp: _isWebApp, currentSizeLevel: _currentSizeLevel, sizeMultipliers: _sizeMultipliers, thicknessMultiplier: _thicknessMultiplier } = context;
     const touchArea = Math.sqrt((point.width || 1) * (point.height || 1));
 
-    if (isWebApp) {
-      const baseMultiplier = 0.15 * (sizeMultipliers[currentSizeLevel] || 1.0);
-      return baseMultiplier * thicknessMultiplier;
+    if (_isWebApp) {
+      const baseMultiplier = 0.15 * (_sizeMultipliers[_currentSizeLevel] || 1.0);
+      return baseMultiplier * _thicknessMultiplier;
     } else {
       const minArea = 5;
       const maxArea = 100;
@@ -105,7 +105,7 @@ export class ParticleStyle implements DrawingStyle {
         baseMultiplier * sizeVariation * this.sizeSmoothingFactor;
 
       this.lastSizeMultiplier = smoothedMultiplier;
-      return smoothedMultiplier * thicknessMultiplier;
+      return smoothedMultiplier * _thicknessMultiplier;
     }
   }
 

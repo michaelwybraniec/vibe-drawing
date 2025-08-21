@@ -52,7 +52,7 @@ export class LavaStyle implements DrawingStyle {
     this.drawLavaLines(context);
   }
 
-  onEnd(context: StyleContext): void {
+  onEnd(_context: StyleContext): void {
     console.log('🌋 Lava style ended');
 
     if (this.currentLavaLine) {

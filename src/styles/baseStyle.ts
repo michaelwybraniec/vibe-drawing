@@ -22,16 +22,16 @@ export interface DrawingStyle {
   name: string;
   description: string;
   icon: string;
-  
+
   // Core methods
   onStart?(point: DrawingPoint, context: StyleContext): void;
   onMove?(points: DrawingPoint[], context: StyleContext): void;
   onEnd?(context: StyleContext): void;
-  
+
   // Optional methods
   onClear?(context: StyleContext): void;
   animate?(context: StyleContext): void;
-  
+
   // Style-specific properties
   properties?: Record<string, any>;
 }

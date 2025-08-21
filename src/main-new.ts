@@ -41,23 +41,23 @@ let isEraserMode = false;
 // Initialize the app
 function initApp(): void {
   console.log('🎨 Initializing Vibe Drawing app...');
-  
+
   const canvas = document.getElementById('app-canvas') as HTMLCanvasElement;
   if (!canvas) {
     console.error('❌ Canvas not found');
     return;
   }
-  
+
   ctx = canvas.getContext('2d');
   if (!ctx) {
     console.error('❌ Could not get 2D context');
     return;
   }
-  
+
   setupCanvas(canvas);
   setupEventListeners(canvas);
   setupUI();
-  
+
   console.log('✅ App initialized successfully');
 }
 
@@ -68,29 +68,29 @@ function setupCanvas(canvas: HTMLCanvasElement): void {
     canvas.width = rect.width * window.devicePixelRatio;
     canvas.height = rect.height * window.devicePixelRatio;
     ctx!.scale(window.devicePixelRatio, window.devicePixelRatio);
-    
+
     // Clear and draw background
     clearCanvas(canvas);
   };
-  
+
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 }
 
 function clearCanvas(canvas: HTMLCanvasElement): void {
   if (!ctx) return;
-  
+
   console.log('Clearing canvas, size:', canvas.width, 'x', canvas.height);
-  
+
   // Create a beautiful gradient background
   const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
   gradient.addColorStop(0, '#1a1a2e'); // Dark blue
   gradient.addColorStop(0.5, '#16213e'); // Navy blue
   gradient.addColorStop(1, '#0f3460'); // Deep blue
-  
+
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  
+
   // Add some subtle stars in the background
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
   for (let i = 0; i < 50; i++) {
@@ -101,7 +101,7 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
     ctx.arc(x, y, size, 0, 2 * Math.PI);
     ctx.fill();
   }
-  
+
   console.log('Canvas cleared and background drawn');
 }
 
@@ -110,59 +110,59 @@ function setupEventListeners(canvas: HTMLCanvasElement): void {
   canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
   canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
   canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
-  
+
   canvas.addEventListener('pointerdown', (e: PointerEvent) => {
     if (isDrawing) return;
-    
+
     canvas.setPointerCapture(e.pointerId);
     isDrawing = true;
     points = [];
-    
+
     const point: DrawingPoint = {
       x: e.clientX,
       y: e.clientY,
       t: e.timeStamp,
       pressure: e.pressure,
       width: e.width,
-      height: e.height
+      height: e.height,
     };
-    
+
     points.push(point);
-    
+
     // Start haptics and style
     hapticsConstantStart();
     styleManager.onStart(point, createStyleContext());
   });
-  
+
   canvas.addEventListener('pointermove', (e: PointerEvent) => {
     if (!isDrawing) return;
-    
+
     const point: DrawingPoint = {
       x: e.clientX,
       y: e.clientY,
       t: e.timeStamp,
       pressure: e.pressure,
       width: e.width,
-      height: e.height
+      height: e.height,
     };
-    
+
     points.push(point);
-    
+
     // Update haptics and style
     styleManager.onMove([point], createStyleContext());
   });
-  
+
   canvas.addEventListener('pointerup', (e: PointerEvent) => {
     if (!isDrawing) return;
-    
+
     isDrawing = false;
     canvas.releasePointerCapture(e.pointerId);
-    
+
     // End haptics and style
     styleManager.onEnd(createStyleContext());
     points = [];
   });
-  
+
   canvas.addEventListener('pointercancel', () => {
     if (isDrawing) {
       isDrawing = false;
@@ -181,7 +181,7 @@ function createStyleContext(): StyleContext {
     thicknessMultiplier,
     currentSizeLevel,
     sizeMultipliers,
-    isWebApp
+    isWebApp,
   };
 }
 
@@ -194,7 +194,7 @@ function setupUI(): void {
       updateStyleUI();
     });
   }
-  
+
   // Clear button
   const clearButton = document.getElementById('clear-button');
   if (clearButton) {
@@ -204,25 +204,25 @@ function setupUI(): void {
       styleManager.onClear(createStyleContext());
     });
   }
-  
+
   // Size controls
   const sizeUpButton = document.getElementById('size-up');
   const sizeDownButton = document.getElementById('size-down');
-  
+
   if (sizeUpButton) {
     sizeUpButton.addEventListener('click', () => {
       currentSizeLevel = Math.min(4, currentSizeLevel + 1);
       updateSizeUI();
     });
   }
-  
+
   if (sizeDownButton) {
     sizeDownButton.addEventListener('click', () => {
       currentSizeLevel = Math.max(0, currentSizeLevel - 1);
       updateSizeUI();
     });
   }
-  
+
   // Thickness slider
   const thicknessSlider = document.getElementById('thickness-slider') as HTMLInputElement;
   if (thicknessSlider) {
@@ -230,7 +230,7 @@ function setupUI(): void {
       thicknessMultiplier = parseFloat((e.target as HTMLInputElement).value);
     });
   }
-  
+
   // Eraser toggle
   const eraserButton = document.getElementById('eraser-button');
   if (eraserButton) {
@@ -240,7 +240,7 @@ function setupUI(): void {
       eraserButton.style.background = isEraserMode ? '#ff6b6b' : '#4ecdc4';
     });
   }
-  
+
   updateStyleUI();
   updateSizeUI();
 }
@@ -258,7 +258,7 @@ function updateSizeUI(): void {
   const sizeLabel = document.getElementById('size-label');
   if (sizeLabel) {
     const sizes = ['Tiny', 'Small', 'Medium', 'Large', 'Huge'];
-    sizeLabel.textContent = sizes[currentSizeLevel];
+    sizeLabel.textContent = sizes[currentSizeLevel] || '';
   }
 }
 

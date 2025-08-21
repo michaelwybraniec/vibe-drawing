@@ -30,7 +30,7 @@ let points: DrawingPoint[] = [];
 const styleManager = new StyleManager();
 
 // Animation frame for style animations
-let animationId: number | null = null;
+let _animationId: number | null = null;
 
 // Web vs Mobile detection
 const isWebApp = !('ontouchstart' in window) || window.navigator.maxTouchPoints === 0;
@@ -51,9 +51,24 @@ let thicknessMultiplier = 1.0; // Global thickness multiplier (0.5 to 3.0)
 let isEraserMode = false;
 
 // Style tracking variables
-let currentStyle = 1;
+let currentStyle = 1; // Default to style 1
 let isStyle2Active = false;
+let _flames: any[] = [];
 let lavaLines: any[] = [];
+
+// Style context function (unused but kept for future use)
+function _createStyleContext() {
+  const canvas = document.getElementById('app-canvas') as HTMLCanvasElement;
+  return {
+    ctx: ctx!,
+    canvas,
+    isEraserMode,
+    thicknessMultiplier,
+    currentSizeLevel,
+    sizeMultipliers,
+    isWebApp,
+  };
+}
 
 function calculateSizeMultiplier(width: number, height: number): number {
   const touchArea = Math.sqrt(width * height);
@@ -136,13 +151,18 @@ function getColorStyle1(_sizeMultiplier: number): string {
 }
 
 function getColorStyle2(_sizeMultiplier: number): string {
-  // Style 2: Random fire colors (red, orange, yellow, gold)
-  const fireHues = [0, 15, 30, 45, 60]; // Red, orange, yellow, gold
+  // Style 2: Use random parameters for fire colors
+  const baseHue = randomStyleParams.baseHue;
+  const baseSaturation = randomStyleParams.saturation;
+  const baseLightness = randomStyleParams.lightness;
+
+  // Fire colors with random variation
+  const fireHues = [baseHue, baseHue + 15, baseHue + 30, baseHue + 45]; // Based on random hue
   const randomIndex = Math.floor(Math.random() * fireHues.length);
-  const randomHue = fireHues[randomIndex] || 30; // Fallback to yellow
+  const randomHue = fireHues[randomIndex] || baseHue;
   const hue = randomHue + (Math.random() - 0.5) * 10; // Add some variation
-  const saturation = 85 + Math.random() * 15;
-  const lightness = 50 + Math.random() * 30;
+  const saturation = baseSaturation + Math.random() * 15;
+  const lightness = baseLightness + Math.random() * 30;
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
@@ -174,30 +194,30 @@ function drawStyle2(
 
   ctx.save();
 
-  // Create ultra-fine pen-like effect
-  const lineWidth = Math.max(touchWidth, touchHeight) * 0.15; // Ultra-thin line width
+  // Create size-sensitive pen-like effect (reduced intensity)
+  const lineWidth = Math.max(touchWidth, touchHeight) * 0.1 * sizeMultiplier; // Reduced from 0.15 to 0.1
   const sparkleIntensity = Math.sin(sparklePhase * Math.PI * 8) * 0.5 + 0.5; // 0 to 1, very fast oscillation
 
-  // Main continuous fire line - like a sharp pen
+  // Main continuous fire line - like a sharp pen (less intense)
   ctx.strokeStyle = getColorStyle2(sizeMultiplier);
-  ctx.lineWidth = lineWidth * (0.2 + sparkleIntensity * 0.1); // Ultra-thin line
+  ctx.lineWidth = lineWidth * (0.15 + sparkleIntensity * 0.08); // Reduced from 0.2 to 0.15
   ctx.lineCap = 'round';
-  ctx.globalAlpha = 0.95 + sparkleIntensity * 0.05;
+  ctx.globalAlpha = 0.85 + sparkleIntensity * 0.1; // Reduced from 0.95 to 0.85
 
-  // Draw continuous fire line - no breaks, smooth
-  const moveOffset = Math.sin(sparklePhase * Math.PI * 2) * 0.8; // Minimal movement
+  // Draw continuous fire line - no breaks, smooth (shorter)
+  const moveOffset = Math.sin(sparklePhase * Math.PI * 2) * 0.4; // Reduced from 0.8 to 0.4
   ctx.beginPath();
-  ctx.moveTo(x - lineWidth * 0.8, y + moveOffset);
-  ctx.lineTo(x + lineWidth * 0.8, y + moveOffset);
+  ctx.moveTo(x - lineWidth * 0.6, y + moveOffset); // Reduced from 0.8 to 0.6
+  ctx.lineTo(x + lineWidth * 0.6, y + moveOffset); // Reduced from 0.8 to 0.6
   ctx.stroke();
 
-  // Add ultra-dense sparkle dots for continuous effect
-  const numSparkles = 25; // Many more sparkles for density
+  // Add ultra-dense sparkle dots for continuous effect (fewer, smaller)
+  const numSparkles = 15; // Reduced from 25 to 15
   for (let i = 0; i < numSparkles; i++) {
-    const sparkleX = x - lineWidth * 0.7 + i * lineWidth * 0.056; // Very close spacing
-    const sparkleOffset = Math.sin((sparklePhase + i * 0.08) * Math.PI * 4) * 2; // Minimal movement
-    const sparkleSize = 0.4 + sparkleIntensity * 0.8; // Very small sparkles
-    const sparkleAlpha = 0.8 + sparkleIntensity * 0.2;
+    const sparkleX = x - lineWidth * 0.5 + i * lineWidth * 0.07; // Reduced from 0.7 to 0.5
+    const sparkleOffset = Math.sin((sparklePhase + i * 0.08) * Math.PI * 4) * 1; // Reduced from 2 to 1
+    const sparkleSize = (0.3 + sparkleIntensity * 0.6) * sizeMultiplier; // Reduced from 0.4 to 0.3
+    const sparkleAlpha = 0.7 + sparkleIntensity * 0.2; // Reduced from 0.8 to 0.7
 
     ctx.globalAlpha = sparkleAlpha;
     ctx.fillStyle = getColorStyle2(sizeMultiplier + 0.1);
@@ -208,17 +228,17 @@ function drawStyle2(
     ctx.fill();
   }
 
-  // Add minimal loop effect for extra density
-  const loopRadius = lineWidth * 0.15; // Very small radius
+  // Add minimal loop effect for extra density (smaller, fewer)
+  const loopRadius = lineWidth * 0.1; // Reduced from 0.15 to 0.1
   const loopSpeed = sparklePhase * Math.PI * 6; // Very fast loop
-  const numLoopSparkles = 12; // More loop sparkles
+  const numLoopSparkles = 8; // Reduced from 12 to 8
 
   for (let i = 0; i < numLoopSparkles; i++) {
     const angle = loopSpeed + (i * Math.PI * 2) / numLoopSparkles;
     const loopX = x + Math.cos(angle) * loopRadius;
     const loopY = y + Math.sin(angle) * loopRadius;
-    const loopSize = 0.2 + sparkleIntensity * 0.6; // Very small loop sparkles
-    const loopAlpha = 0.6 + sparkleIntensity * 0.2;
+    const loopSize = (0.15 + sparkleIntensity * 0.4) * sizeMultiplier; // Reduced from 0.2 to 0.15
+    const loopAlpha = 0.5 + sparkleIntensity * 0.2; // Reduced from 0.6 to 0.5
 
     ctx.globalAlpha = loopAlpha;
     ctx.fillStyle = getColorStyle2(sizeMultiplier + 0.2);
@@ -241,6 +261,618 @@ function drawFlameEffect(
 ): void {
   // Simple sparkle effect - just draw the sparkle line
   drawStyle2(ctx, x, y, sizeMultiplier, touchWidth, touchHeight);
+}
+
+// Global glitch trail for digital glitch effect
+let glitchTrail: Array<{
+  x: number;
+  y: number;
+  size: number;
+  timestamp: number;
+  glitchOffset: number;
+}> = [];
+let lastGlitchTime = 0;
+
+function drawGlitchEffect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  sizeMultiplier: number,
+  touchWidth: number,
+  touchHeight: number,
+): void {
+  // DIGITAL GLITCH EFFECT 💻🖥️
+  const time = Date.now();
+  const glitchSize = Math.max(touchWidth, touchHeight) * 0.25 * sizeMultiplier;
+
+  ctx.save();
+
+  // Glitch colors with digital effect
+  const glitchHues = [0, 120, 240]; // RGB primary colors
+  const randomHue = glitchHues[Math.floor(Math.random() * glitchHues.length)] || 0;
+  const hue = randomHue + (Math.random() - 0.5) * 20;
+
+  const glitchColor = `hsl(${hue}, 100%, 60%)`;
+  const glitchColor2 = `hsl(${hue + 120}, 100%, 60%)`; // Complementary color
+  const glitchColor3 = `hsl(${hue + 240}, 100%, 60%)`; // Triadic color
+
+  // Glitch timing and effects
+  const glitchPulse = Math.sin(time / 100) * 0.4 + 0.6;
+  const animatedSize = glitchSize * glitchPulse;
+
+  // Add glitch offset
+  const glitchOffset = Math.sin(time / 50) * 8; // Fast glitch movement
+  const glitchX = x + glitchOffset;
+  const glitchY = y + (Math.random() - 0.5) * 4;
+
+  // Add to glitch trail
+  if (time - lastGlitchTime > 30) {
+    glitchTrail.push({
+      x: glitchX,
+      y: glitchY,
+      size: animatedSize,
+      timestamp: time,
+      glitchOffset: glitchOffset,
+    });
+    lastGlitchTime = time;
+
+    // Keep only last 12 points for glitch trail
+    if (glitchTrail.length > 12) {
+      glitchTrail.shift();
+    }
+  }
+
+  // Draw glitch trail with digital artifacts
+  glitchTrail.forEach((point, _index) => {
+    const age = time - point.timestamp;
+    if (age < 600) {
+      // Shorter glitch trail
+      const fadeProgress = age / 600;
+      const alpha = (1 - fadeProgress) * 0.7;
+      const size = point.size * (1 - fadeProgress * 0.3);
+
+      // Random glitch color
+      const colors = [glitchColor, glitchColor2, glitchColor3];
+      const randomColor = colors[Math.floor(Math.random() * colors.length)] || glitchColor;
+
+      // Glitch rectangle instead of circle
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = randomColor;
+      ctx.fillRect(point.x - size / 2 + point.glitchOffset, point.y - size / 2, size, size);
+
+      // Add glitch scan lines
+      if (Math.random() < 0.3) {
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(point.x - size / 2, point.y - size / 4, size, 1);
+      }
+    }
+  });
+
+  // Draw main glitch point
+  const _mainGlitch = Math.sin(time / 30) * 0.5 + 0.5; // Fast glitch
+
+  // Primary glitch color
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = glitchColor;
+  ctx.fillRect(glitchX - animatedSize / 2, glitchY - animatedSize / 2, animatedSize, animatedSize);
+
+  // Glitch color shift
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = glitchColor2;
+  ctx.fillRect(
+    glitchX - animatedSize / 2 + 2,
+    glitchY - animatedSize / 2,
+    animatedSize / 3,
+    animatedSize,
+  );
+
+  // Glitch color shift 2
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = glitchColor3;
+  ctx.fillRect(
+    glitchX - animatedSize / 2 - 2,
+    glitchY - animatedSize / 2,
+    animatedSize / 3,
+    animatedSize,
+  );
+
+  // Add digital artifacts
+  if (Math.random() < 0.4) {
+    ctx.globalAlpha = 0.8;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(glitchX - animatedSize / 2, glitchY - animatedSize / 4, animatedSize, 2);
+  }
+
+  // Add glitch noise
+  if (Math.random() < 0.2) {
+    for (let i = 0; i < 5; i++) {
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#000000';
+      const noiseX = glitchX + (Math.random() - 0.5) * animatedSize;
+      const noiseY = glitchY + (Math.random() - 0.5) * animatedSize;
+      ctx.fillRect(noiseX, noiseY, 2, 2);
+    }
+  }
+
+  // Clean up old glitch trail
+  glitchTrail = glitchTrail.filter((point) => time - point.timestamp < 800);
+
+  ctx.restore();
+}
+
+// Simple fire trail for performance
+let fireTrail: Array<{ x: number; y: number; size: number; color: string; timestamp: number }> = [];
+let lastFireTime = 0;
+
+function drawFireEffect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  sizeMultiplier: number,
+  touchWidth: number,
+  touchHeight: number,
+): void {
+  // BLINKING LAVA EFFECT 🔥🌋
+  const time = Date.now();
+  const lavaSize = Math.max(touchWidth, touchHeight) * 0.2 * sizeMultiplier;
+
+  ctx.save();
+
+  // Lava colors with blinking effect
+  const lavaHues = [0, 15, 30]; // Red to orange
+  const randomHue = lavaHues[Math.floor(Math.random() * lavaHues.length)] || 15;
+  const hue = randomHue + (Math.random() - 0.5) * 10;
+
+  // Create blinking effect with multiple frequencies
+  const blink1 = Math.sin(time / 150) * 0.5 + 0.5; // Fast blink
+  const blink2 = Math.sin(time / 300) * 0.3 + 0.7; // Medium blink
+  const blink3 = Math.sin(time / 600) * 0.2 + 0.8; // Slow blink
+  const combinedBlink = (blink1 + blink2 + blink3) / 3;
+
+  // Lava colors that blink
+  const lavaColor = `hsl(${hue}, 100%, ${50 + combinedBlink * 30}%)`; // Brightness blinks
+  const coreColor = `hsl(${hue + 5}, 100%, ${70 + combinedBlink * 20}%)`;
+  const glowColor = `hsl(${hue + 10}, 100%, ${40 + combinedBlink * 40}%)`;
+
+  // Lava movement with blinking
+  const lavaPulse = Math.sin(time / 100) * 0.3 + 0.7;
+  const animatedSize = lavaSize * lavaPulse * combinedBlink;
+
+  // Add to trail every 50ms for smoother lava
+  if (time - lastFireTime > 50) {
+    fireTrail.push({
+      x,
+      y,
+      size: animatedSize,
+      color: lavaColor,
+      timestamp: time,
+    });
+    lastFireTime = time;
+
+    // Keep only last 10 points for lava trail
+    if (fireTrail.length > 10) {
+      fireTrail.shift();
+    }
+  }
+
+  // Draw lava core with blinking
+  ctx.globalAlpha = 0.9 * combinedBlink;
+  ctx.fillStyle = coreColor;
+  ctx.beginPath();
+  ctx.arc(x, y, animatedSize * 0.5, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Draw main lava body with blinking
+  ctx.globalAlpha = 0.8 * combinedBlink;
+  ctx.fillStyle = lavaColor;
+  ctx.beginPath();
+  ctx.arc(x, y, animatedSize, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Draw blinking lava trail
+  fireTrail.slice(-6).forEach((point, _index) => {
+    const age = time - point.timestamp;
+    if (age < 600) {
+      // Longer trail for lava
+      const fadeProgress = age / 600;
+      const alpha = (1 - fadeProgress) * combinedBlink * 0.6;
+      const size = point.size * (1 - fadeProgress * 0.3);
+
+      // Add blinking to trail points
+      const trailBlink = Math.sin((time - point.timestamp) / 100) * 0.3 + 0.7;
+
+      ctx.globalAlpha = alpha * trailBlink;
+      ctx.fillStyle = point.color;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, size, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  });
+
+  // Add blinking lava glow
+  ctx.globalAlpha = 0.3 * combinedBlink;
+  ctx.fillStyle = glowColor;
+  ctx.beginPath();
+  ctx.arc(x, y, animatedSize * 2.5, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Add occasional lava sparkles
+  if (Math.random() < 0.2) {
+    ctx.globalAlpha = 0.7 * combinedBlink;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(
+      x + (Math.random() - 0.5) * lavaSize,
+      y + (Math.random() - 0.5) * lavaSize,
+      2,
+      0,
+      2 * Math.PI,
+    );
+    ctx.fill();
+  }
+
+  // Clean up old trail points
+  fireTrail = fireTrail.filter((point) => time - point.timestamp < 800);
+
+  ctx.restore();
+}
+
+// Global chalk trail for dusty chalk effect
+let chalkTrail: Array<{ x: number; y: number; size: number; timestamp: number; pressure: number }> =
+  [];
+let lastChalkTime = 0;
+
+function drawWaterEffect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  sizeMultiplier: number,
+  touchWidth: number,
+  touchHeight: number,
+): void {
+  // DUSTY CHALK PEN ✏️🖍️
+  const time = Date.now();
+  const chalkSize = Math.max(touchWidth, touchHeight) * 0.2 * sizeMultiplier;
+
+  ctx.save();
+
+  // Chalk colors with dusty effect - responsive to randomizer and line variation
+  // Use randomizer parameters for color variation
+  const baseHue = randomStyleParams.baseHue;
+  const baseSaturation = randomStyleParams.saturation;
+  const baseLightness = randomStyleParams.lightness;
+  // Add line-based color variation for rainbow effect within each line
+  const lineColorOffset = Math.sin(time / 500) * 60; // Rainbow effect over time
+  const hue = baseHue + lineColorOffset + (Math.random() - 0.5) * 30; // Line color + random variation
+  const saturation = baseSaturation + (Math.random() - 0.5) * 20;
+  const lightness = baseLightness + (Math.random() - 0.5) * 15;
+
+  const chalkColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Randomizer-controlled chalk
+  const dustColor = `hsl(${hue}, ${saturation * 0.7}%, ${lightness + 5}%)`; // Lighter dust
+  const shadowColor = `hsl(${hue}, ${saturation * 0.8}%, ${lightness - 10}%)`; // Darker shadow
+
+  // Add to chalk trail with pressure variation - more sensitive to size
+  if (time - lastChalkTime > 20) {
+    const pressure = Math.random() * 0.5 + 0.5; // Random pressure
+    const sizeVariation = 0.4 + Math.random() * 1.2; // 40% to 160% size
+    // Very minimal size sensitivity for chalk
+    const enhancedSizeMultiplier =
+      sizeMultiplier * (1 + currentSizeLevel * 0.02) * thicknessMultiplier;
+    const variedSize = chalkSize * sizeVariation * pressure * enhancedSizeMultiplier;
+
+    // Add irregular chalk dust spread
+    const dustSpreadX = (Math.random() - 0.5) * 20; // Much wider X spread
+    const dustSpreadY = (Math.random() - 0.5) * 16; // Much wider Y spread
+    const dustX = x + dustSpreadX;
+    const dustY = y + dustSpreadY;
+
+    chalkTrail.push({
+      x: dustX,
+      y: dustY,
+      size: variedSize,
+      timestamp: time,
+      pressure: pressure,
+    });
+    lastChalkTime = time;
+
+    // Keep only last 20 points for dusty trail
+    if (chalkTrail.length > 20) {
+      chalkTrail.shift();
+    }
+  }
+
+  // Draw chalk dust trail
+  chalkTrail.forEach((point) => {
+    const age = time - point.timestamp;
+    if (age < 1500) {
+      // Longer dust trail
+      const fadeProgress = age / 1500;
+      const alpha = (1 - fadeProgress) * point.pressure * 0.6;
+      const size = point.size * (1 - fadeProgress * 0.3); // Dust doesn't shrink much
+
+      // Draw chalk dust particles
+      ctx.globalAlpha = alpha * 0.4;
+      ctx.fillStyle = dustColor;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, size * 1.5, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Draw main chalk mark
+      ctx.globalAlpha = alpha * 0.8;
+      ctx.fillStyle = chalkColor;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, size, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Draw chalk shadow
+      ctx.globalAlpha = alpha * 0.3;
+      ctx.fillStyle = shadowColor;
+      ctx.beginPath();
+      ctx.arc(point.x + 1, point.y + 1, size * 0.8, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  });
+
+  // Draw current chalk mark - reduced size sensitivity
+  const chalkPulse = Math.sin(time / 100) * 0.3 + 0.7;
+  // Very minimal size sensitivity for current mark
+  const enhancedCurrentSize =
+    chalkSize * chalkPulse * sizeMultiplier * (1 + currentSizeLevel * 0.02) * thicknessMultiplier;
+  const animatedSize = enhancedCurrentSize;
+
+  // Chalk shadow
+  ctx.globalAlpha = 0.4;
+  ctx.fillStyle = shadowColor;
+  ctx.beginPath();
+  ctx.arc(x + 2, y + 2, animatedSize * 0.7, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Main chalk mark
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = chalkColor;
+  ctx.beginPath();
+  ctx.arc(x, y, animatedSize, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Irregular chalk dust particles
+  if (Math.random() < 0.6) {
+    // More frequent particles
+    const particleCount = Math.floor(Math.random() * 8) + 3; // More particles
+    for (let i = 0; i < particleCount; i++) {
+      ctx.globalAlpha = 0.6;
+      ctx.fillStyle = dustColor;
+      const particleX = x + (Math.random() - 0.5) * chalkSize * 5; // Wider spread
+      const particleY = y + (Math.random() - 0.5) * chalkSize * 4; // Wider spread
+      const particleSize = Math.random() * 5 + 1; // Larger size variation
+      ctx.beginPath();
+      ctx.arc(particleX, particleY, particleSize, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  }
+
+  // Clean up old chalk trail
+  chalkTrail = chalkTrail.filter((point) => time - point.timestamp < 2000);
+
+  ctx.restore();
+}
+
+// Global epic cosmic storm system
+let cosmicParticles: Array<{
+  x: number;
+  y: number;
+  size: number;
+  velocityX: number;
+  velocityY: number;
+  color: string;
+  type: 'star' | 'nebula' | 'comet' | 'blackhole';
+  timestamp: number;
+  life: number;
+}> = [];
+let lastEpicTime = 0;
+
+function drawEpicEffect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  sizeMultiplier: number,
+  touchWidth: number,
+  touchHeight: number,
+): void {
+  // EPIC COSMIC STORM 🌌✨🚀
+  const time = Date.now();
+  const cosmicSize = Math.max(touchWidth, touchHeight) * 0.4 * sizeMultiplier;
+
+  ctx.save();
+
+  // Cosmic colors with epic variation
+  const cosmicHues = [0, 60, 120, 180, 240, 300]; // Rainbow cosmic colors
+  const randomHue = cosmicHues[Math.floor(Math.random() * cosmicHues.length)] || 0;
+  const hue = randomHue + (Math.random() - 0.5) * 30;
+
+  const cosmicColor = `hsl(${hue}, 100%, 70%)`;
+  const nebulaColor = `hsl(${hue + 30}, 80%, 60%)`;
+  const starColor = `hsl(${hue + 60}, 90%, 90%)`;
+  const blackholeColor = `hsl(${hue - 30}, 100%, 20%)`;
+
+  // Add cosmic particles
+  if (time - lastEpicTime > 15) {
+    const particleTypes = ['star', 'nebula', 'comet', 'blackhole'];
+    const randomType = particleTypes[Math.floor(Math.random() * particleTypes.length)] as any;
+
+    const velocityX = (Math.random() - 0.5) * 8;
+    const velocityY = (Math.random() - 0.5) * 6;
+    const particleSize = cosmicSize * (0.3 + Math.random() * 1.5);
+
+    cosmicParticles.push({
+      x,
+      y,
+      size: particleSize,
+      velocityX,
+      velocityY,
+      color:
+        randomType === 'star'
+          ? starColor
+          : randomType === 'nebula'
+            ? nebulaColor
+            : randomType === 'comet'
+              ? cosmicColor
+              : blackholeColor,
+      type: randomType,
+      timestamp: time,
+      life: 1.0,
+    });
+    lastEpicTime = time;
+
+    // Keep only last 30 cosmic particles
+    if (cosmicParticles.length > 30) {
+      cosmicParticles.shift();
+    }
+  }
+
+  // Update and draw cosmic particles
+  cosmicParticles.forEach((particle) => {
+    // Update particle physics
+    particle.velocityX *= 0.98;
+    particle.velocityY *= 0.98;
+    particle.x += particle.velocityX;
+    particle.y += particle.velocityY;
+    particle.life -= 0.02;
+
+    if (particle.life <= 0) return;
+
+    const alpha = particle.life;
+    const size = particle.size * particle.life;
+
+    ctx.globalAlpha = alpha;
+
+    switch (particle.type) {
+      case 'star': {
+        // Draw twinkling star
+        const twinkle = Math.sin(time / 100 + particle.timestamp) * 0.3 + 0.7;
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size * twinkle, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Star rays
+        ctx.strokeStyle = particle.color;
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 4; i++) {
+          const angle = (i * Math.PI) / 2 + time / 1000;
+          const rayLength = size * 2;
+          ctx.beginPath();
+          ctx.moveTo(particle.x, particle.y);
+          ctx.lineTo(
+            particle.x + Math.cos(angle) * rayLength,
+            particle.y + Math.sin(angle) * rayLength,
+          );
+          ctx.stroke();
+        }
+        break;
+      }
+
+      case 'nebula':
+        // Draw colorful nebula
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size * 2, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Nebula glow
+        ctx.globalAlpha = alpha * 0.5;
+        ctx.fillStyle = nebulaColor;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size * 3, 0, 2 * Math.PI);
+        ctx.fill();
+        break;
+
+      case 'comet': {
+        // Draw comet with tail
+        ctx.fillStyle = particle.color;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Comet tail
+        const tailLength = size * 4;
+        const tailAngle = Math.atan2(particle.velocityY, particle.velocityX);
+        ctx.strokeStyle = particle.color;
+        ctx.lineWidth = size / 2;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(particle.x, particle.y);
+        ctx.lineTo(
+          particle.x - Math.cos(tailAngle) * tailLength,
+          particle.y - Math.sin(tailAngle) * tailLength,
+        );
+        ctx.stroke();
+        break;
+      }
+
+      case 'blackhole': {
+        // Draw black hole with gravitational effect
+        ctx.fillStyle = blackholeColor;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Gravitational ring
+        ctx.globalAlpha = alpha * 0.7;
+        ctx.strokeStyle = cosmicColor;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size * 1.5, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // Inner ring
+        ctx.globalAlpha = alpha * 0.4;
+        ctx.beginPath();
+        ctx.arc(particle.x, particle.y, size * 0.8, 0, 2 * Math.PI);
+        ctx.stroke();
+        break;
+      }
+    }
+  });
+
+  // Draw epic cosmic core
+  const cosmicPulse = Math.sin(time / 150) * 0.4 + 0.6;
+  const animatedSize = cosmicSize * cosmicPulse;
+
+  // Cosmic glow
+  ctx.globalAlpha = 0.3;
+  ctx.fillStyle = cosmicColor;
+  ctx.beginPath();
+  ctx.arc(x, y, animatedSize * 4, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Main cosmic core
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = starColor;
+  ctx.beginPath();
+  ctx.arc(x, y, animatedSize, 0, 2 * Math.PI);
+  ctx.fill();
+
+  // Cosmic explosion effect
+  if (Math.random() < 0.1) {
+    const explosionRadius = animatedSize * 3;
+    for (let i = 0; i < 12; i++) {
+      const angle = (i * Math.PI * 2) / 12;
+      const explosionX = x + Math.cos(angle) * explosionRadius;
+      const explosionY = y + Math.sin(angle) * explosionRadius;
+
+      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = cosmicColor;
+      ctx.beginPath();
+      ctx.arc(explosionX, explosionY, 4, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+  }
+
+  // Clean up dead particles
+  cosmicParticles = cosmicParticles.filter((particle) => particle.life > 0);
+
+  ctx.restore();
 }
 
 function drawLavaEffect(
@@ -417,11 +1049,25 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
     return;
   }
 
-  // Clear any ongoing animations
-  if (animationId) {
-    cancelAnimationFrame(animationId);
-    animationId = null;
+  // Clear flame animation system
+  _flames = [];
+  if (_animationId) {
+    cancelAnimationFrame(_animationId);
+    _animationId = null;
   }
+
+  // Clear neon trail
+  // Clear glitch trail
+  glitchTrail = [];
+
+  // Clear fire trail
+  fireTrail = [];
+
+  // Clear chalk trail
+  chalkTrail = [];
+
+  // Clear cosmic particles
+  cosmicParticles = [];
 
   console.log('Clearing canvas, size:', canvas.width, 'x', canvas.height);
 
@@ -546,11 +1192,37 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
       const touchHeight = adjustedHeight * downMultiplier * mobileMultiplier;
       const maxSize = Math.max(touchWidth, touchHeight);
 
-      if (currentStyle === 2) {
-        // Style 2: Draw initial flame
-        drawFlameEffect(ctx, x, y, downMultiplier, touchWidth, touchHeight);
+      const currentStyleIndex = styleManager.getCurrentStyleIndex();
+      if (currentStyleIndex === 1) {
+        // Style 2 (Lava)
+        // Style 2: Draw initial flame with enhanced size sensitivity
+        const baseSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+        const enhancedSizeMultiplier =
+          baseSizeMultiplier * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
+        drawFlameEffect(ctx, x, y, enhancedSizeMultiplier, touchWidth, touchHeight);
+      } else if (currentStyleIndex === 2) {
+        // Style 3 (Glitch)
+        // Style 3: GLITCH EFFECT
+        const glitchSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+        drawGlitchEffect(ctx, x, y, glitchSizeMultiplier, touchWidth, touchHeight);
+      } else if (currentStyleIndex === 3) {
+        // Style 4 (Fire)
+        // Style 4: EPIC FIRE EFFECT
+        const fireSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+        drawFireEffect(ctx, x, y, fireSizeMultiplier, touchWidth, touchHeight);
+      } else if (currentStyleIndex === 4) {
+        // Style 5 (Water)
+        // Style 5: WATER SHAPE STYLO
+        const waterSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+        drawWaterEffect(ctx, x, y, waterSizeMultiplier, touchWidth, touchHeight);
+      } else if (currentStyleIndex === 5) {
+        // Style 6 (Epic)
+        // Style 6: EPIC COSMIC STORM
+        const epicSizeMultiplier =
+          calculateSizeMultiplier(touchWidth, touchHeight) * (1 + currentSizeLevel * 0.01);
+        drawEpicEffect(ctx, x, y, epicSizeMultiplier, touchWidth, touchHeight);
       } else {
-        // Style 1 & 3: Regular smooth dot
+        // Style 1 & other styles: Regular smooth dot
         ctx.save();
 
         ctx.globalAlpha = 0.8;
@@ -716,11 +1388,37 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
       const dotX = last.x + (x - last.x) * t;
       const dotY = last.y + (y - last.y) * t;
 
-      if (currentStyle === 2) {
-        // Style 2: Draw animated flames on every point for no gaps
-        drawFlameEffect(ctx, dotX, dotY, moveMultiplier, touchWidth, touchHeight);
+      const currentStyleIndex = styleManager.getCurrentStyleIndex();
+      if (currentStyleIndex === 1) {
+        // Style 2 (Lava)
+        // Style 2: Draw animated flames on every point for no gaps with enhanced size sensitivity
+        const baseSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+        const enhancedSizeMultiplier =
+          baseSizeMultiplier * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
+        drawFlameEffect(ctx, dotX, dotY, enhancedSizeMultiplier, touchWidth, touchHeight);
+      } else if (currentStyleIndex === 2) {
+        // Style 3 (Glitch)
+        // Style 3: GLITCH EFFECT
+        const glitchSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+        drawGlitchEffect(ctx, dotX, dotY, glitchSizeMultiplier, touchWidth, touchHeight);
+      } else if (currentStyleIndex === 3) {
+        // Style 4 (Fire)
+        // Style 4: EPIC FIRE EFFECT
+        const fireSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+        drawFireEffect(ctx, dotX, dotY, fireSizeMultiplier, touchWidth, touchHeight);
+      } else if (currentStyleIndex === 4) {
+        // Style 5 (Water)
+        // Style 5: WATER SHAPE STYLO
+        const waterSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
+        drawWaterEffect(ctx, dotX, dotY, waterSizeMultiplier, touchWidth, touchHeight);
+      } else if (currentStyleIndex === 5) {
+        // Style 6 (Epic)
+        // Style 6: EPIC COSMIC STORM
+        const epicSizeMultiplier =
+          calculateSizeMultiplier(touchWidth, touchHeight) * (1 + currentSizeLevel * 0.01);
+        drawEpicEffect(ctx, dotX, dotY, epicSizeMultiplier, touchWidth, touchHeight);
       } else {
-        // Style 1 & 3: Regular smooth dots or eraser
+        // Style 1 & other styles: Regular smooth dots or eraser
         // Use the same size calculation for both drawing and erasing
         // Enhanced size transitions for Apple Pencil
         let sizeVariation;
@@ -962,7 +1660,7 @@ let randomStyleParams = {
   sizeMultiplier: 1.0,
 };
 
-function _generateRandomStyle1Parameters(): void {
+function generateRandomStyle1Parameters(): void {
   // Generate aggressive, vibrant pen styles with high contrast and intensity
   const hue = Math.floor(Math.random() * 360); // Full color spectrum
 
@@ -1083,75 +1781,78 @@ function init(): void {
     playSplashSound();
   }, 200);
 
-  // Style switch button functionality
+  // Style selector button functionality (NEW FEATURE: Switch styles)
+  const styleSelectorButton = document.getElementById('style-selector');
+  if (styleSelectorButton) {
+    const styleSelectorHandler = () => {
+      // Switch to next drawing style
+      styleManager.nextStyle();
+      const newStyle = styleManager.getCurrentStyle();
+
+      // Update button icon to show current style
+      styleSelectorButton.textContent = newStyle.icon;
+
+      // Set consistent white color for numbers
+      styleSelectorButton.style.color = 'white';
+
+      console.log(`🎨 Switched to ${newStyle.name} style: ${newStyle.description}`);
+      console.log(`🎯 Style index: ${styleManager.getCurrentStyleIndex()}`);
+      styleSelectorButton.title = `Current: ${newStyle.name}\nTap to switch drawing style`;
+    };
+
+    // Add event listeners
+    styleSelectorButton.addEventListener('click', styleSelectorHandler);
+    styleSelectorButton.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      styleSelectorHandler();
+    });
+    styleSelectorButton.addEventListener('touchend', (e) => {
+      e.preventDefault();
+    });
+
+    // Initialize with current style
+    const currentStyle = styleManager.getCurrentStyle();
+    styleSelectorButton.textContent = currentStyle.icon;
+    styleSelectorButton.style.color = 'white';
+    styleSelectorButton.title = `Current: ${currentStyle.name}\nTap to switch drawing style`;
+  }
+
+  // Style switch button functionality (OLD FEATURE: Randomize current style)
   const styleSwitchButton = document.getElementById('style-switch');
   if (styleSwitchButton) {
     const styleSwitchHandler = () => {
-      // Randomize current style parameters for unexpected variations
-      _generateRandomStyle1Parameters();
+      // Generate new random style parameters ONLY - no drawing
+      generateRandomStyle1Parameters();
 
       // Change to a random size (0-4 for 5 sizes)
       currentSizeLevel = Math.floor(Math.random() * 5);
 
-      // Update button icon to show current style
-      const currentStyle = styleManager.getCurrentStyle();
-      styleSwitchButton.textContent = currentStyle.icon;
-      
       // Generate random color for the button
       const randomHue = Math.floor(Math.random() * 360);
       styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
 
+      // No animation needed
+
       const sizeNames = ['tiny', 'small', 'medium', 'large', 'huge'];
-      console.log(`🎨 Randomized ${currentStyle.name} style and changed to ${sizeNames[currentSizeLevel]} size!`);
+      console.log(`Generated new random style and changed to ${sizeNames[currentSizeLevel]} size!`);
 
       // Don't clear canvas - preserve existing drawing
     };
 
     // Add multiple event listeners for better mobile responsiveness
-    let lastTapTime = 0;
-    const doubleTapDelay = 300; // milliseconds
-    
-    const handleStyleInteraction = (e: Event) => {
-      e.preventDefault();
-      const currentTime = new Date().getTime();
-      const timeDiff = currentTime - lastTapTime;
-      
-      if (timeDiff < doubleTapDelay) {
-        // Double tap - switch to next drawing style
-        styleManager.nextStyle();
-        const newStyle = styleManager.getCurrentStyle();
-        styleSwitchButton.textContent = newStyle.icon;
-        
-        // Also randomize the new style
-        _generateRandomStyle1Parameters();
-        currentSizeLevel = Math.floor(Math.random() * 5);
-        
-        // Update title
-        styleSwitchButton.title = `Current: ${newStyle.name}\nSingle tap: Randomize settings\nDouble tap: Switch style`;
-        
-        console.log(`🎨 Switched to ${newStyle.name} style and randomized settings!`);
-      } else {
-        // Single tap - randomize current style
-        styleSwitchHandler();
-      }
-      
-      lastTapTime = currentTime;
-    };
-    
-    styleSwitchButton.addEventListener('click', handleStyleInteraction);
-    styleSwitchButton.addEventListener('touchstart', handleStyleInteraction);
+    styleSwitchButton.addEventListener('click', styleSwitchHandler);
+    styleSwitchButton.addEventListener('touchstart', (e) => {
+      e.preventDefault(); // Prevent default touch behavior
+      styleSwitchHandler();
+    });
     styleSwitchButton.addEventListener('touchend', (e) => {
       e.preventDefault(); // Prevent default touch behavior
     });
 
-    // Initialize with current style icon and color
-    const currentStyle = styleManager.getCurrentStyle();
-    styleSwitchButton.textContent = currentStyle.icon;
+    // Initialize with random parameters and button color
+    generateRandomStyle1Parameters();
     const randomHue = Math.floor(Math.random() * 360);
     styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
-    
-    // Add title for user guidance
-    styleSwitchButton.title = `Current: ${currentStyle.name}\nSingle tap: Randomize settings\nDouble tap: Switch style`;
   }
 
   // Thickness slider functionality

@@ -102,7 +102,7 @@
       <canvas id="app-canvas"></canvas>
 
       <div class="tools-container">
-        <div class="left-controls">
+        <!-- <div class="tool-group">
           <div class="control-group">
             <span class="control-label">📳</span>
             <input
@@ -116,10 +116,20 @@
               aria-label="Vibration intensity"
             />
           </div>
+          <div class="tool-label">Haptic</div>
+        </div> -->
+
+        <div class="tool-group">
+          <button id="style-switch" class="tool-button">🌀</button>
+          <div class="tool-label">Randomize</div>
         </div>
-        <button id="style-switch" class="tool-button">🌀</button>
-        <div class="tools">
-          <!-- <div id="thickness-value" class="thickness-value">1.0</div> -->
+
+        <div class="tool-group">
+          <button id="style-selector" class="tool-button">1</button>
+          <div class="tool-label">Style</div>
+        </div>
+
+        <div class="tool-group">
           <input
             type="range"
             id="thickness-slider"
@@ -129,9 +139,18 @@
             value="1.0"
             class="thickness-slider"
           />
+          <div class="tool-label">Size</div>
         </div>
-        <button id="eraser" class="tool-button">🧽</button>
-        <button id="clear-canvas" class="clear-button">🗑️</button>
+
+        <div class="tool-group">
+          <button id="eraser" class="tool-button">🧽</button>
+          <div class="tool-label">Erase</div>
+        </div>
+
+        <div class="tool-group">
+          <button id="clear-canvas" class="clear-button">🗑️</button>
+          <div class="tool-label">Clear</div>
+        </div>
       </div>
 
       <div class="style-buttons-container" style="display: none">

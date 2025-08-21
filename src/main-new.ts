@@ -266,7 +266,7 @@ function updateSizeUI(): void {
 function startAnimation(): void {
   function animate() {
     styleManager.animate(createStyleContext());
-    animationId = requestAnimationFrame(animate);
+    _animationId = requestAnimationFrame(animate);
   }
   animate();
 }

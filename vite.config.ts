@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/vibe-drawing/',
+  base: process.env.CAPACITOR ? '/' : '/vibe-drawing/',
   server: {
     port: 5555,
     host: true,

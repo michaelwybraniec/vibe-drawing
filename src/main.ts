@@ -1306,15 +1306,14 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
 
         // Paint main ellipse with pulsing effect and HD quality (same for drawing and erasing)
         const pulseScale = 1 + Math.sin(Date.now() / 200) * 0.1; // Gentle pulsing
-        const eraserMultiplier = isEraserMode ? 3.0 : 1.0; // Make eraser 3x bigger
-        const radiusX = (touchWidth / 2) * pulseScale * eraserMultiplier;
-        const radiusY = (touchHeight / 2) * pulseScale * eraserMultiplier;
+        const radiusX = (touchWidth / 2) * pulseScale;
+        const radiusY = (touchHeight / 2) * pulseScale;
 
         // Set eraser mode or drawing mode
         if (isEraserMode) {
-          // Eraser: use destination-out to erase
-          ctx.globalCompositeOperation = 'destination-out';
-          ctx.fillStyle = 'rgba(0, 0, 0, 1)'; // Fully opaque black for erasing
+          // Eraser: draw with background color to "erase"
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.fillStyle = '#151E35'; // Dark blue background color to cover drawn content
         } else {
           // Normal drawing mode
           ctx.globalCompositeOperation = 'source-over';
@@ -1323,11 +1322,11 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
 
         // Create radial gradient for HD quality
         if (isEraserMode) {
-          // For eraser, use a simple black gradient
+          // For eraser, use background color gradient
           const gradient = ctx.createRadialGradient(x, y, 0, x, y, Math.max(radiusX, radiusY));
-          gradient.addColorStop(0, 'rgba(0, 0, 0, 1)');
-          gradient.addColorStop(0.7, 'rgba(0, 0, 0, 0.8)');
-          gradient.addColorStop(1, 'rgba(0, 0, 0, 0.6)');
+          gradient.addColorStop(0, '#151E35');
+          gradient.addColorStop(0.7, '#151E35');
+          gradient.addColorStop(1, '#151E35');
           ctx.fillStyle = gradient;
         } else {
           // For drawing, use the normal color gradient
@@ -1351,8 +1350,8 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
 
         ctx.restore();
 
-        // Add sparkle effect for larger touches
-        if (maxSize > 20) {
+        // Add sparkle effect for larger touches (only when not erasing)
+        if (maxSize > 20 && !isEraserMode) {
           addSparkleEffect(ctx, x, y, maxSize);
         }
       }
@@ -1511,9 +1510,9 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
 
         // Set eraser mode or drawing mode
         if (isEraserMode) {
-          // Eraser: draw with dark blue background color
+          // Eraser: draw with background color to "erase"
           ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = '#151E35'; // Dark blue background color
+          ctx.fillStyle = '#151E35'; // Dark blue background color to cover drawn content
         } else {
           // Normal drawing mode
           ctx.globalCompositeOperation = 'source-over';
@@ -1534,8 +1533,8 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
         );
         ctx.fill();
 
-        // Enhanced sparkle effects for Apple Pencil
-        if (Math.max(touchWidth, touchHeight) > 15) {
+        // Enhanced sparkle effects for Apple Pencil (only when not erasing)
+        if (Math.max(touchWidth, touchHeight) > 15 && !isEraserMode) {
           let sparkleChance;
           if (isPencil) {
             // Apple Pencil gets more sparkles for enhanced effect

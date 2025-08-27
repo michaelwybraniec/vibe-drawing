@@ -15,7 +15,7 @@ let HapticsBasic: any | null = null;
 })();
 
 let timerId: number | null = null;
-let tickMs = 70;
+let tickMs = 150; // Increased interval to reduce haptic spam
 let durMs = 22;
 let usingAudio = false;
 let usingNativeHaptics = false;
@@ -60,38 +60,35 @@ function speedToStyle(speed?: number, pressure?: number): 'light' | 'medium' | '
 }
 
 function tick() {
-  console.log(
-    `Haptic tick - platform: ${platform}, usingNativeHaptics: ${usingNativeHaptics}, HapticsBasic: ${!!HapticsBasic}`,
-  );
+  // Reduced logging for performance
 
   // Try native haptics first for better pressure control
   if (platform !== 'web' && !usingNativeHaptics) {
     try {
       NativeHaptics.update({ intensity: currentIntensity });
-      console.log(`Native haptics update: ${currentIntensity}`);
+      // Native haptics updated
       return;
-    } catch (e) {
-      console.log(`Native haptics failed: ${e}`);
+    } catch {
+      // Native haptics failed, falling back
       // Fall back to basic haptics
     }
   }
 
   if (HapticsBasic) {
     if (platform === 'ios') {
-      console.log(`iOS haptic impact: ${iosStyle}`);
+      // iOS haptic impact
       HapticsBasic.impact({ style: iosStyle }).catch((e: any) =>
         console.log(`iOS haptic failed: ${e}`),
       );
     } else if (platform === 'android') {
-      console.log(`Android vibrate: ${durMs}ms`);
+      // Android vibrate
       HapticsBasic.vibrate({ duration: durMs }).catch((e: any) =>
         console.log(`Android haptic failed: ${e}`),
       );
     } else if (supportsVibration()) {
-      console.log(`Web vibrate: ${durMs}ms`);
       navigator.vibrate(durMs);
     } else {
-      console.log(`Audio fallback: ${durMs / 40}`);
+      // Audio fallback
       if (!usingAudio) {
         usingAudio = true;
         audioStart(0.4);
@@ -103,10 +100,9 @@ function tick() {
   }
   // No Haptics plugin → web/audio fallback
   if (supportsVibration()) {
-    console.log(`Fallback web vibrate: ${durMs}ms`);
     navigator.vibrate(durMs);
   } else {
-    console.log(`Fallback audio: ${durMs / 40}`);
+          // Fallback audio
     if (!usingAudio) {
       usingAudio = true;
       audioStart(0.4);
@@ -130,21 +126,19 @@ export function hapticsConstantStart(): void {
   // Try native haptics first for continuous pressure-based feedback
   if (platform !== 'web') {
     try {
-      console.log(`Starting native haptics with intensity: ${currentIntensity}`);
       NativeHaptics.start({ intensity: currentIntensity });
       usingNativeHaptics = true;
       isHapticsRunning = true;
-      console.log(`Native haptics started successfully`);
       return;
-    } catch (e) {
-      console.log(`Native haptics start failed: ${e}`);
+    } catch {
+      // Native haptics start failed, falling back
       // Fall back to discrete haptics
     }
   }
 
   // optional pre-tap
   if (HapticsBasic && platform === 'ios') {
-    console.log(`iOS pre-tap`);
+    // iOS pre-tap
     HapticsBasic.impact({ style: 'medium' }).catch((e: any) =>
       console.log(`iOS pre-tap failed: ${e}`),
     );
@@ -152,7 +146,7 @@ export function hapticsConstantStart(): void {
   tick();
   timerId = window.setInterval(tick, tickMs);
   isHapticsRunning = true;
-  console.log(`Started haptic timer with interval: ${tickMs}ms`);
+  // Started haptic timer
 }
 
 export function hapticsUpdate(speed?: number, pressure?: number): void {
@@ -162,23 +156,16 @@ export function hapticsUpdate(speed?: number, pressure?: number): void {
   const intensityChanged = Math.abs(currentIntensity - newIntensity) > 0.05; // Only update if significant change
   currentIntensity = newIntensity;
 
-  // Debug log occasionally if debug mode is enabled
-  if (getFlag('debug') && Math.random() < 0.05) {
-    console.log(
-      `hapticsUpdate - speed: ${speed?.toFixed(3)}, pressure: ${pressure?.toFixed(3)}, intensity: ${newIntensity.toFixed(3)}`,
-    );
-  }
+  // Debug logging removed for performance
 
   // Update native haptics if using continuous mode and intensity changed significantly
   if (usingNativeHaptics && intensityChanged) {
     try {
       NativeHaptics.update({ intensity: currentIntensity });
-      if (getFlag('debug')) {
-        console.log(`Native haptics updated to: ${currentIntensity.toFixed(3)}`);
-      }
+      // Native haptics updated
       return;
-    } catch (e) {
-      if (getFlag('debug')) console.log(`Native haptics update failed: ${e}`);
+    } catch {
+      // Native haptics update failed
       // Fall back to discrete haptics
       usingNativeHaptics = false;
     }

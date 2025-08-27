@@ -133,19 +133,21 @@ function _getColorFromSize(_sizeMultiplier: number): string {
 }
 
 function getColorStyle1(_sizeMultiplier: number): string {
-  // Style 1: Use the selected color with aggressive variations for dynamic pen styles
+  // Style 1: Multicolor vibrant drawing with vibe-based rainbow effect
+  const time = Date.now() * 0.001; // Time-based color cycling
   const baseHue = randomStyleParams.baseHue;
-  const baseSaturation = randomStyleParams.saturation;
-  const baseLightness = randomStyleParams.lightness;
-
-  // Add aggressive variations to create dynamic, vibrant color changes
-  const hueVariation = (Math.random() - 0.5) * 40; // ±20 degrees (more variation)
-  const saturationVariation = (Math.random() - 0.5) * 30; // ±15% (more saturation variation)
-  const lightnessVariation = (Math.random() - 0.5) * 20; // ±10% (more lightness variation)
-
+  const cycleSpeed = randomStyleParams.cycleSpeed || 8; // Use vibe-specific cycle speed
+  
+  // Create multicolor effect with vibe-based hue cycling
+  const hueCycle = Math.sin(time * cycleSpeed) * 180; // Vibe-specific cycling speed
+  const hueVariation = (Math.random() - 0.5) * 40 + hueCycle; // Add cycling to random variation
+  const saturationVariation = (Math.random() - 0.5) * 20 + Math.sin(time * 3) * 10; // Vibrant saturation
+  const lightnessVariation = (Math.random() - 0.5) * 15 + Math.sin(time * 2.5) * 8; // Brightness variation
+  
+  // Multicolor palette with vibe-based rainbow cycling
   const hue = (baseHue + hueVariation + 360) % 360;
-  const saturation = Math.max(60, Math.min(100, baseSaturation + saturationVariation)); // Keep in aggressive range
-  const lightness = Math.max(30, Math.min(70, baseLightness + lightnessVariation)); // Keep in aggressive range
+  const saturation = Math.max(75, Math.min(100, randomStyleParams.saturation + saturationVariation)); // Very high saturation
+  const lightness = Math.max(40, Math.min(80, randomStyleParams.lightness + lightnessVariation)); // Bright and vibrant
 
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
@@ -955,22 +957,37 @@ function _drawAllStyle2Lines(ctx: CanvasRenderingContext2D): void {
 }
 
 function addSparkleEffect(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
-  // Add sparkle particles around the main dot
-  const numSparkles = Math.floor(size / 10); // More sparkles for bigger touches
+  // Enhanced sparkle effect for Style 1 - vibrant splash effect
+  const time = Date.now() * 0.001;
+  const numSparkles = Math.floor(size / 6); // More sparkles for bigger splash effect
 
   for (let i = 0; i < numSparkles; i++) {
-    const angle = (Math.PI * 2 * i) / numSparkles;
-    const distance = size * (0.8 + Math.random() * 0.4); // Random distance
+    const angle = (Math.PI * 2 * i) / numSparkles + Math.sin(time * 5 + i) * 0.3;
+    const distance = size * (0.6 + Math.random() * 0.8); // Wider spread for splash
     const sparkleX = x + Math.cos(angle) * distance;
     const sparkleY = y + Math.sin(angle) * distance;
-    const sparkleSize = 2 + Math.random() * 4;
+    const sparkleSize = 1 + Math.random() * 6; // Varied sparkle sizes
 
     ctx.save();
-    ctx.globalAlpha = 0.6 + Math.random() * 0.4;
-    ctx.fillStyle = 'white';
+    
+    // Create vibrant, varied sparkle colors
+    const sparkleHue = (time * 100 + i * 30) % 360;
+    const sparkleSaturation = 80 + Math.random() * 20;
+    const sparkleLightness = 60 + Math.random() * 40;
+    ctx.fillStyle = `hsl(${sparkleHue}, ${sparkleSaturation}%, ${sparkleLightness}%)`;
+    
+    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
     ctx.beginPath();
     ctx.arc(sparkleX, sparkleY, sparkleSize, 0, 2 * Math.PI);
     ctx.fill();
+    
+    // Add glow effect for extra vibrancy
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = `hsl(${sparkleHue}, ${sparkleSaturation}%, ${sparkleLightness + 20}%)`;
+    ctx.beginPath();
+    ctx.arc(sparkleX, sparkleY, sparkleSize * 1.5, 0, 2 * Math.PI);
+    ctx.fill();
+    
     ctx.restore();
   }
 }
@@ -1350,9 +1367,23 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
 
         ctx.restore();
 
-        // Add sparkle effect for larger touches (only when not erasing)
-        if (maxSize > 20 && !isEraserMode) {
-          addSparkleEffect(ctx, x, y, maxSize);
+        // Add sparkle effect for Style 1 (ParticleStyle) - random but performant splash
+        if (maxSize > 15 && !isEraserMode) {
+          const currentStyleIndex = styleManager.getCurrentStyleIndex();
+          
+          if (currentStyleIndex === 0) {
+            // Style 1 (ParticleStyle): Random but performant sparkle effects
+            const sparkleChance = Math.random() < 0.7; // 70% chance for Style 1 on pointerdown
+            if (sparkleChance) {
+              ctx.save();
+              ctx.globalAlpha = 0.5; // Balanced alpha for performance
+              addSparkleEffect(ctx, x, y, maxSize);
+              ctx.restore();
+            }
+          } else {
+            // Other styles: Regular sparkle effects
+            addSparkleEffect(ctx, x, y, maxSize);
+          }
         }
       }
     } else {
@@ -1518,7 +1549,47 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
           ctx.globalCompositeOperation = 'source-over';
           const colorT = Math.sin(t * Math.PI) * 0.12; // 20% more color variation (was 0.1)
           const colorMultiplier = moveMultiplier + colorT;
-          ctx.fillStyle = getCurrentColor(colorMultiplier);
+          
+          // Use Style 1's color generation if it's active
+          if (currentStyleIndex === 0) {
+            // Style 1: Use theme-based colors with dramatic rainbow cycling
+            const time = Date.now() * 0.001;
+            // Get the most up-to-date randomStyleParams
+            const currentRandomStyleParams = (window as any).randomStyleParams || randomStyleParams;
+            const baseHue = currentRandomStyleParams.baseHue;
+            const cycleSpeed = currentRandomStyleParams.cycleSpeed || 8;
+            
+            // Apply light performant filter for Style 1 (only occasionally for performance)
+            if (currentRandomStyleParams.filter && currentRandomStyleParams.filter !== 'none' && Math.random() < 0.3) {
+              ctx.filter = currentRandomStyleParams.filter;
+            }
+            
+            // Create dramatic rainbow cycling effect with theme-based base
+            const hueCycle = Math.sin(time * cycleSpeed) * 100; // Reduced rainbow range for more theme focus
+            const hueVariation = (Math.random() - 0.5) * 80 + hueCycle; // Much more dramatic hue variation
+            const saturationVariation = (Math.random() - 0.5) * 40 + Math.sin(time * 3) * 20; // Much more dramatic saturation
+            const lightnessVariation = (Math.random() - 0.5) * 35 + Math.sin(time * 2.5) * 15; // Much more dramatic lightness
+            
+            // Dramatic palette with theme-based cycling
+            const hue = (baseHue + hueVariation + 360) % 360;
+            const saturation = Math.max(70, Math.min(100, currentRandomStyleParams.saturation + saturationVariation));
+            const lightness = Math.max(35, Math.min(85, currentRandomStyleParams.lightness + lightnessVariation));
+            
+            ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+            
+            // Debug: Log current drawing colors more frequently
+            if (Math.floor(time * 10) % 20 === 0) {
+              console.log(`🎨 Style 1 DRAWING: baseHue=${baseHue}, finalHue=${hue}, saturation=${saturation}, lightness=${lightness}, filter=${currentRandomStyleParams.filter}`);
+            }
+            
+            // Reset filter after drawing Style 1
+            if (currentRandomStyleParams.filter && currentRandomStyleParams.filter !== 'none') {
+              ctx.filter = 'none';
+            }
+          } else {
+            // Other styles: Use the original color generation
+            ctx.fillStyle = getCurrentColor(colorMultiplier);
+          }
         }
 
         ctx.beginPath();
@@ -1533,22 +1604,34 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
         );
         ctx.fill();
 
-        // Enhanced sparkle effects for Apple Pencil (only when not erasing)
-        if (Math.max(touchWidth, touchHeight) > 15 && !isEraserMode) {
-          let sparkleChance;
-          if (isPencil) {
-            // Apple Pencil gets more sparkles for enhanced effect
-            sparkleChance = 0.4;
+        // Enhanced sparkle effects for Style 1 (ParticleStyle) - random but performant splash
+        if (Math.max(touchWidth, touchHeight) > 10 && !isEraserMode) {
+          const currentStyleIndex = styleManager.getCurrentStyleIndex();
+          
+          if (currentStyleIndex === 0) {
+            // Style 1 (ParticleStyle): Random but performant sparkle effects
+            const sparkleChance = Math.random() < 0.6; // 60% chance for Style 1
+            if (sparkleChance) {
+              ctx.save();
+              ctx.globalAlpha = 0.5; // Balanced alpha for performance
+              addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, touchHeight) / 2.5);
+              ctx.restore();
+            }
           } else {
-            // Touch and mouse get reduced sparkles for performance
-            sparkleChance = 0.2;
-          }
+            // Other styles: Random sparkle effects
+            let sparkleChance;
+            if (isPencil) {
+              sparkleChance = 0.4;
+            } else {
+              sparkleChance = 0.2;
+            }
 
-          if (Math.random() < sparkleChance) {
-            ctx.save();
-            ctx.globalAlpha = 0.4; // Reduced alpha for performance
-            addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, touchHeight) / 3);
-            ctx.restore();
+            if (Math.random() < sparkleChance) {
+              ctx.save();
+              ctx.globalAlpha = 0.4;
+              addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, touchHeight) / 3);
+              ctx.restore();
+            }
           }
         }
       }
@@ -1732,19 +1815,45 @@ let randomStyleParams = {
   glowIntensity: 0.2,
   pulseSpeed: 0.02,
   sizeMultiplier: 1.0,
+  cycleSpeed: 8, // Add cycle speed for vibe-based color cycling
+  filter: 'none', // Add filter for dramatic visual changes
 };
+
+// Make randomStyleParams globally accessible for Style 1
+(window as any).randomStyleParams = randomStyleParams;
 
 function generateRandomStyle1Parameters(): void {
   // Generate aggressive, vibrant pen styles with high contrast and intensity
-  const hue = Math.floor(Math.random() * 360); // Full color spectrum
-
-  // Aggressive saturation: from strong (70%) to maximum (100%)
-  const saturationChoices = [70, 75, 80, 85, 90, 95, 100];
-  const saturation = saturationChoices[Math.floor(Math.random() * saturationChoices.length)];
-
-  // Aggressive lightness: from medium (40%) to bright (60%) for high contrast
-  const lightnessChoices = [40, 45, 50, 55, 60];
-  const lightness = lightnessChoices[Math.floor(Math.random() * lightnessChoices.length)];
+  // Get current colors to avoid duplicates
+  const currentHue = randomStyleParams.baseHue;
+  const currentSaturation = randomStyleParams.saturation;
+  const currentLightness = randomStyleParams.lightness;
+  
+  // Generate new colors that are DRAMATICALLY different from current ones
+  let hue = Math.floor(Math.random() * 360);
+  let saturation = 90;
+  let lightness = 50;
+  let attempts = 0;
+  const maxAttempts = 15; // More attempts to find different colors
+  
+  do {
+    hue = Math.floor(Math.random() * 360); // Full color spectrum
+    
+    // Aggressive saturation: from strong (80%) to maximum (100%) - more vibrant
+    const saturationChoices = [80, 85, 90, 95, 100];
+    saturation = saturationChoices[Math.floor(Math.random() * saturationChoices.length)]!;
+    
+    // Aggressive lightness: from medium (35%) to bright (65%) for high contrast
+    const lightnessChoices = [35, 40, 45, 50, 55, 60, 65];
+    lightness = lightnessChoices[Math.floor(Math.random() * lightnessChoices.length)]!;
+    
+    attempts++;
+  } while (
+    attempts < maxAttempts && 
+    Math.abs(hue - currentHue) < 60 && // Much larger difference required
+    Math.abs(saturation - currentSaturation) < 20 && // Larger difference required
+    Math.abs(lightness - currentLightness) < 20 // Larger difference required
+  );
 
   // Enhanced sparkle and glow effects for aggressive styles
   const sparkleIntensity = Math.random() * 0.6 + 0.4; // 0.4 to 1.0 (more intense)
@@ -1753,6 +1862,17 @@ function generateRandomStyle1Parameters(): void {
   const glowIntensity = Math.random() * 0.8 + 0.2; // 0.2 to 1.0 (stronger glow)
   const pulseSpeed = Math.random() * 0.3 + 0.1; // 0.1 to 0.4 (faster pulse)
   const sizeMultiplier = Math.random() * 2.0 + 0.8; // 0.8 to 2.8 (more size variation)
+  
+  // Light performant filters for Style 1
+  const filters = [
+    'none',
+    'hue-rotate(90deg)',
+    'hue-rotate(180deg)',
+    'saturate(1.5)',
+    'brightness(1.2)',
+    'contrast(1.3)',
+  ];
+  const randomFilter = filters[Math.floor(Math.random() * filters.length)]!;
 
   randomStyleParams = {
     baseHue: hue,
@@ -1764,11 +1884,103 @@ function generateRandomStyle1Parameters(): void {
     glowIntensity: glowIntensity,
     pulseSpeed: pulseSpeed,
     sizeMultiplier: sizeMultiplier,
+    cycleSpeed: 8, // Default cycle speed
+    filter: randomFilter, // Random dramatic filter
   };
+  
+  // Update global reference for Style 1
+  (window as any).randomStyleParams = randomStyleParams;
 
-  console.log(
-    `Generated aggressive pen style: hsl(${hue}, ${saturation}%, ${lightness}%) - Intensity: ${sparkleIntensity.toFixed(2)}`,
-  );
+  console.log(`🎨 Style 1 NEW COLORS: baseHue=${hue}, saturation=${saturation}, lightness=${lightness}`);
+  // Style 1 parameters randomized
+}
+
+// Add a function to force immediate color change for Style 1
+function forceImmediateColorChange(): void {
+  // Generate different vibe-based multicolor starting points with more dramatic themes
+  const vibeThemes = [
+    // Fire vibe - intense reds and oranges
+    { baseHue: 0, saturation: 100, lightness: 45, cycleSpeed: 9 },
+    // Toxic vibe - bright neon greens and yellows
+    { baseHue: 60, saturation: 100, lightness: 55, cycleSpeed: 11 },
+    // Retro Galaxy vibe - deep purples and cyans
+    { baseHue: 270, saturation: 95, lightness: 40, cycleSpeed: 7 },
+    // Electric vibe - bright blues and whites
+    { baseHue: 210, saturation: 100, lightness: 60, cycleSpeed: 12 },
+    // Sunset vibe - warm oranges and pinks
+    { baseHue: 15, saturation: 100, lightness: 50, cycleSpeed: 6 },
+    // Ocean vibe - cool blues and teals
+    { baseHue: 200, saturation: 90, lightness: 45, cycleSpeed: 8 },
+    // Forest vibe - greens and earth tones
+    { baseHue: 120, saturation: 85, lightness: 40, cycleSpeed: 7 },
+    // Neon vibe - bright electric colors
+    { baseHue: 280, saturation: 100, lightness: 55, cycleSpeed: 10 },
+    // Cosmic vibe - purples and cyans
+    { baseHue: 240, saturation: 90, lightness: 45, cycleSpeed: 8 },
+    // Tropical vibe - bright greens and blues
+    { baseHue: 160, saturation: 95, lightness: 50, cycleSpeed: 7 },
+    // Aurora vibe - cool greens and blues
+    { baseHue: 180, saturation: 85, lightness: 45, cycleSpeed: 6 },
+    // Cyberpunk vibe - neon pinks and cyans
+    { baseHue: 300, saturation: 100, lightness: 50, cycleSpeed: 13 },
+    // Lava vibe - deep reds and bright oranges
+    { baseHue: 20, saturation: 100, lightness: 45, cycleSpeed: 8 },
+    // Ice vibe - cool blues and whites
+    { baseHue: 220, saturation: 90, lightness: 65, cycleSpeed: 5 },
+    // Golden vibe - warm yellows and golds
+    { baseHue: 45, saturation: 95, lightness: 55, cycleSpeed: 7 }
+  ];
+  
+  // Get current colors to avoid duplicates
+  const currentHue = randomStyleParams.baseHue;
+  const currentSaturation = randomStyleParams.saturation;
+  const currentLightness = randomStyleParams.lightness;
+  
+  // Filter out themes that are too similar to current colors
+  const availableThemes = vibeThemes.filter(theme => {
+    const hueDiff = Math.abs(theme.baseHue - currentHue);
+    const satDiff = Math.abs(theme.saturation - currentSaturation);
+    const lightDiff = Math.abs(theme.lightness - currentLightness);
+    
+    // Ensure significant difference in at least 2 properties
+    return (hueDiff > 30) || (satDiff > 15) || (lightDiff > 15);
+  });
+  
+  // If no themes are different enough, use all themes
+  const themesToUse = availableThemes.length > 0 ? availableThemes : vibeThemes;
+  
+  // Pick a random vibe theme from available ones
+  const selectedVibe = themesToUse[Math.floor(Math.random() * themesToUse.length)]!;
+  
+  randomStyleParams = {
+    ...randomStyleParams,
+    baseHue: selectedVibe.baseHue,
+    saturation: selectedVibe.saturation,
+    lightness: selectedVibe.lightness,
+    cycleSpeed: selectedVibe.cycleSpeed, // Add cycle speed for different vibes
+  };
+  
+  // Add light performant filter for Style 1
+  const filters = [
+    'none',
+    'hue-rotate(90deg)',
+    'hue-rotate(180deg)',
+    'saturate(1.5)',
+    'brightness(1.2)',
+    'contrast(1.3)',
+  ];
+  const randomFilter = filters[Math.floor(Math.random() * filters.length)]!;
+  
+  randomStyleParams = {
+    ...randomStyleParams,
+    filter: randomFilter,
+  };
+  
+  // Update global reference for Style 1
+  (window as any).randomStyleParams = randomStyleParams;
+  
+  console.log(`🎨 Style 1 VIBE CHANGE: baseHue=${selectedVibe.baseHue}, saturation=${selectedVibe.saturation}, lightness=${selectedVibe.lightness}, filter=${randomFilter}`);
+  // Vibe theme changed for Style 1
 }
 
 function init(): void {
@@ -1895,20 +2107,43 @@ function init(): void {
   const styleSwitchButton = document.getElementById('style-switch');
   if (styleSwitchButton) {
     const styleSwitchHandler = () => {
-      // Generate new random style parameters ONLY - no drawing
-      generateRandomStyle1Parameters();
-
-      // Change to a random size (0-4 for 5 sizes)
-      currentSizeLevel = Math.floor(Math.random() * 5);
-
-      // Generate random color for the button
-      const randomHue = Math.floor(Math.random() * 360);
-      styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
-
-      // No animation needed
-
-      const sizeNames = ['tiny', 'small', 'medium', 'large', 'huge'];
-      console.log(`Generated new random style and changed to ${sizeNames[currentSizeLevel]} size!`);
+      // Check if we're on Style 1 (ParticleStyle) - only randomize colors for Style 1
+      const currentStyleIndex = styleManager.getCurrentStyleIndex();
+      
+      if (currentStyleIndex === 0) {
+        // Style 1: Randomize both colors AND size
+        const shouldForceColorChange = Math.random() < 0.4; // 40% chance for vibe change
+        
+        if (shouldForceColorChange) {
+          // Force immediate vibe change for Style 1
+          forceImmediateColorChange();
+          console.log('🎨 FORCED vibe change for Style 1!');
+        } else {
+          // Generate new random color parameters for Style 1
+          generateRandomStyle1Parameters();
+          console.log('🎨 Randomized colors for Style 1!');
+        }
+        
+        // Also randomize size for Style 1
+        currentSizeLevel = Math.floor(Math.random() * 5);
+        
+        // Change button color
+        const randomHue = Math.floor(Math.random() * 360);
+        styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
+        
+        const sizeNames = ['tiny', 'small', 'medium', 'large', 'huge'];
+        console.log(`🎨 Style 1 randomized: ${sizeNames[currentSizeLevel]} size + new colors!`);
+      } else {
+        // Other styles: Full randomization (size + parameters)
+        generateRandomStyle1Parameters();
+        currentSizeLevel = Math.floor(Math.random() * 5);
+        
+        const randomHue = Math.floor(Math.random() * 360);
+        styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
+        
+        const sizeNames = ['tiny', 'small', 'medium', 'large', 'huge'];
+        console.log(`Generated new random style and changed to ${sizeNames[currentSizeLevel]} size!`);
+      }
 
       // Don't clear canvas - preserve existing drawing
     };

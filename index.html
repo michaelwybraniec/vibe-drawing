@@ -22,8 +22,8 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,700;1,300&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/vibe-drawing/assets/index-Bl4g-nWS.js"></script>
-    <link rel="stylesheet" crossorigin href="/vibe-drawing/assets/index-BLT0OYWZ.css">
+    <script type="module" crossorigin src="/vibe-drawing/assets/index-DAkoMJYT.js"></script>
+    <link rel="stylesheet" crossorigin href="/vibe-drawing/assets/index-Ca3xj1ff.css">
   </head>
   <body>
     <!-- Splash Screen -->
@@ -212,6 +212,11 @@
           <button id="clear-canvas" class="clear-button">🗑️</button>
           <div class="tool-label">Clear</div>
         </div>
+
+        <div class="tool-group">
+          <button id="save-as" class="tool-button">💾</button>
+          <div class="tool-label">Save</div>
+        </div>
       </div>
 
       <div class="style-buttons-container" style="display: none">
@@ -220,5 +225,89 @@
         <button id="style-3" class="style-button">Style 3</button>
       </div>
     </main>
+
+    <!-- Save Options Modal -->
+    <div id="save-modal" class="info-popup">
+      <div class="info-popup-content">
+        <span class="close-popup" onclick="closeSaveModal()">&times;</span>
+
+        <h3>Export Options 💾</h3>
+
+        <div class="popup-section">
+          <h4>Quality Resolution</h4>
+          <div class="quality-options">
+            <label class="option-item">
+              <input type="radio" name="quality" value="2K" checked />
+              <span><strong>2K</strong> (2048×1152, 12x scale, 600 DPI) - Web Quality</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="quality" value="5K" />
+              <span><strong>5K</strong> (5120×2880, 30x scale, 1200 DPI) - High-End Display</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="quality" value="10K" />
+              <span
+                ><strong>10K</strong> (10240×5760, 60x scale, 2400 DPI) - Professional Quality</span
+              >
+            </label>
+            <label class="option-item">
+              <input type="radio" name="quality" value="20K" />
+              <span><strong>16K</strong> (16384×9216, 120x scale, 4800 DPI) - MAXIMUM QUALITY</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="popup-section">
+          <h4>Export Format</h4>
+          <div class="format-options">
+            <label class="option-item">
+              <input type="radio" name="format" value="PNG" checked />
+              <span><strong>PNG</strong> - Lossless quality, perfect for graphics</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="format" value="JPEG" />
+              <span><strong>JPEG</strong> - Compressed, great for photos</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="format" value="WEBP" />
+              <span><strong>WebP</strong> - Modern format, smaller files</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="format" value="SVG" />
+              <span><strong>SVG</strong> - Vector-like quality, scalable</span>
+            </label>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="popup-section">
+          <p>
+            <strong>Want to know more?</strong> ->
+            <a href="#" onclick="showInfoPopup(); closeSaveModal(); return false;"
+              >Learn about VIBE DRAWING</a
+            >
+          </p>
+        </div>
+
+        <div class="signature">
+          <button id="cancel-save" class="save-btn cancel-btn">Cancel</button>
+          <button id="confirm-save" class="save-btn confirm-btn">Export Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processing Spinner -->
+    <div id="processing-spinner" class="info-popup" style="display: none">
+      <div class="info-popup-content processing-modal">
+        <div class="processing-content">
+          <div class="spinner"></div>
+          <h3>Processing Export ⚡</h3>
+          <p>Creating your high-quality artwork...</p>
+          <p class="processing-info">Made with VIBE-CODING & AWP by Mike</p>
+        </div>
+      </div>
+    </div>
+
   </body>
 </html>

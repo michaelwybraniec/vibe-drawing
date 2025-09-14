@@ -4,10 +4,16 @@ export class Style2 implements DrawingStyle {
   name = '3D Sphere';
   description = 'Three-dimensional sphere effects with depth and lighting';
   
-  private randomStyleParams = {
-    baseHue: 200,
-    saturation: 85,
-    lightness: 60,
+  private currentVariant = 0;
+  private colorVariants = [
+    { baseHue: 200, saturation: 85, lightness: 60, name: 'Deep Blue' },
+    { baseHue: 15, saturation: 90, lightness: 55, name: 'Fire Orange' },
+    { baseHue: 120, saturation: 80, lightness: 50, name: 'Emerald Green' },
+    { baseHue: 300, saturation: 85, lightness: 65, name: 'Magenta Pink' },
+    { baseHue: 60, saturation: 90, lightness: 70, name: 'Bright Yellow' }
+  ];
+  
+  private styleParams = {
     sphereIntensity: 0.7,
     depthEffect: 0.8,
     lightingAngle: 45,
@@ -23,14 +29,15 @@ export class Style2 implements DrawingStyle {
     
     // 3D Sphere Effect
     const time = Date.now() * 0.001;
-    const baseHue = this.randomStyleParams.baseHue;
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    const baseHue = currentVariant.baseHue;
     
     // Use global size system
     const baseMultiplier = 0.4 * (sizeMultipliers[currentSizeLevel] || 1.0);
     const sphereSize = baseMultiplier * thicknessMultiplier * Math.max(width, height);
     
     // Create 3D lighting effect
-    const lightingAngle = this.randomStyleParams.lightingAngle;
+    const lightingAngle = this.styleParams.lightingAngle;
     const lightX = Math.cos(lightingAngle * Math.PI / 180) * sphereSize;
     const lightY = Math.sin(lightingAngle * Math.PI / 180) * sphereSize;
     
@@ -54,8 +61,8 @@ export class Style2 implements DrawingStyle {
       );
       
       const hue = (baseHue + Math.sin(time * 2) * 30) % 360;
-      const saturation = this.randomStyleParams.saturation;
-      const lightness = this.randomStyleParams.lightness;
+      const saturation = currentVariant.saturation;
+      const lightness = currentVariant.lightness;
       
       // Light side (highlight)
       gradient.addColorStop(0, `hsl(${hue}, ${saturation}%, ${Math.min(95, lightness + 30)}%)`);
@@ -87,26 +94,11 @@ export class Style2 implements DrawingStyle {
     ctx.restore();
   }
 
-  generateRandomParameters(): void {
-    this.randomStyleParams = {
-      baseHue: Math.floor(Math.random() * 360),
-      saturation: 70 + Math.random() * 30,
-      lightness: 40 + Math.random() * 40,
-      sphereIntensity: 0.5 + Math.random() * 0.5,
-      depthEffect: 0.6 + Math.random() * 0.4,
-      lightingAngle: Math.random() * 360,
-    };
-    console.log(`🌐 Style 2 NEW COLORS: baseHue=${this.randomStyleParams.baseHue}, lightingAngle=${this.randomStyleParams.lightingAngle}`);
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
   }
 
   resetToDefault(): void {
-    this.randomStyleParams = {
-      baseHue: 200,
-      saturation: 85,
-      lightness: 60,
-      sphereIntensity: 0.7,
-      depthEffect: 0.8,
-      lightingAngle: 45,
-    };
+    this.currentVariant = 0;
   }
 }

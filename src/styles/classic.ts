@@ -4,10 +4,16 @@ export class Style1 implements DrawingStyle {
   name = 'Classic';
   description = 'Smooth classic drawing with rainbow effects';
   
-  private randomStyleParams = {
-    baseHue: 216,
-    saturation: 90,
-    lightness: 50,
+  private currentVariant = 0;
+  private colorVariants = [
+    { baseHue: 216, saturation: 90, lightness: 50, name: 'Ocean Blue' },
+    { baseHue: 0, saturation: 85, lightness: 55, name: 'Crimson Red' },
+    { baseHue: 120, saturation: 80, lightness: 50, name: 'Forest Green' },
+    { baseHue: 45, saturation: 90, lightness: 60, name: 'Golden Yellow' },
+    { baseHue: 280, saturation: 85, lightness: 55, name: 'Royal Purple' }
+  ];
+  
+  private styleParams = {
     sparkleIntensity: 0.3,
     sparkleSize: 2,
     sparkleCount: 3,
@@ -29,12 +35,13 @@ export class Style1 implements DrawingStyle {
     
     // Style 1: Artistic Pen with Pressure Sensitivity and Splash Effects
     const time = Date.now() * 0.001;
-    const baseHue = this.randomStyleParams.baseHue;
-    const cycleSpeed = this.randomStyleParams.cycleSpeed || 8;
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    const baseHue = currentVariant.baseHue;
+    const cycleSpeed = this.styleParams.cycleSpeed || 8;
     
     // Apply light performant filter for Style 1 (only occasionally for performance)
-    if (this.randomStyleParams.filter && this.randomStyleParams.filter !== 'none' && Math.random() < 0.3) {
-      ctx.filter = this.randomStyleParams.filter;
+    if (this.styleParams.filter && this.styleParams.filter !== 'none' && Math.random() < 0.3) {
+      ctx.filter = this.styleParams.filter;
     }
     
     // Create dramatic rainbow cycling effect with theme-based base
@@ -43,10 +50,10 @@ export class Style1 implements DrawingStyle {
     const saturationVariation = (Math.random() - 0.5) * 15 + Math.sin(time * 3) * 10; // Reduced variations
     const lightnessVariation = (Math.random() - 0.5) * 15 + Math.sin(time * 2.5) * 8; // Reduced variations
     
-    // Dramatic palette with theme-based cycling - more respect for randomized base
+    // Dramatic palette with theme-based cycling - more respect for variant base
     const hue = (baseHue + hueVariation + 360) % 360;
-    const saturation = Math.max(70, Math.min(100, this.randomStyleParams.saturation + saturationVariation));
-    const lightness = Math.max(35, Math.min(75, this.randomStyleParams.lightness + lightnessVariation));
+    const saturation = Math.max(70, Math.min(100, currentVariant.saturation + saturationVariation));
+    const lightness = Math.max(35, Math.min(75, currentVariant.lightness + lightnessVariation));
     
     const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     
@@ -141,44 +148,12 @@ export class Style1 implements DrawingStyle {
 
   }
 
-  generateRandomParameters(): void {
-    // Simple, safe randomization - no loops that can freeze
-    const hue = Math.floor(Math.random() * 360);
-    const saturationChoices = [80, 85, 90, 95, 100];
-    const saturation = saturationChoices[Math.floor(Math.random() * saturationChoices.length)]!;
-    const lightnessChoices = [35, 40, 45, 50, 55, 60, 65];
-    const lightness = lightnessChoices[Math.floor(Math.random() * lightnessChoices.length)]!;
-
-    this.randomStyleParams = {
-      ...this.randomStyleParams,
-      baseHue: hue,
-      saturation,
-      lightness,
-      sparkleIntensity: Math.random() * 0.6 + 0.4,
-      sparkleSize: Math.random() * 3 + 1.0,
-      sparkleCount: Math.floor(Math.random() * 5) + 2,
-      glowIntensity: Math.random() * 0.4 + 0.1,
-      pulseSpeed: Math.random() * 0.03 + 0.01,
-      cycleSpeed: Math.random() * 8 + 3,
-      filter: Math.random() < 0.3 ? 'hue-rotate(90deg) saturate(1.5)' : 'none',
-    };
-    
-    console.log(`🎨 Style 1 NEW COLORS: baseHue=${hue}, saturation=${saturation}, lightness=${lightness}`);
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+    const _variant = this.colorVariants[this.currentVariant]!;
   }
 
   resetToDefault(): void {
-    this.randomStyleParams = {
-      baseHue: 216,
-      saturation: 90,
-      lightness: 50,
-      sparkleIntensity: 0.3,
-      sparkleSize: 2,
-      sparkleCount: 3,
-      glowIntensity: 0.2,
-      pulseSpeed: 0.02,
-      sizeMultiplier: 1.0,
-      cycleSpeed: 8,
-      filter: 'none',
-    };
+    this.currentVariant = 0;
   }
 }

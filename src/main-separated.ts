@@ -27,7 +27,7 @@ let thicknessMultiplier = 1.0; // Global thickness multiplier (0.5 to 3.0)
 let isEraserMode = false;
 
 // Style tracking variables
-let currentStyle = 1; // Default to style 1
+let _currentStyle = 1; // Default to style 1
 
 
 function createStyleContext(): StyleContext {
@@ -43,7 +43,6 @@ function createStyleContext(): StyleContext {
 
 // Initialize the app
 function initApp(): void {
-  console.log('🎨 Initializing Vibe Drawing app with separated styles...');
 
   const canvas = document.getElementById('app-canvas') as HTMLCanvasElement;
   if (!canvas) {
@@ -61,7 +60,6 @@ function initApp(): void {
   setupEventListeners(canvas);
   setupUI();
 
-  console.log('✅ App initialized successfully with separated styles');
 }
 
 function setupCanvas(canvas: HTMLCanvasElement): void {
@@ -149,8 +147,7 @@ function setupUI(): void {
       const target = e.target as HTMLSelectElement;
       const styleIndex = parseInt(target.value) - 1;
       styleManager.switchToStyle(styleIndex);
-      currentStyle = styleIndex + 1;
-      console.log(`🎨 Switched to style ${currentStyle}`);
+      _currentStyle = styleIndex + 1;
     });
   }
 
@@ -180,7 +177,6 @@ function setupUI(): void {
         currentSizeLevel = Math.round(normalizedValue * 4);
       }
       
-      console.log(`📏 Thickness: ${thicknessMultiplier}, Size Level: ${currentSizeLevel}`);
     });
   }
 
@@ -190,7 +186,6 @@ function setupUI(): void {
     eraserButton.addEventListener('click', () => {
       isEraserMode = !isEraserMode;
       eraserButton.classList.toggle('eraser-active', isEraserMode);
-      console.log(`🧽 Eraser mode: ${isEraserMode ? 'ON' : 'OFF'}`);
     });
   }
 
@@ -201,19 +196,17 @@ function setupUI(): void {
       const canvas = document.getElementById('app-canvas') as HTMLCanvasElement;
       if (ctx && canvas) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        console.log('🧹 Canvas cleared');
       }
     });
   }
 
-  // Randomize button
+  // Color variant button (formerly randomize)
   const randomizeButton = document.getElementById('randomize') as HTMLButtonElement;
   if (randomizeButton) {
     randomizeButton.addEventListener('click', () => {
       const currentStyle = styleManager.getCurrentStyle();
-      if (currentStyle.generateRandomParameters) {
-        currentStyle.generateRandomParameters();
-        console.log('🎲 Style parameters randomized');
+      if (currentStyle.nextColorVariant) {
+        currentStyle.nextColorVariant();
       }
     });
   }

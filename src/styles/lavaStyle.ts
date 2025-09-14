@@ -21,6 +21,15 @@ export class LavaStyle implements DrawingStyle {
   description = 'Flowing lava lines that melt and drip';
   icon = '2';
 
+  private currentVariant = 0;
+  private colorVariants = [
+    { color: '#ff4500', name: 'Orange Red' },
+    { color: '#ff6347', name: 'Tomato' },
+    { color: '#ff8c00', name: 'Dark Orange' },
+    { color: '#ffa500', name: 'Orange' },
+    { color: '#dc143c', name: 'Crimson' }
+  ];
+
   draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
     // Simple draw implementation for lava style
     const { x, y, width, height } = point;
@@ -32,7 +41,7 @@ export class LavaStyle implements DrawingStyle {
       ctx.fillStyle = '#000000';
     } else {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#ff4500';
+      ctx.fillStyle = this.getLavaColor();
     }
     
     ctx.beginPath();
@@ -46,7 +55,6 @@ export class LavaStyle implements DrawingStyle {
   private animationId: number | null = null;
 
   onStart(point: DrawingPoint, context: StyleContext): void {
-    console.log('🌋 Lava style started');
 
     this.currentLavaLine = {
       points: [],
@@ -73,7 +81,6 @@ export class LavaStyle implements DrawingStyle {
   }
 
   onEnd(_context: StyleContext): void {
-    console.log('🌋 Lava style ended');
 
     if (this.currentLavaLine) {
       this.currentLavaLine.isMelting = true;
@@ -208,7 +215,7 @@ export class LavaStyle implements DrawingStyle {
     ctx.save();
 
     const dripCount = Math.floor(line.meltProgress * 5);
-    const dripColor = isEraserMode ? '#151E35' : '#ff6347';
+    const dripColor = isEraserMode ? '#151E35' : this.getLavaColor();
 
     for (let i = 0; i < dripCount; i++) {
       const point = line.points[Math.floor(Math.random() * line.points.length)];
@@ -258,5 +265,18 @@ export class LavaStyle implements DrawingStyle {
 
   private startAnimation(_context: StyleContext): void {
     this.animate(_context);
+  }
+
+  private getLavaColor(): string {
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    return currentVariant.color;
+  }
+
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+  }
+
+  resetToDefault(): void {
+    this.currentVariant = 0;
   }
 }

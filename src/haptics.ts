@@ -77,14 +77,10 @@ function tick() {
   if (HapticsBasic) {
     if (platform === 'ios') {
       // iOS haptic impact
-      HapticsBasic.impact({ style: iosStyle }).catch((e: any) =>
-        console.log(`iOS haptic failed: ${e}`),
-      );
+      HapticsBasic.impact({ style: iosStyle })
     } else if (platform === 'android') {
       // Android vibrate
-      HapticsBasic.vibrate({ duration: durMs }).catch((e: any) =>
-        console.log(`Android haptic failed: ${e}`),
-      );
+      HapticsBasic.vibrate({ duration: durMs })
     } else if (supportsVibration()) {
       navigator.vibrate(durMs);
     } else {
@@ -139,9 +135,7 @@ export function hapticsConstantStart(): void {
   // optional pre-tap
   if (HapticsBasic && platform === 'ios') {
     // iOS pre-tap
-    HapticsBasic.impact({ style: 'medium' }).catch((e: any) =>
-      console.log(`iOS pre-tap failed: ${e}`),
-    );
+    HapticsBasic.impact({ style: 'medium' })
   }
   tick();
   timerId = window.setInterval(tick, tickMs);

@@ -5,6 +5,15 @@ export class WatercolorStyle implements DrawingStyle {
   description = 'Soft watercolor brush strokes with color blending';
   icon = '4';
 
+  private currentVariant = 0;
+  private colorVariants = [
+    { color: '#BAE1FF', name: 'Sky Blue' },
+    { color: '#FFB3BA', name: 'Rose Pink' },
+    { color: '#BAFFC9', name: 'Mint Green' },
+    { color: '#FFFFBA', name: 'Soft Yellow' },
+    { color: '#E1BAFF', name: 'Lavender' }
+  ];
+
   draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
     // Simple draw implementation for watercolor style
     const { x, y, width, height } = point;
@@ -16,7 +25,7 @@ export class WatercolorStyle implements DrawingStyle {
       ctx.fillStyle = '#000000';
     } else {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#BAE1FF';
+      ctx.fillStyle = this.getWatercolorColor();
     }
     
     ctx.beginPath();
@@ -36,12 +45,10 @@ export class WatercolorStyle implements DrawingStyle {
   }> = [];
 
   onStart(_point: DrawingPoint, _context: StyleContext): void {
-    console.log('🎨 Watercolor style started');
     this.brushStrokes = [];
   }
 
   onMove(points: DrawingPoint[], context: StyleContext): void {
-    console.log('🎨 WatercolorStyle.onMove called');
     const { ctx, isEraserMode, thicknessMultiplier: _thicknessMultiplier, currentSizeLevel: _currentSizeLevel, sizeMultipliers: _sizeMultipliers, isWebApp: _isWebApp } =
       context;
 
@@ -80,8 +87,8 @@ export class WatercolorStyle implements DrawingStyle {
       } else {
         // Watercolor: create soft, blended strokes
         const colorT = Math.sin(t * Math.PI) * 0.15;
-        const colorMultiplier = 1 + colorT;
-        const baseColor = this.getWatercolorColor(colorMultiplier);
+        const _colorMultiplier = 1 + colorT;
+        const baseColor = this.getWatercolorColor();
 
         // Create multiple brush strokes for watercolor effect
         for (let i = 0; i < 3; i++) {
@@ -114,7 +121,6 @@ export class WatercolorStyle implements DrawingStyle {
   }
 
   onEnd(_context: StyleContext): void {
-    console.log('🎨 Watercolor style ended');
   }
 
   onClear(_context: StyleContext): void {
@@ -150,20 +156,16 @@ export class WatercolorStyle implements DrawingStyle {
     }
   }
 
-  private getWatercolorColor(multiplier: number): string {
-    // Soft, pastel watercolor palette
-    const colors = [
-      '#FFB3BA', // Soft pink
-      '#BAFFC9', // Soft green
-      '#BAE1FF', // Soft blue
-      '#FFFFBA', // Soft yellow
-      '#FFB3F7', // Soft purple
-      '#B3FFE6', // Soft teal
-      '#FFD4B3', // Soft orange
-      '#E6B3FF', // Soft lavender
-    ];
+  private getWatercolorColor(): string {
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    return currentVariant.color;
+  }
 
-    const index = Math.floor(multiplier * colors.length) % colors.length;
-    return colors[index] || '#ff6b6b';
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+  }
+
+  resetToDefault(): void {
+    this.currentVariant = 0;
   }
 }

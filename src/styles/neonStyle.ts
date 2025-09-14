@@ -5,6 +5,15 @@ export class NeonStyle implements DrawingStyle {
   description = 'Bright neon lines with glowing effects';
   icon = '3';
 
+  private currentVariant = 0;
+  private colorVariants = [
+    { color: '#00ff00', name: 'Neon Green' },
+    { color: '#ff00ff', name: 'Neon Magenta' },
+    { color: '#00ffff', name: 'Neon Cyan' },
+    { color: '#ffff00', name: 'Neon Yellow' },
+    { color: '#ff0080', name: 'Neon Pink' }
+  ];
+
   private neonLines: Array<{
     points: DrawingPoint[];
     color: string;
@@ -13,8 +22,26 @@ export class NeonStyle implements DrawingStyle {
   private currentLine: Array<DrawingPoint> = [];
   private currentColor: string = '#00ff00';
 
+  draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
+    const { x, y, width, height } = point;
+    const { isEraserMode } = context;
+    
+    ctx.save();
+    if (isEraserMode) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = '#000000';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = this.currentColor;
+    }
+    
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(width, height) / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
   onStart(point: DrawingPoint, _context: StyleContext): void {
-    console.log('💡 Neon style started');
 
     this.currentLine = [point];
     this.currentColor = this.getNeonColor();
@@ -31,7 +58,6 @@ export class NeonStyle implements DrawingStyle {
   }
 
   onEnd(_context: StyleContext): void {
-    console.log('💡 Neon style ended');
 
     if (this.currentLine.length > 1) {
       this.neonLines.push({
@@ -193,18 +219,16 @@ export class NeonStyle implements DrawingStyle {
   }
 
   private getNeonColor(): string {
-    const colors = [
-      '#00ff00', // Green
-      '#ff00ff', // Magenta
-      '#00ffff', // Cyan
-      '#ffff00', // Yellow
-      '#ff0080', // Pink
-      '#0080ff', // Blue
-      '#ff8000', // Orange
-      '#8000ff', // Purple
-    ];
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    return currentVariant.color;
+  }
 
-    return colors[Math.floor(Math.random() * colors.length)] || '#ff6b6b';
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+  }
+
+  resetToDefault(): void {
+    this.currentVariant = 0;
   }
 
   private getGlowColor(baseColor: string): string {

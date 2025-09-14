@@ -4,10 +4,16 @@ export class Style8 implements DrawingStyle {
   name = 'Classic Rainbow';
   description = 'Original rainbow cycling with sparkle effects';
   
-  private randomStyleParams = {
-    baseHue: 216,
-    saturation: 90,
-    lightness: 50,
+  private currentVariant = 0;
+  private colorVariants = [
+    { baseHue: 216, saturation: 90, lightness: 50, name: 'Classic Rainbow' },
+    { baseHue: 0, saturation: 95, lightness: 55, name: 'Red Spectrum' },
+    { baseHue: 120, saturation: 85, lightness: 50, name: 'Green Rainbow' },
+    { baseHue: 240, saturation: 90, lightness: 60, name: 'Blue Spectrum' },
+    { baseHue: 60, saturation: 95, lightness: 65, name: 'Yellow Rainbow' }
+  ];
+  
+  private styleParams = {
     sparkleIntensity: 0.3,
     sparkleSize: 2,
     sparkleCount: 3,
@@ -28,12 +34,13 @@ export class Style8 implements DrawingStyle {
     
     // Style 8: EXACT Original Style 1 Implementation
     const time = Date.now() * 0.001;
-    const baseHue = this.randomStyleParams.baseHue;
-    const cycleSpeed = this.randomStyleParams.cycleSpeed || 8;
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    const baseHue = currentVariant.baseHue;
+    const cycleSpeed = this.styleParams.cycleSpeed || 8;
     
     // Apply light performant filter for Style 8 (only occasionally for performance)
-    if (this.randomStyleParams.filter && this.randomStyleParams.filter !== 'none' && Math.random() < 0.3) {
-      ctx.filter = this.randomStyleParams.filter;
+    if (this.styleParams.filter && this.styleParams.filter !== 'none' && Math.random() < 0.3) {
+      ctx.filter = this.styleParams.filter;
     }
     
     // EXACT original Style 1 rainbow cycling effect
@@ -44,8 +51,8 @@ export class Style8 implements DrawingStyle {
     
     // EXACT original palette with theme-based cycling
     const hue = (baseHue + hueVariation + 360) % 360;
-    const saturation = Math.max(70, Math.min(100, this.randomStyleParams.saturation + saturationVariation));
-    const lightness = Math.max(35, Math.min(85, this.randomStyleParams.lightness + lightnessVariation)); // EXACT original: 85 max
+    const saturation = Math.max(70, Math.min(100, currentVariant.saturation + saturationVariation));
+    const lightness = Math.max(35, Math.min(85, currentVariant.lightness + lightnessVariation)); // EXACT original: 85 max
     
     const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     
@@ -56,7 +63,7 @@ export class Style8 implements DrawingStyle {
     
     // Report actual size to debugger
     if (typeof (window as any).reportActualSize === 'function') {
-      (window as any).reportActualSize('Original Style 1', currentSizeLevel, finalSize);
+      (window as any).reportActualSize('Original Style 1', _currentSizeLevel, finalSize);
     }
     
     ctx.save();
@@ -95,7 +102,7 @@ export class Style8 implements DrawingStyle {
     }
     
     // Reset filter after drawing (EXACT original)
-    if (this.randomStyleParams.filter && this.randomStyleParams.filter !== 'none') {
+    if (this.styleParams.filter && this.styleParams.filter !== 'none') {
       ctx.filter = 'none';
     }
     
@@ -120,62 +127,11 @@ export class Style8 implements DrawingStyle {
     }
   }
 
-  generateRandomParameters(): void {
-    // Generate new random parameters for this style
-    const currentHue = this.randomStyleParams.baseHue;
-    const currentSaturation = this.randomStyleParams.saturation;
-    const currentLightness = this.randomStyleParams.lightness;
-    
-    let hue = Math.floor(Math.random() * 360);
-    let saturation = 90;
-    let lightness = 50;
-    let attempts = 0;
-    const maxAttempts = 15;
-    
-    do {
-      hue = Math.floor(Math.random() * 360);
-      const saturationChoices = [80, 85, 90, 95, 100];
-      saturation = saturationChoices[Math.floor(Math.random() * saturationChoices.length)]!;
-      const lightnessChoices = [35, 40, 45, 50, 55, 60, 65];
-      lightness = lightnessChoices[Math.floor(Math.random() * lightnessChoices.length)]!;
-      attempts++;
-    } while (
-      attempts < maxAttempts && 
-      Math.abs(hue - currentHue) < 60 && 
-      Math.abs(saturation - currentSaturation) < 20 && 
-      Math.abs(lightness - currentLightness) < 20
-    );
-
-    this.randomStyleParams = {
-      ...this.randomStyleParams,
-      baseHue: hue,
-      saturation,
-      lightness,
-      sparkleIntensity: Math.random() * 0.6 + 0.4,
-      sparkleSize: Math.random() * 3 + 1.0,
-      sparkleCount: Math.floor(Math.random() * 5) + 2,
-      glowIntensity: Math.random() * 0.4 + 0.1,
-      pulseSpeed: Math.random() * 0.03 + 0.01,
-      cycleSpeed: Math.random() * 10 + 5, // Original cycle speed range
-      filter: Math.random() < 0.3 ? 'hue-rotate(90deg) saturate(1.5)' : 'none',
-    };
-    
-    console.log(`🌈 Style 8 NEW COLORS: baseHue=${hue}, saturation=${saturation}, lightness=${lightness}, cycleSpeed=${this.randomStyleParams.cycleSpeed}`);
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
   }
 
   resetToDefault(): void {
-    this.randomStyleParams = {
-      baseHue: 216,
-      saturation: 90,
-      lightness: 50,
-      sparkleIntensity: 0.3,
-      sparkleSize: 2,
-      sparkleCount: 3,
-      glowIntensity: 0.2,
-      pulseSpeed: 0.02,
-      sizeMultiplier: 1.0,
-      cycleSpeed: 8,
-      filter: 'none',
-    };
+    this.currentVariant = 0;
   }
 }

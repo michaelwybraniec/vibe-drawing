@@ -1,4 +1,6 @@
 import { DrawingStyle, DrawingPoint, StyleContext } from './baseStyle.js';
+import { GlowStyle } from './glowStyle.js';
+import { TriangleStyle } from './triangle-draw.js';
 import { Style1 } from './classic.js';
 import { Style2 } from './3d-sphere.js';
 import { Style3 } from './glitch-wave.js';
@@ -7,6 +9,11 @@ import { Style5 } from './water-drops.js';
 import { Style6 } from './holographic-prism.js';
 import { Style7 } from './plasma-energy.js';
 import { Style8 } from './classic-rainbow.js';
+import { ChalkStyle } from './chalkStyle.js';
+import { LavaStyle } from './lavaStyle.js';
+import { NeonStyle } from './neonStyle.js';
+import { ParticleStyle } from './particleStyle.js';
+import { WatercolorStyle } from './watercolorStyle.js';
 
 export class StyleManager {
   private styles: DrawingStyle[] = [];
@@ -16,14 +23,21 @@ export class StyleManager {
   constructor() {
     // Initialize all available styles
     this.styles = [
-      new Style1(),      // Classic
-      new Style2(),      // 3D Sphere
-      new Style3(),      // Glitch Wave
-      new Style4(),      // Fire Lava
-      new Style5(),      // Water Drops
-      new Style6(),      // Holographic Prism
-      new Style7(),      // Plasma Energy
-      new Style8(),      // Classic Rainbow
+      new TriangleStyle(), // Triangle
+      new GlowStyle(),     // Glow
+      new Style1(),        // Classic
+      new Style2(),        // 3D Sphere
+      new Style3(),        // Glitch Wave
+      new Style4(),        // Fire Lava
+      new Style5(),        // Water Drops
+      new Style6(),        // Holographic Prism
+      new Style7(),        // Plasma Energy
+      new Style8(),        // Classic Rainbow
+      new ChalkStyle(),    // Chalk
+      new LavaStyle(),     // Lava
+      new NeonStyle(),     // Neon
+      new ParticleStyle(), // Particle
+      new WatercolorStyle(), // Watercolor
     ];
 
     this.currentStyle = this.styles[0]!;
@@ -45,7 +59,6 @@ export class StyleManager {
     if (index >= 0 && index < this.styles.length) {
       this.currentStyleIndex = index;
       this.currentStyle = this.styles[index]!;
-      console.log(`🎨 Switched to style: ${this.currentStyle.name}`);
     }
   }
 
@@ -66,9 +79,6 @@ export class StyleManager {
   }
 
   onMove(points: DrawingPoint[], context: StyleContext): void {
-    console.log(
-      `🎯 StyleManager.onMove called for style: ${this.currentStyle.name}, points: ${points.length}`,
-    );
     this.currentStyle.onMove?.(points, context);
   }
 

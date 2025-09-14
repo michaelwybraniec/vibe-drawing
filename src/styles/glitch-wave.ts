@@ -4,10 +4,16 @@ export class Style3 implements DrawingStyle {
   name = 'Glitch Wave';
   description = 'Digital glitch effects with wave distortions';
   
-  private randomStyleParams = {
-    baseHue: 300,
-    saturation: 100,
-    lightness: 50,
+  private currentVariant = 0;
+  private colorVariants = [
+    { baseHue: 300, saturation: 100, lightness: 50, name: 'Cyber Purple' },
+    { baseHue: 0, saturation: 100, lightness: 60, name: 'Neon Red' },
+    { baseHue: 120, saturation: 100, lightness: 50, name: 'Matrix Green' },
+    { baseHue: 200, saturation: 100, lightness: 60, name: 'Electric Blue' },
+    { baseHue: 60, saturation: 100, lightness: 70, name: 'Digital Yellow' }
+  ];
+  
+  private styleParams = {
     glitchIntensity: 0.6,
     waveFrequency: 0.1,
     distortionAmount: 0.3,
@@ -23,7 +29,8 @@ export class Style3 implements DrawingStyle {
     
     // Glitch Wave Effect
     const time = Date.now() * 0.001;
-    const baseHue = this.randomStyleParams.baseHue;
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    const baseHue = currentVariant.baseHue;
     
     // Use global size system
     const baseMultiplier = 0.3 * (sizeMultipliers[currentSizeLevel] || 1.0);
@@ -43,14 +50,14 @@ export class Style3 implements DrawingStyle {
       ctx.globalCompositeOperation = 'source-over';
       
       // Create glitch wave distortion
-      const waveOffset = Math.sin(time * this.randomStyleParams.waveFrequency * 10) * this.randomStyleParams.distortionAmount * glitchSize;
+      const waveOffset = Math.sin(time * this.styleParams.waveFrequency * 10) * this.styleParams.distortionAmount * glitchSize;
       const glitchX = x + waveOffset;
-      const glitchY = y + Math.sin(time * this.randomStyleParams.waveFrequency * 15) * this.randomStyleParams.distortionAmount * glitchSize * 0.5;
+      const glitchY = y + Math.sin(time * this.styleParams.waveFrequency * 15) * this.styleParams.distortionAmount * glitchSize * 0.5;
       
       // Main glitch color
       const hue = (baseHue + Math.sin(time * 5) * 60) % 360;
-      const saturation = this.randomStyleParams.saturation;
-      const lightness = this.randomStyleParams.lightness;
+      const saturation = currentVariant.saturation;
+      const lightness = currentVariant.lightness;
       
       // Primary glitch stroke
       ctx.globalAlpha = 0.8;
@@ -60,7 +67,7 @@ export class Style3 implements DrawingStyle {
       ctx.fill();
       
       // Glitch distortion lines
-      if (Math.random() < this.randomStyleParams.glitchIntensity) {
+      if (Math.random() < this.styleParams.glitchIntensity) {
         ctx.globalAlpha = 0.6;
         ctx.fillStyle = `hsl(${(hue + 120) % 360}, ${saturation}%, ${lightness + 20}%)`;
         
@@ -105,26 +112,12 @@ export class Style3 implements DrawingStyle {
     ctx.restore();
   }
 
-  generateRandomParameters(): void {
-    this.randomStyleParams = {
-      baseHue: Math.floor(Math.random() * 360),
-      saturation: 80 + Math.random() * 20,
-      lightness: 40 + Math.random() * 40,
-      glitchIntensity: 0.3 + Math.random() * 0.7,
-      waveFrequency: 0.05 + Math.random() * 0.15,
-      distortionAmount: 0.2 + Math.random() * 0.4,
-    };
-    console.log(`⚡ Style 3 NEW COLORS: baseHue=${this.randomStyleParams.baseHue}, glitchIntensity=${this.randomStyleParams.glitchIntensity}`);
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+    const _variant = this.colorVariants[this.currentVariant]!;
   }
 
   resetToDefault(): void {
-    this.randomStyleParams = {
-      baseHue: 300,
-      saturation: 100,
-      lightness: 50,
-      glitchIntensity: 0.6,
-      waveFrequency: 0.1,
-      distortionAmount: 0.3,
-    };
+    this.currentVariant = 0;
   }
 }

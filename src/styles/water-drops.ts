@@ -4,10 +4,16 @@ export class Style5 implements DrawingStyle {
   name = 'Water Drops';
   description = 'Liquid water effects with ripples and reflections';
   
-  private randomStyleParams = {
-    baseHue: 200,
-    saturation: 80,
-    lightness: 60,
+  private currentVariant = 0;
+  private colorVariants = [
+    { baseHue: 200, saturation: 80, lightness: 60, name: 'Ocean Blue' },
+    { baseHue: 180, saturation: 85, lightness: 55, name: 'Cyan Water' },
+    { baseHue: 220, saturation: 75, lightness: 65, name: 'Sky Blue' },
+    { baseHue: 160, saturation: 90, lightness: 50, name: 'Teal Drops' },
+    { baseHue: 240, saturation: 80, lightness: 70, name: 'Light Blue' }
+  ];
+  
+  private styleParams = {
     rippleIntensity: 0.6,
     dropCount: 4,
     reflectionStrength: 0.5,
@@ -23,7 +29,8 @@ export class Style5 implements DrawingStyle {
     
     // Water Drops Effect
     const time = Date.now() * 0.001;
-    const baseHue = this.randomStyleParams.baseHue;
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    const baseHue = currentVariant.baseHue;
     
     // Use global size system
     const baseMultiplier = 0.4 * (sizeMultipliers[currentSizeLevel] || 1.0);
@@ -49,8 +56,8 @@ export class Style5 implements DrawingStyle {
       );
       
       const hue = (baseHue + Math.sin(time * 2) * 20) % 360;
-      const saturation = this.randomStyleParams.saturation;
-      const lightness = this.randomStyleParams.lightness;
+      const saturation = currentVariant.saturation;
+      const lightness = currentVariant.lightness;
       
       // Highlight (light blue/white)
       gradient.addColorStop(0, `hsl(${hue}, ${saturation}%, ${Math.min(95, lightness + 35)}%)`);
@@ -65,7 +72,7 @@ export class Style5 implements DrawingStyle {
       ctx.fill();
       
       // Water ripple effect
-      if (Math.random() < this.randomStyleParams.rippleIntensity) {
+      if (Math.random() < this.styleParams.rippleIntensity) {
         ctx.globalAlpha = 0.4;
         ctx.strokeStyle = `hsl(${hue}, ${saturation}%, ${lightness + 20}%)`;
         ctx.lineWidth = 2;
@@ -84,7 +91,7 @@ export class Style5 implements DrawingStyle {
       
       // Water droplets
       if (Math.random() < 0.5) {
-        const dropCount = Math.floor(this.randomStyleParams.dropCount * (0.5 + Math.random()));
+        const dropCount = Math.floor(this.styleParams.dropCount * (0.5 + Math.random()));
         
         for (let i = 0; i < dropCount; i++) {
           const dropX = x + (Math.random() - 0.5) * waterSize * 1.8;
@@ -108,7 +115,7 @@ export class Style5 implements DrawingStyle {
       }
       
       // Reflection effect
-      if (Math.random() < this.randomStyleParams.reflectionStrength) {
+      if (Math.random() < this.styleParams.reflectionStrength) {
         ctx.globalAlpha = 0.3;
         ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness + 40}%)`;
         
@@ -139,26 +146,12 @@ export class Style5 implements DrawingStyle {
     ctx.restore();
   }
 
-  generateRandomParameters(): void {
-    this.randomStyleParams = {
-      baseHue: 180 + Math.random() * 60, // Blue to cyan range
-      saturation: 70 + Math.random() * 30,
-      lightness: 50 + Math.random() * 30,
-      rippleIntensity: 0.3 + Math.random() * 0.7,
-      dropCount: 2 + Math.floor(Math.random() * 6),
-      reflectionStrength: 0.2 + Math.random() * 0.6,
-    };
-    console.log(`💧 Style 5 NEW COLORS: baseHue=${this.randomStyleParams.baseHue}, rippleIntensity=${this.randomStyleParams.rippleIntensity}`);
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+    const _variant = this.colorVariants[this.currentVariant]!;
   }
 
   resetToDefault(): void {
-    this.randomStyleParams = {
-      baseHue: 200,
-      saturation: 80,
-      lightness: 60,
-      rippleIntensity: 0.6,
-      dropCount: 4,
-      reflectionStrength: 0.5,
-    };
+    this.currentVariant = 0;
   }
 }

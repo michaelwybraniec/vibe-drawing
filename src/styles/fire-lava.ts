@@ -4,10 +4,16 @@ export class Style4 implements DrawingStyle {
   name = 'Fire Lava';
   description = 'Flowing fire and lava effects with heat distortion';
   
-  private randomStyleParams = {
-    baseHue: 15,
-    saturation: 90,
-    lightness: 55,
+  private currentVariant = 0;
+  private colorVariants = [
+    { baseHue: 15, saturation: 90, lightness: 55, name: 'Classic Fire' },
+    { baseHue: 0, saturation: 85, lightness: 50, name: 'Deep Red' },
+    { baseHue: 30, saturation: 95, lightness: 60, name: 'Bright Orange' },
+    { baseHue: 45, saturation: 90, lightness: 65, name: 'Golden Flame' },
+    { baseHue: 60, saturation: 85, lightness: 70, name: 'Yellow Fire' }
+  ];
+  
+  private styleParams = {
     fireIntensity: 0.7,
     heatDistortion: 0.4,
     emberCount: 5,
@@ -23,7 +29,8 @@ export class Style4 implements DrawingStyle {
     
     // Fire Lava Effect
     const time = Date.now() * 0.001;
-    const baseHue = this.randomStyleParams.baseHue;
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    const baseHue = currentVariant.baseHue;
     
     // Use global size system
     const baseMultiplier = 0.5 * (sizeMultipliers[currentSizeLevel] || 1.0);
@@ -49,8 +56,8 @@ export class Style4 implements DrawingStyle {
       );
       
       const hue = (baseHue + Math.sin(time * 3) * 20) % 360;
-      const saturation = this.randomStyleParams.saturation;
-      const lightness = this.randomStyleParams.lightness;
+      const saturation = currentVariant.saturation;
+      const lightness = currentVariant.lightness;
       
       // Hot center (white/yellow)
       gradient.addColorStop(0, `hsl(${hue}, ${saturation}%, 90%)`);
@@ -67,7 +74,7 @@ export class Style4 implements DrawingStyle {
       ctx.fill();
       
       // Heat distortion effect
-      if (Math.random() < this.randomStyleParams.heatDistortion) {
+      if (Math.random() < this.styleParams.heatDistortion) {
         ctx.globalAlpha = 0.6;
         ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness + 40}%)`;
         
@@ -85,7 +92,7 @@ export class Style4 implements DrawingStyle {
       
       // Ember particles
       if (Math.random() < 0.4) {
-        const emberCount = Math.floor(this.randomStyleParams.emberCount * (0.5 + Math.random()));
+        const emberCount = Math.floor(this.styleParams.emberCount * (0.5 + Math.random()));
         
         for (let i = 0; i < emberCount; i++) {
           const emberX = x + (Math.random() - 0.5) * fireSize * 2;
@@ -121,26 +128,12 @@ export class Style4 implements DrawingStyle {
     ctx.restore();
   }
 
-  generateRandomParameters(): void {
-    this.randomStyleParams = {
-      baseHue: 10 + Math.random() * 40, // Orange to red range
-      saturation: 80 + Math.random() * 20,
-      lightness: 45 + Math.random() * 30,
-      fireIntensity: 0.4 + Math.random() * 0.6,
-      heatDistortion: 0.2 + Math.random() * 0.6,
-      emberCount: 3 + Math.floor(Math.random() * 5),
-    };
-    console.log(`🔥 Style 4 NEW COLORS: baseHue=${this.randomStyleParams.baseHue}, fireIntensity=${this.randomStyleParams.fireIntensity}`);
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+    const _variant = this.colorVariants[this.currentVariant]!;
   }
 
   resetToDefault(): void {
-    this.randomStyleParams = {
-      baseHue: 15,
-      saturation: 90,
-      lightness: 55,
-      fireIntensity: 0.7,
-      heatDistortion: 0.4,
-      emberCount: 5,
-    };
+    this.currentVariant = 0;
   }
 }

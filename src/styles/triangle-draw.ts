@@ -1,9 +1,9 @@
 import { DrawingStyle, DrawingPoint, StyleContext } from './baseStyle.js';
 
-export class GlowStyle implements DrawingStyle {
-  name = 'Glow';
-  description = 'Bright neon strokes with glowing effects';
-  icon = '6';
+export class TriangleStyle implements DrawingStyle {
+  name = 'Triangle';
+  description = 'Bright neon triangles with glowing effects';
+  icon = '7';
 
   private currentVariant = 0;
   private colorVariants = [
@@ -15,7 +15,7 @@ export class GlowStyle implements DrawingStyle {
   ];
 
   draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
-    // Simple draw implementation for glow style
+    // Simple draw implementation for triangle style
     const { x, y, width, height } = point;
     const { isEraserMode } = context;
     
@@ -25,12 +25,9 @@ export class GlowStyle implements DrawingStyle {
       ctx.fillStyle = '#000000';
     } else {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#00FFFF';
     }
     
-    ctx.beginPath();
-    ctx.arc(x, y, Math.max(width, height) / 2, 0, 2 * Math.PI);
-    ctx.fill();
+    this.drawTriangle(ctx, x, y, Math.max(width, height) / 2);
     ctx.restore();
   }
 
@@ -95,33 +92,25 @@ export class GlowStyle implements DrawingStyle {
         ctx.globalAlpha = 0.3;
         ctx.fillStyle = baseColor;
 
-        ctx.beginPath();
-        ctx.arc(dotX, dotY, finalSize * 3, 0, 2 * Math.PI);
-        ctx.fill();
+        this.drawTriangle(ctx, dotX, dotY, finalSize * 3);
 
         // Create middle glow (medium, brighter)
         ctx.globalAlpha = 0.6;
         ctx.fillStyle = baseColor;
 
-        ctx.beginPath();
-        ctx.arc(dotX, dotY, finalSize * 2, 0, 2 * Math.PI);
-        ctx.fill();
+        this.drawTriangle(ctx, dotX, dotY, finalSize * 2);
 
         // Create inner glow (small, brightest)
         ctx.globalAlpha = 0.9;
         ctx.fillStyle = baseColor;
 
-        ctx.beginPath();
-        ctx.arc(dotX, dotY, finalSize, 0, 2 * Math.PI);
-        ctx.fill();
+        this.drawTriangle(ctx, dotX, dotY, finalSize);
 
         // Create bright center
         ctx.globalAlpha = 1.0;
         ctx.fillStyle = '#FFFFFF';
 
-        ctx.beginPath();
-        ctx.arc(dotX, dotY, finalSize * 0.3, 0, 2 * Math.PI);
-        ctx.fill();
+        this.drawTriangle(ctx, dotX, dotY, finalSize * 0.3);
 
         // Add glow trail for animation
         this.glowTrails.push({
@@ -165,9 +154,7 @@ export class GlowStyle implements DrawingStyle {
         ctx.globalAlpha = trail.life * 0.4;
         ctx.fillStyle = trail.color;
 
-        ctx.beginPath();
-        ctx.arc(trail.x, trail.y, trail.size * 2, 0, 2 * Math.PI);
-        ctx.fill();
+        this.drawTriangle(ctx, trail.x, trail.y, trail.size * 2);
 
         ctx.restore();
         return true;
@@ -237,11 +224,62 @@ export class GlowStyle implements DrawingStyle {
       const sparkleX = x + Math.cos(angle) * 10;
       const sparkleY = y + Math.sin(angle) * 10;
 
-      ctx.beginPath();
-      ctx.arc(sparkleX, sparkleY, 2, 0, 2 * Math.PI);
-      ctx.fill();
+      this.drawTriangle(ctx, sparkleX, sparkleY, 2);
     }
 
     ctx.restore();
+  }
+
+  private drawTriangle(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    
+    // Define three different colors for the three sides
+    const sideColors = [
+      `hsl(${currentVariant.baseHue}, ${currentVariant.saturation}%, ${currentVariant.lightness}%)`, // Top side
+      `hsl(${(currentVariant.baseHue + 120) % 360}, ${currentVariant.saturation}%, ${currentVariant.lightness}%)`, // Left side
+      `hsl(${(currentVariant.baseHue + 240) % 360}, ${currentVariant.saturation}%, ${currentVariant.lightness}%)`  // Right side
+    ];
+    
+    // Calculate triangle vertices
+    const topX = x;
+    const topY = y - size / 2;
+    const leftX = x - size / 2;
+    const leftY = y + size / 2;
+    const rightX = x + size / 2;
+    const rightY = y + size / 2;
+    
+    // Draw each side with different colors
+    // Top side (top to left)
+    ctx.beginPath();
+    ctx.moveTo(topX, topY);
+    ctx.lineTo(leftX, leftY);
+    ctx.strokeStyle = sideColors[0]!;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Left side (left to right)
+    ctx.beginPath();
+    ctx.moveTo(leftX, leftY);
+    ctx.lineTo(rightX, rightY);
+    ctx.strokeStyle = sideColors[1]!;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Right side (right to top)
+    ctx.beginPath();
+    ctx.moveTo(rightX, rightY);
+    ctx.lineTo(topX, topY);
+    ctx.strokeStyle = sideColors[2]!;
+    ctx.lineWidth = 3;
+    ctx.stroke();
+    
+    // Fill the triangle with a semi-transparent version of the base color
+    ctx.beginPath();
+    ctx.moveTo(topX, topY);
+    ctx.lineTo(leftX, leftY);
+    ctx.lineTo(rightX, rightY);
+    ctx.closePath();
+    ctx.fillStyle = `hsla(${currentVariant.baseHue}, ${currentVariant.saturation}%, ${currentVariant.lightness}%, 0.3)`;
+    ctx.fill();
   }
 }

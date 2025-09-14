@@ -5,6 +5,15 @@ export class ParticleStyle implements DrawingStyle {
   description = 'Smooth particle-based drawing with haptic feedback';
   icon = '1';
 
+  private currentVariant = 0;
+  private colorVariants = [
+    { color: '#FF6B6B', name: 'Coral' },
+    { color: '#4ECDC4', name: 'Turquoise' },
+    { color: '#45B7D1', name: 'Sky Blue' },
+    { color: '#96CEB4', name: 'Mint Green' },
+    { color: '#FFEAA7', name: 'Soft Yellow' }
+  ];
+
   draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
     // Simple draw implementation for particle style
     const { x, y, width, height } = point;
@@ -16,7 +25,7 @@ export class ParticleStyle implements DrawingStyle {
       ctx.fillStyle = '#000000';
     } else {
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#FF6B6B';
+      ctx.fillStyle = this.getParticleColor();
     }
     
     ctx.beginPath();
@@ -30,12 +39,10 @@ export class ParticleStyle implements DrawingStyle {
   private previousPoint: DrawingPoint | null = null;
 
   onStart(point: DrawingPoint, _context: StyleContext): void {
-    console.log('🎨 Particle style started');
     this.previousPoint = point;
   }
 
   onMove(points: DrawingPoint[], context: StyleContext): void {
-    console.log('🎨 ParticleStyle.onMove called');
     const { ctx, isEraserMode, thicknessMultiplier: _thicknessMultiplier, currentSizeLevel: _currentSizeLevel, sizeMultipliers: _sizeMultipliers, isWebApp: _isWebApp } =
       context;
 
@@ -97,7 +104,6 @@ export class ParticleStyle implements DrawingStyle {
   }
 
   onEnd(_context: StyleContext): void {
-    console.log('🎨 Particle style ended');
   }
 
   private calculateSizeMultiplier(point: DrawingPoint, context: StyleContext): number {
@@ -156,5 +162,18 @@ export class ParticleStyle implements DrawingStyle {
       ctx.arc(sparkleX, sparkleY, sparkleSize, 0, 2 * Math.PI);
       ctx.fill();
     }
+  }
+
+  private getParticleColor(): string {
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    return currentVariant.color;
+  }
+
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+  }
+
+  resetToDefault(): void {
+    this.currentVariant = 0;
   }
 }

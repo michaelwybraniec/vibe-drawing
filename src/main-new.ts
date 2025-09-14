@@ -3,16 +3,12 @@ import { StyleManager } from './styles/styleManager.js';
 import { DrawingPoint, StyleContext } from './styles/baseStyle.js';
 
 // Debug: Check if JavaScript is loading
-console.log('🎨 Vibe Drawing app starting...');
-console.log('📍 Current location:', window.location.href);
-console.log('🌐 User agent:', navigator.userAgent);
 
 // Fallback: Show info popup if main app fails to load
 setTimeout(() => {
   const app = document.getElementById('app');
   const splash = document.getElementById('splash-screen');
   if (app && splash && !app.querySelector('canvas')) {
-    console.log('⚠️ Main app failed to load, showing info popup');
     splash.style.display = 'none';
     const infoPopup = document.getElementById('info-popup');
     if (infoPopup) {
@@ -40,7 +36,6 @@ let isEraserMode = false;
 
 // Initialize the app
 function initApp(): void {
-  console.log('🎨 Initializing Vibe Drawing app...');
 
   const canvas = document.getElementById('app-canvas') as HTMLCanvasElement;
   if (!canvas) {
@@ -58,7 +53,6 @@ function initApp(): void {
   setupEventListeners(canvas);
   setupUI();
 
-  console.log('✅ App initialized successfully');
 }
 
 function setupCanvas(canvas: HTMLCanvasElement): void {
@@ -80,7 +74,6 @@ function setupCanvas(canvas: HTMLCanvasElement): void {
 function clearCanvas(canvas: HTMLCanvasElement): void {
   if (!ctx) return;
 
-  console.log('Clearing canvas, size:', canvas.width, 'x', canvas.height);
 
   // Create a beautiful gradient background
   const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
@@ -102,7 +95,6 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
     ctx.fill();
   }
 
-  console.log('Canvas cleared and background drawn');
 }
 
 function setupEventListeners(canvas: HTMLCanvasElement): void {

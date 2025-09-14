@@ -4,13 +4,16 @@ export class Style7 implements DrawingStyle {
   name = 'Plasma Energy';
   description = 'Swirling plasma energy with dynamic particles';
   
-  private randomStyleParams = {
-    baseHue: 280, // Purple plasma base
-    saturation: 100,
-    lightness: 50,
-    plasmaHue: 280, // Separate hue for plasma particles
-    plasmaSaturation: 100,
-    plasmaLightness: 70,
+  private currentVariant = 0;
+  private colorVariants = [
+    { baseHue: 280, plasmaHue: 280, saturation: 100, plasmaSaturation: 100, lightness: 50, plasmaLightness: 70, name: 'Purple Plasma' },
+    { baseHue: 0, plasmaHue: 15, saturation: 100, plasmaSaturation: 95, lightness: 55, plasmaLightness: 75, name: 'Red Energy' },
+    { baseHue: 120, plasmaHue: 140, saturation: 100, plasmaSaturation: 90, lightness: 50, plasmaLightness: 70, name: 'Green Plasma' },
+    { baseHue: 200, plasmaHue: 220, saturation: 100, plasmaSaturation: 95, lightness: 60, plasmaLightness: 80, name: 'Blue Energy' },
+    { baseHue: 60, plasmaHue: 80, saturation: 100, plasmaSaturation: 100, lightness: 65, plasmaLightness: 85, name: 'Yellow Plasma' }
+  ];
+  
+  private styleParams = {
     swirlSpeed: 0.01,
     particleCount: 4,
   };
@@ -34,11 +37,12 @@ export class Style7 implements DrawingStyle {
 
     ctx.save();
 
-    // Plasma colors with swirling effect - use randomStyleParams
-    const baseHue = this.randomStyleParams.baseHue;
-    const plasmaHue = this.randomStyleParams.plasmaHue;
-    const swirlSpeed = this.randomStyleParams.swirlSpeed || 0.01;
-    const particleCount = this.randomStyleParams.particleCount || 4;
+    // Plasma colors with swirling effect - use color variants
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    const baseHue = currentVariant.baseHue;
+    const plasmaHue = currentVariant.plasmaHue;
+    const swirlSpeed = this.styleParams.swirlSpeed || 0.01;
+    const particleCount = this.styleParams.particleCount || 4;
 
     // Create plasma swirling effect with multiple frequencies
     const swirl1 = Math.sin(time * swirlSpeed) * 0.4 + 0.6; // Main swirl
@@ -47,8 +51,8 @@ export class Style7 implements DrawingStyle {
     const combinedSwirl = (swirl1 + swirl2 + swirl3) / 3;
 
     // Plasma colors that swirl - different colors for different parts
-    const plasmaColor = `hsl(${baseHue}, ${this.randomStyleParams.saturation}%, ${this.randomStyleParams.lightness + combinedSwirl * 30}%)`;
-    // const particleColor = `hsl(${plasmaHue}, ${this.randomStyleParams.plasmaSaturation}%, ${this.randomStyleParams.plasmaLightness + combinedSwirl * 20}%)`;
+    const plasmaColor = `hsl(${baseHue}, ${currentVariant.saturation}%, ${currentVariant.lightness + combinedSwirl * 30}%)`;
+    // const particleColor = `hsl(${plasmaHue}, ${currentVariant.plasmaSaturation}%, ${currentVariant.plasmaLightness + combinedSwirl * 20}%)`;
 
     // Plasma movement with swirling
     const plasmaPulse = Math.sin(time / 200) * 0.4 + 0.6;
@@ -100,9 +104,9 @@ export class Style7 implements DrawingStyle {
         );
         
         const particleHue = (plasmaHue + i * 40) % 360;
-        gradient.addColorStop(0, `hsl(${particleHue}, ${this.randomStyleParams.plasmaSaturation}%, ${80 + combinedSwirl * 15}%)`);
-        gradient.addColorStop(0.7, `hsl(${particleHue}, ${this.randomStyleParams.plasmaSaturation - 20}%, ${60 + combinedSwirl * 20}%)`);
-        gradient.addColorStop(1, `hsl(${particleHue}, ${this.randomStyleParams.plasmaSaturation - 40}%, ${40 + combinedSwirl * 25}%)`);
+        gradient.addColorStop(0, `hsl(${particleHue}, ${currentVariant.plasmaSaturation}%, ${80 + combinedSwirl * 15}%)`);
+        gradient.addColorStop(0.7, `hsl(${particleHue}, ${currentVariant.plasmaSaturation - 20}%, ${60 + combinedSwirl * 20}%)`);
+        gradient.addColorStop(1, `hsl(${particleHue}, ${currentVariant.plasmaSaturation - 40}%, ${40 + combinedSwirl * 25}%)`);
         
         ctx.globalAlpha = (0.8 - i * 0.1) * combinedSwirl;
         ctx.fillStyle = gradient;
@@ -127,9 +131,9 @@ export class Style7 implements DrawingStyle {
           x, y, animatedSize * 0.8
         );
         
-        coreGradient.addColorStop(0, `hsl(${baseHue}, ${this.randomStyleParams.saturation}%, ${80 + combinedSwirl * 15}%)`);
-        coreGradient.addColorStop(0.5, `hsl(${baseHue}, ${this.randomStyleParams.saturation - 10}%, ${65 + combinedSwirl * 20}%)`);
-        coreGradient.addColorStop(1, `hsl(${baseHue}, ${this.randomStyleParams.saturation - 20}%, ${45 + combinedSwirl * 25}%)`);
+        coreGradient.addColorStop(0, `hsl(${baseHue}, ${currentVariant.saturation}%, ${80 + combinedSwirl * 15}%)`);
+        coreGradient.addColorStop(0.5, `hsl(${baseHue}, ${currentVariant.saturation - 10}%, ${65 + combinedSwirl * 20}%)`);
+        coreGradient.addColorStop(1, `hsl(${baseHue}, ${currentVariant.saturation - 20}%, ${45 + combinedSwirl * 25}%)`);
         
         ctx.globalAlpha = 0.9 * combinedSwirl;
         ctx.fillStyle = coreGradient;
@@ -186,30 +190,11 @@ export class Style7 implements DrawingStyle {
     ctx.restore();
   }
 
-  generateRandomParameters(): void {
-    this.randomStyleParams = {
-      baseHue: Math.floor(Math.random() * 360), // Full color spectrum for base
-      saturation: 80 + Math.random() * 20, // 80-100% saturation
-      lightness: 40 + Math.random() * 40, // 40-80% lightness
-      plasmaHue: Math.floor(Math.random() * 360), // Separate plasma color - full spectrum
-      plasmaSaturation: 85 + Math.random() * 15, // 85-100% saturation for plasma
-      plasmaLightness: 50 + Math.random() * 30, // 50-80% lightness for plasma
-      swirlSpeed: 0.005 + Math.random() * 0.015, // 0.005-0.02 swirl speed
-      particleCount: 3 + Math.floor(Math.random() * 3), // 3-5 particles
-    };
-    console.log(`🌌 Style 7 NEW COLORS: baseHue=${this.randomStyleParams.baseHue}, plasmaHue=${this.randomStyleParams.plasmaHue}, swirlSpeed=${this.randomStyleParams.swirlSpeed}, particleCount=${this.randomStyleParams.particleCount}`);
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
   }
 
   resetToDefault(): void {
-    this.randomStyleParams = {
-      baseHue: 280,
-      saturation: 100,
-      lightness: 50,
-      plasmaHue: 280,
-      plasmaSaturation: 100,
-      plasmaLightness: 70,
-      swirlSpeed: 0.01,
-      particleCount: 4,
-    };
+    this.currentVariant = 0;
   }
 }

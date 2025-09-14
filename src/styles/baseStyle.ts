@@ -31,6 +31,6 @@ export interface DrawingStyle {
   onEnd?(context: StyleContext): void;
   onClear?(context: StyleContext): void;
   animate?(context: StyleContext): void;
-  generateRandomParameters?(): void;
+  nextColorVariant?(): void;
   resetToDefault?(): void;
 }

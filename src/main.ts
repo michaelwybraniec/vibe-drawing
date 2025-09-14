@@ -77,7 +77,6 @@ setTimeout(() => {
   const app = document.getElementById('app');
   const splash = document.getElementById('splash-screen');
   if (app && splash && !app.querySelector('canvas')) {
-    console.log('⚠️ Main app failed to load, showing info popup');
     splash.style.display = 'none';
     const infoPopup = document.getElementById('info-popup');
     if (infoPopup) {
@@ -268,7 +267,7 @@ function _initializeDebugTracking(): void {
 let currentStyle = 1; // Default to style 1
 let isStyle2Active = false;
 let _flames: any[] = [];
-let lavaLines: any[] = [];
+let _lavaLines: any[] = [];
 
 // Style context function for the new separated system
 function createStyleContext(): StyleContext {
@@ -329,14 +328,6 @@ function calculateSizeMultiplier(width: number, height: number): number {
     // Web app: Always use consistent size for better drawing experience
     const baseMultiplier = 0.15 * (sizeMultipliers[currentSizeLevel] || 1.0);
     const finalMultiplier = baseMultiplier * thicknessMultiplier;
-    if (Math.random() < 0.01) {
-      // Log occasionally to avoid spam
-      console.log('Web app size calculation:', {
-        baseMultiplier,
-        thicknessMultiplier,
-        finalMultiplier,
-      });
-    }
     return finalMultiplier; // Apply size control and thickness
   } else {
     // Mobile: Optimized for iOS performance and Apple Pencil
@@ -363,15 +354,6 @@ function calculateSizeMultiplier(width: number, height: number): number {
 
     const finalMultiplier =
       smoothedMultiplier * (sizeMultipliers[currentSizeLevel] || 1.0) * thicknessMultiplier;
-    if (Math.random() < 0.01) {
-      // Log occasionally to avoid spam
-      console.log('Size calculation:', {
-        smoothedMultiplier,
-        sizeLevel: sizeMultipliers[currentSizeLevel],
-        thicknessMultiplier,
-        finalMultiplier,
-      });
-    }
     return finalMultiplier; // Apply size control and thickness
   }
 }
@@ -384,41 +366,9 @@ function _getColorFromSize(_sizeMultiplier: number): string {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
-function getColorStyle1(_sizeMultiplier: number): string {
-  // Style 1: Multicolor vibrant drawing with vibe-based rainbow effect
-  const time = Date.now() * 0.001; // Time-based color cycling
-  const baseHue = randomStyleParams.baseHue;
-  const cycleSpeed = randomStyleParams.cycleSpeed || 8; // Use vibe-specific cycle speed
-  
-  // Create multicolor effect with vibe-based hue cycling
-  const hueCycle = Math.sin(time * cycleSpeed) * 180; // Vibe-specific cycling speed
-  const hueVariation = (Math.random() - 0.5) * 40 + hueCycle; // Add cycling to random variation
-  const saturationVariation = (Math.random() - 0.5) * 20 + Math.sin(time * 3) * 10; // Vibrant saturation
-  const lightnessVariation = (Math.random() - 0.5) * 15 + Math.sin(time * 2.5) * 8; // Brightness variation
-  
-  // Multicolor palette with vibe-based rainbow cycling
-  const hue = (baseHue + hueVariation + 360) % 360;
-  const saturation = Math.max(75, Math.min(100, randomStyleParams.saturation + saturationVariation)); // Very high saturation
-  const lightness = Math.max(40, Math.min(80, randomStyleParams.lightness + lightnessVariation)); // Bright and vibrant
+// Old getColorStyle1 function removed - now using color variants system
 
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-}
-
-function _getColorStyle2(_sizeMultiplier: number): string {
-  // Style 2: Use random parameters for fire colors
-  const baseHue = randomStyleParams.baseHue;
-  const baseSaturation = randomStyleParams.saturation;
-  const baseLightness = randomStyleParams.lightness;
-
-  // Fire colors with random variation
-  const fireHues = [baseHue, baseHue + 15, baseHue + 30, baseHue + 45]; // Based on random hue
-  const randomIndex = Math.floor(Math.random() * fireHues.length);
-  const randomHue = fireHues[randomIndex] || baseHue;
-  const hue = randomHue + (Math.random() - 0.5) * 10; // Add some variation
-  const saturation = baseSaturation + Math.random() * 15;
-  const lightness = baseLightness + Math.random() * 30;
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-}
+// Old _getColorStyle2 function removed - now using color variants system
 
 function _getColorStyle3(_sizeMultiplier: number): string {
   // Style 3: Ocean colors (blue, cyan, teal, purple)
@@ -428,77 +378,9 @@ function _getColorStyle3(_sizeMultiplier: number): string {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
-function getCurrentColor(sizeMultiplier: number): string {
-  // Always use Style 1 with random parameters
-  return getColorStyle1(sizeMultiplier);
-}
+// Old getCurrentColor function removed - now using color variants system
 
-function _drawStyle2(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  sizeMultiplier: number,
-  touchWidth: number,
-): void {
-  // Style 2: SPLIT & MERGE LINES ⚡🔀 - Lines that split into two and merge back together
-  const _time = Date.now();
-  const _isMobile = !isWebApp;
-  // Style 2: Enhanced size calculation with larger maximum size
-  let sizeVariation;
-  if (_isMobile) {
-    sizeVariation = 0.95 + Math.random() * 0.1; // Same as Style 1 mobile
-  } else {
-    sizeVariation = 0.95 + Math.random() * 0.1; // Same as Style 1 desktop
-  }
-  const pulseScale = 1 + Math.sin((Date.now()) / 160) * 0.03; // Same as Style 1
-  const baseSize = (touchWidth / 2) * sizeVariation * pulseScale; // Base size like Style 1
-  const enhancedSize = baseSize * (1 + currentSizeLevel * 0.3) * thicknessMultiplier; // Enhanced scaling for Style 2
-  const lineSize = Math.max(3.0, enhancedSize); // Minimum 3px, but can go much larger
-
-  ctx.save();
-
-  // Split line colors - dynamic and energetic
-  const baseHue = randomStyleParams.baseHue;
-  const splitHue = (baseHue + 120) % 360; // Green shift for split effect
-  const lineColor = `hsl(${splitHue}, 85%, 65%)`; // Main line color
-  // Removed unused split/merge variables since Style 2 is now simple 3D sphere
-  const animatedSize = lineSize; // Use lineSize directly since it already has the proper scaling
-
-  // Style 2: Simple 3D sphere drawing with dark shadow effect
-  const depthOffset = animatedSize * 0.1; // 3D depth offset
-  
-  // 3D shadow sphere
-  ctx.globalAlpha = 0.6;
-  ctx.fillStyle = '#000000';
-  ctx.beginPath();
-  ctx.arc(x + depthOffset, y + depthOffset, Math.max(2, animatedSize * 0.15), 0, 2 * Math.PI);
-  ctx.fill();
-  
-  // Main 3D sphere
-  ctx.globalAlpha = 0.9;
-  ctx.fillStyle = lineColor;
-  ctx.beginPath();
-  ctx.arc(x, y, Math.max(2, animatedSize * 0.12), 0, 2 * Math.PI);
-  ctx.fill();
-  
-  // Highlight on top
-  ctx.globalAlpha = 0.7;
-  ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-  ctx.arc(x - depthOffset * 0.4, y - depthOffset * 0.4, Math.max(0.5, animatedSize * 0.08), 0, 2 * Math.PI);
-    ctx.fill();
-
-  // Occasional energy burst at split/merge points - reduced for mobile
-  if (Math.random() < (_isMobile ? 0.02 : 0.05)) { // 2% chance on mobile, 5% on desktop
-    ctx.globalAlpha = 0.6;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(x, y, animatedSize * 0.1, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-
-  ctx.restore();
-}
+// Old _drawStyle2 function removed - now using color variants system
 
 // Removed old drawFlameEffect - now using separated style system
 
@@ -510,586 +392,11 @@ function _drawStyle2(
 let _backgroundStars: Array<{x: number; y: number; size: number; twinklePhase: number; twinkleSpeed: number}> = [];
 
 // Removed old drawGlitchEffect - now using separated style system
-function _drawGlitchEffect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  sizeMultiplier: number,
-  touchWidth: number,
-  _touchHeight: number,
-): void {
-  // Style 3: SINUSOIDAL SPLIT & MERGE 🌊✨ - Ultra-artistic lines that split and merge in sine wave patterns
-  const time = Date.now();
-  const _isMobile = !isWebApp;
-  // Use normal size calculation like Style 1 - no enhanced scaling
-  const baseSize = (touchWidth / 2) * (0.95 + Math.random() * 0.1);
-  const pulseScale = 1 + Math.sin(Date.now() / 160) * 0.03;
-  const waveSize = baseSize * pulseScale; // Normal size like Style 1, no enhanced scaling
+// Old _drawGlitchEffect function removed - now using color variants system
 
-  ctx.save();
+// Old fire trail and drawing functions removed - now using color variants system
 
-  // Ultra-artistic colors - flowing and ethereal
-  const baseHue = randomStyleParams.baseHue;
-  const waveHue = (baseHue + 180) % 360; // Complementary shift for wave effect
-  const primaryWave = `hsl(${waveHue}, 85%, 60%)`; // Main wave color
-  const secondaryWave = `hsl(${waveHue + 60}, 80%, 70%)`; // Secondary wave color
-  const accentWave = `hsl(${waveHue - 60}, 90%, 80%)`; // Accent wave color
-  const mergeColor = `hsl(${waveHue}, 95%, 90%)`; // Merge point color
-
-  // Sinusoidal animation - multiple wave frequencies
-  const wavePhase1 = time * 0.004; // Primary wave frequency
-  const wavePhase2 = time * 0.006; // Secondary wave frequency
-  const wavePhase3 = time * 0.003; // Tertiary wave frequency
-  const animatedSize = waveSize * sizeMultiplier * (1 + currentSizeLevel * 0.1) * thicknessMultiplier; // REDUCED from 0.3 to 0.1 for smaller maximum
-
-  // Determine if this point should create a sinusoidal split - reduced for mobile and fast drawing
-  let waveChance;
-  if (_isMobile) {
-    waveChance = 0.25; // Normal mobile
-  } else {
-    waveChance = 0.4; // Desktop
-  }
-  const shouldCreateWave = Math.random() < waveChance;
-  
-  if (shouldCreateWave) {
-    // SINUSOIDAL SPLIT: Create beautiful sine wave patterns that split and merge
-    
-    // Calculate wave parameters - optimized for mobile
-    const waveLength = animatedSize * (_isMobile ? 0.8 : 1.2); // Shorter waves on mobile
-    const waveAmplitude = animatedSize * (_isMobile ? 0.3 : 0.5); // Smaller amplitude on mobile
-    const numPoints = _isMobile ? 12 : 20; // Lower resolution on mobile for performance
-    
-    // Create the main sinusoidal path
-    ctx.globalAlpha = 0.9;
-    ctx.strokeStyle = primaryWave;
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    
-    ctx.beginPath();
-    let firstPoint = true;
-    
-    for (let i = 0; i <= numPoints; i++) {
-      const progress = i / numPoints;
-      const waveX = x + (progress - 0.5) * waveLength;
-      
-      // Create complex sine wave with multiple frequencies
-      const waveY = y + 
-        Math.sin(wavePhase1 + progress * Math.PI * 4) * waveAmplitude * 0.6 +
-        Math.sin(wavePhase2 + progress * Math.PI * 6) * waveAmplitude * 0.3 +
-        Math.sin(wavePhase3 + progress * Math.PI * 2) * waveAmplitude * 0.1;
-      
-      if (firstPoint) {
-        ctx.moveTo(waveX, waveY);
-        firstPoint = false;
-      } else {
-        ctx.lineTo(waveX, waveY);
-      }
-    }
-    ctx.stroke();
-    
-    // Create secondary wave (split path)
-    ctx.globalAlpha = 0.8;
-    ctx.strokeStyle = secondaryWave;
-    ctx.lineWidth = 2;
-    
-    ctx.beginPath();
-    firstPoint = true;
-    
-    for (let i = 0; i <= numPoints; i++) {
-      const progress = i / numPoints;
-      const waveX = x + (progress - 0.5) * waveLength;
-      
-      // Secondary wave with different phase and amplitude
-      const waveY = y + 
-        Math.sin(wavePhase1 + Math.PI/3 + progress * Math.PI * 4) * waveAmplitude * 0.5 +
-        Math.sin(wavePhase2 + Math.PI/2 + progress * Math.PI * 6) * waveAmplitude * 0.4 +
-        Math.sin(wavePhase3 + Math.PI/4 + progress * Math.PI * 2) * waveAmplitude * 0.2;
-      
-      if (firstPoint) {
-        ctx.moveTo(waveX, waveY);
-        firstPoint = false;
-      } else {
-        ctx.lineTo(waveX, waveY);
-      }
-    }
-    ctx.stroke();
-    
-    // Create tertiary wave (accent path)
-    ctx.globalAlpha = 0.7;
-    ctx.strokeStyle = accentWave;
-    ctx.lineWidth = 1.5;
-    
-    ctx.beginPath();
-    firstPoint = true;
-    
-    for (let i = 0; i <= numPoints; i++) {
-      const progress = i / numPoints;
-      const waveX = x + (progress - 0.5) * waveLength;
-      
-      // Tertiary wave with different characteristics
-      const waveY = y + 
-        Math.sin(wavePhase1 + Math.PI/6 + progress * Math.PI * 3) * waveAmplitude * 0.4 +
-        Math.sin(wavePhase2 + Math.PI/3 + progress * Math.PI * 5) * waveAmplitude * 0.3 +
-        Math.sin(wavePhase3 + Math.PI/2 + progress * Math.PI * 7) * waveAmplitude * 0.3;
-      
-      if (firstPoint) {
-        ctx.moveTo(waveX, waveY);
-        firstPoint = false;
-      } else {
-        ctx.lineTo(waveX, waveY);
-      }
-    }
-    ctx.stroke();
-    
-    // Add wave merge points (where waves converge)
-    const mergePoints = [0.2, 0.5, 0.8]; // Three merge points along the wave
-    
-    for (const mergeProgress of mergePoints) {
-      const mergeX = x + (mergeProgress - 0.5) * waveLength;
-      const mergeY = y + Math.sin(wavePhase1 + mergeProgress * Math.PI * 4) * waveAmplitude * 0.3;
-      
-      ctx.globalAlpha = 0.9;
-      ctx.fillStyle = mergeColor;
-      ctx.beginPath();
-      ctx.arc(mergeX, mergeY, 3, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-    
-  } else {
-    // SINGLE WAVE: Create a single flowing sine wave
-    const waveLength = animatedSize * 1.0; // INCREASED from 0.6 to 1.0 for longer single waves
-    const waveAmplitude = animatedSize * 0.4; // INCREASED from 0.2 to 0.4 for taller single waves
-    const numPoints = 15;
-    
-    ctx.globalAlpha = 0.8;
-    ctx.strokeStyle = primaryWave;
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    
-    ctx.beginPath();
-    let firstPoint = true;
-    
-    for (let i = 0; i <= numPoints; i++) {
-      const progress = i / numPoints;
-      const waveX = x + (progress - 0.5) * waveLength;
-      const waveY = y + Math.sin(wavePhase1 + progress * Math.PI * 3) * waveAmplitude;
-      
-      if (firstPoint) {
-        ctx.moveTo(waveX, waveY);
-        firstPoint = false;
-      } else {
-        ctx.lineTo(waveX, waveY);
-      }
-    }
-    ctx.stroke();
-    
-    // Add center point
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = mergeColor;
-    ctx.beginPath();
-    ctx.arc(x, y, 2, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-
-  // Add ethereal sparkles along the waves - reduced for mobile
-  if (Math.random() < (_isMobile ? 0.08 : 0.15)) { // 8% chance on mobile, 15% on desktop
-    const sparkleX = x + (Math.random() - 0.5) * animatedSize * (_isMobile ? 0.8 : 1.2);
-    const sparkleY = y + (Math.random() - 0.5) * animatedSize * (_isMobile ? 0.6 : 1.0);
-    
-    ctx.globalAlpha = 0.8;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(sparkleX, sparkleY, 1.5, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-
-  ctx.restore();
-}
-
-// Simple fire trail for performance
-let fireTrail: Array<{ x: number; y: number; size: number; color: string; timestamp: number }> = [];
-let lastFireTime = 0;
-
-function _drawFireEffect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  sizeMultiplier: number,
-  touchWidth: number,
-  _touchHeight: number,
-): void {
-  // BLINKING LAVA EFFECT 🔥🌋
-  const time = Date.now();
-  const lavaSize = Math.max(touchWidth, _touchHeight) * 0.4 * sizeMultiplier; // Increased from 0.2 to 0.4 for larger fire effects
-
-  ctx.save();
-
-  // Lava colors with blinking effect
-  const lavaHues = [0, 15, 30]; // Red to orange
-  const randomHue = lavaHues[Math.floor(Math.random() * lavaHues.length)] || 15;
-  const hue = randomHue + (Math.random() - 0.5) * 10;
-
-  // Create blinking effect with multiple frequencies
-  const blink1 = Math.sin(time / 150) * 0.5 + 0.5; // Fast blink
-  const blink2 = Math.sin(time / 300) * 0.3 + 0.7; // Medium blink
-  const blink3 = Math.sin(time / 600) * 0.2 + 0.8; // Slow blink
-  const combinedBlink = (blink1 + blink2 + blink3) / 3;
-
-  // Lava colors that blink
-  const lavaColor = `hsl(${hue}, 100%, ${50 + combinedBlink * 30}%)`; // Brightness blinks
-  const coreColor = `hsl(${hue + 5}, 100%, ${70 + combinedBlink * 20}%)`;
-  const glowColor = `hsl(${hue + 10}, 100%, ${40 + combinedBlink * 40}%)`;
-
-  // Lava movement with blinking
-  const lavaPulse = Math.sin(time / 100) * 0.3 + 0.7;
-  const animatedSize = lavaSize * lavaPulse * combinedBlink;
-
-  // Add to trail every 50ms for smoother lava
-  if (time - lastFireTime > 50) {
-    fireTrail.push({
-      x,
-      y,
-      size: animatedSize,
-      color: lavaColor,
-      timestamp: time,
-    });
-    lastFireTime = time;
-
-    // Keep only last 10 points for lava trail
-    if (fireTrail.length > 10) {
-      fireTrail.shift();
-    }
-  }
-
-  // Draw lava core with blinking
-  ctx.globalAlpha = 0.9 * combinedBlink;
-  ctx.fillStyle = coreColor;
-  ctx.beginPath();
-  ctx.arc(x, y, animatedSize * 0.5, 0, 2 * Math.PI);
-  ctx.fill();
-
-  // Draw main lava body with blinking
-  ctx.globalAlpha = 0.8 * combinedBlink;
-  ctx.fillStyle = lavaColor;
-  ctx.beginPath();
-  ctx.arc(x, y, animatedSize, 0, 2 * Math.PI);
-  ctx.fill();
-
-  // Draw blinking lava trail
-  fireTrail.slice(-6).forEach((point, _index) => {
-    const age = time - point.timestamp;
-    if (age < 600) {
-      // Longer trail for lava
-      const fadeProgress = age / 600;
-      const alpha = (1 - fadeProgress) * combinedBlink * 0.6;
-      const size = point.size * (1 - fadeProgress * 0.3);
-
-      // Add blinking to trail points
-      const trailBlink = Math.sin((time - point.timestamp) / 100) * 0.3 + 0.7;
-
-      ctx.globalAlpha = alpha * trailBlink;
-      ctx.fillStyle = point.color;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, size, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-  });
-
-  // Add blinking lava glow
-  ctx.globalAlpha = 0.3 * combinedBlink;
-  ctx.fillStyle = glowColor;
-  ctx.beginPath();
-  ctx.arc(x, y, animatedSize * 2.5, 0, 2 * Math.PI);
-  ctx.fill();
-
-  // Add occasional lava sparkles
-  if (Math.random() < 0.2) {
-    ctx.globalAlpha = 0.7 * combinedBlink;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(
-      x + (Math.random() - 0.5) * lavaSize,
-      y + (Math.random() - 0.5) * lavaSize,
-      2,
-      0,
-      2 * Math.PI,
-    );
-    ctx.fill();
-  }
-
-  // Clean up old trail points
-  fireTrail = fireTrail.filter((point) => time - point.timestamp < 800);
-
-  ctx.restore();
-}
-
-// Global chalk trail for dusty chalk effect (removed - no longer used)
-// let chalkTrail: Array<{ x: number; y: number; size: number; timestamp: number; pressure: number }> = [];
-// let lastChalkTime = 0;
-
-function _drawWaterEffect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  sizeMultiplier: number,
-  touchWidth: number,
-  _touchHeight: number,
-): void {
-  // CHILDREN-FRIENDLY WATER DROPS 💧🌈
-  const time = Date.now();
-  const waterSize = Math.max(touchWidth, _touchHeight) * 0.25 * sizeMultiplier; // Back to working size
-
-  ctx.save();
-
-  // Simple, bright water colors - children-friendly
-  const baseHue = randomStyleParams.baseHue;
-  const waterHue = (baseHue + 180) % 360; // Complementary color for water
-  const waterColor = `hsl(${waterHue}, 70%, 60%)`; // Bright, friendly blue
-  const highlightColor = `hsl(${waterHue}, 50%, 85%)`; // Light highlight
-  const shadowColor = `hsl(${waterHue}, 80%, 40%)`; // Darker shadow
-
-  // Simple water drop with gentle animation
-  const waterPulse = Math.sin(time / 200) * 0.1 + 0.9; // Gentle pulsing
-  const animatedSize = waterSize * waterPulse * (1 + currentSizeLevel * 0.3) * thicknessMultiplier; // Back to working scaling
-
-  // Water drop shadow (subtle)
-  ctx.globalAlpha = 0.3;
-      ctx.fillStyle = shadowColor;
-      ctx.beginPath();
-  ctx.arc(x + 1, y + 1, animatedSize * 0.8, 0, 2 * Math.PI);
-      ctx.fill();
-
-  // Main water drop
-  ctx.globalAlpha = 0.8;
-  ctx.fillStyle = waterColor;
-  ctx.beginPath();
-  ctx.arc(x, y, animatedSize, 0, 2 * Math.PI);
-  ctx.fill();
-
-  // Water highlight (small bright spot)
-  ctx.globalAlpha = 0.9;
-  ctx.fillStyle = highlightColor;
-  ctx.beginPath();
-  ctx.arc(x - animatedSize * 0.3, y - animatedSize * 0.3, animatedSize * 0.2, 0, 2 * Math.PI);
-  ctx.fill();
-
-  // Occasional sparkle (rare, children-friendly)
-  if (Math.random() < 0.1) {
-    ctx.globalAlpha = 0.7;
-    ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-    ctx.arc(x + animatedSize * 0.4, y - animatedSize * 0.4, animatedSize * 0.1, 0, 2 * Math.PI);
-      ctx.fill();
-  }
-
-  ctx.restore();
-}
-
-// Global epic cosmic storm system (removed - no longer used)
-// let cosmicParticles: Array<{...}> = [];
-// let lastEpicTime = 0;
-
-function _drawEpicEffect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  sizeMultiplier: number,
-  touchWidth: number,
-  _touchHeight: number,
-): void {
-  // Style 6: HOLOGRAPHIC PRISM EFFECT 🌈💎 - Ultra performant with creative refraction
-  const time = Date.now();
-  const prismSize = Math.max(touchWidth, _touchHeight) * 0.3 * sizeMultiplier; // Reduced base size
-
-  ctx.save();
-
-  // Holographic colors - shifting rainbow spectrum
-  const baseHue = randomStyleParams.baseHue;
-  const timeShift = time * 0.001; // Slow color shift over time
-  const hue1 = (baseHue + timeShift * 30) % 360;
-  const hue2 = (baseHue + 120 + timeShift * 30) % 360;
-  const hue3 = (baseHue + 240 + timeShift * 30) % 360;
-
-  const color1 = `hsl(${hue1}, 90%, 70%)`;
-  const color2 = `hsl(${hue2}, 90%, 70%)`;
-  const color3 = `hsl(${hue3}, 90%, 70%)`;
-
-  // Gentle rotation animation
-  const rotation = time * 0.002; // Slow rotation
-  const pulse = Math.sin(time / 400) * 0.15 + 0.85; // Gentle pulsing
-  const animatedSize = prismSize * pulse * sizeMultiplier * (1 + currentSizeLevel * 0.05) * thicknessMultiplier; // Reduced scaling for smaller maximum
-
-  // Create prism shape with three triangular sections
-  const centerX = x;
-  const centerY = y;
-  const radius = animatedSize;
-
-  // First triangular section (top)
-  ctx.globalAlpha = 0.8;
-  ctx.fillStyle = color1;
-        ctx.beginPath();
-  ctx.moveTo(centerX, centerY - radius);
-  ctx.lineTo(centerX + radius * Math.cos(rotation + Math.PI * 2/3), centerY + radius * Math.sin(rotation + Math.PI * 2/3));
-  ctx.lineTo(centerX + radius * Math.cos(rotation + Math.PI * 4/3), centerY + radius * Math.sin(rotation + Math.PI * 4/3));
-  ctx.closePath();
-        ctx.fill();
-
-  // Second triangular section (bottom right)
-  ctx.globalAlpha = 0.8;
-  ctx.fillStyle = color2;
-          ctx.beginPath();
-  ctx.moveTo(centerX, centerY - radius);
-  ctx.lineTo(centerX + radius * Math.cos(rotation + Math.PI * 4/3), centerY + radius * Math.sin(rotation + Math.PI * 4/3));
-  ctx.lineTo(centerX + radius * Math.cos(rotation), centerY + radius * Math.sin(rotation));
-  ctx.closePath();
-        ctx.fill();
-
-  // Third triangular section (bottom left)
-  ctx.globalAlpha = 0.8;
-  ctx.fillStyle = color3;
-        ctx.beginPath();
-  ctx.moveTo(centerX, centerY - radius);
-  ctx.lineTo(centerX + radius * Math.cos(rotation), centerY + radius * Math.sin(rotation));
-  ctx.lineTo(centerX + radius * Math.cos(rotation + Math.PI * 2/3), centerY + radius * Math.sin(rotation + Math.PI * 2/3));
-  ctx.closePath();
-        ctx.fill();
-
-  // Central bright core
-  ctx.globalAlpha = 0.9;
-  ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  ctx.arc(centerX, centerY, animatedSize * 0.2, 0, 2 * Math.PI);
-  ctx.fill();
-
-  // Occasional light refraction burst (rare, for extra creativity)
-  if (Math.random() < 0.03) { // 3% chance
-    ctx.globalAlpha = 0.6;
-    ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-    ctx.arc(centerX, centerY, animatedSize * 0.1, 0, 2 * Math.PI);
-      ctx.fill();
-  }
-
-  ctx.restore();
-}
-
-function drawLavaEffect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  sizeMultiplier: number,
-  touchWidth: number,
-  _touchHeight: number,
-): void {
-  // Create optimized, animated lava effect
-  const time = Date.now();
-  const lavaSize = Math.max(touchWidth, _touchHeight) * 0.6; // Smaller size for performance
-
-  ctx.save();
-
-  // Lava colors - red to orange to yellow
-  const lavaHue = 15 + ((sizeMultiplier - 0.1) / 0.3) * 30; // 15-45 degrees (red to orange)
-  const lavaColor = `hsl(${lavaHue}, 100%, 50%)`;
-  const glowColor = `hsl(${lavaHue + 10}, 100%, 70%)`;
-
-  // Animated pulse effect
-  const pulse = Math.sin(time / 200) * 0.1 + 0.9; // 0.8 to 1.0 pulse
-  const animatedSize = lavaSize * pulse;
-
-  // Draw main lava blob with animation
-  const gradient = ctx.createRadialGradient(x, y, 0, x, y, animatedSize);
-  gradient.addColorStop(0, glowColor);
-  gradient.addColorStop(0.5, lavaColor);
-  gradient.addColorStop(1, `hsla(${lavaHue}, 80%, 40%, 0.3)`);
-
-  ctx.fillStyle = gradient;
-  ctx.beginPath();
-  ctx.arc(x, y, animatedSize, 0, 2 * Math.PI);
-  ctx.fill();
-
-  ctx.restore();
-}
-
-function _drawAllStyle2Lines(ctx: CanvasRenderingContext2D): void {
-  const currentTime = Date.now();
-
-  // Draw all lava lines
-  for (let i = lavaLines.length - 1; i >= 0; i--) {
-    const line = lavaLines[i];
-    if (!line || line.points.length === 0) continue;
-
-    const lineAge = currentTime - line.startTime;
-    const meltDuration = 4000; // 4 seconds to melt away
-
-    if (line.isMelting) {
-      // Update melt progress
-      line.meltProgress = Math.min(1, lineAge / meltDuration);
-
-      if (line.meltProgress >= 1) {
-        // Line has completely melted, remove it
-        lavaLines.splice(i, 1);
-        continue;
-      }
-    }
-
-    // Draw lava line
-    for (let j = 0; j < line.points.length; j++) {
-      const point = line.points[j];
-      if (point) {
-        drawLavaEffect(
-          ctx,
-          point.x,
-          point.y,
-          point.sizeMultiplier,
-          point.touchWidth,
-          point._touchHeight,
-        );
-      }
-    }
-  }
-}
-
-function addSparkleEffect(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
-  // Enhanced sparkle effect for Style 1 - optimized for mobile performance
-  const time = Date.now() * 0.001;
-  const _isMobile = !isWebApp;
-  
-  // Reduce sparkle count for mobile performance
-  const numSparkles = _isMobile ? Math.floor(size / 12) : Math.floor(size / 6); // Half sparkles on mobile
-
-  for (let i = 0; i < numSparkles; i++) {
-    const angle = (Math.PI * 2 * i) / numSparkles + Math.sin(time * 5 + i) * 0.3;
-    const distance = size * (0.6 + Math.random() * 0.8); // Wider spread for splash
-    const sparkleX = x + Math.cos(angle) * distance;
-    const sparkleY = y + Math.sin(angle) * distance;
-    const sparkleSize = _isMobile ? 1 + Math.random() * 3 : 1 + Math.random() * 6; // Smaller sparkles on mobile
-
-    ctx.save();
-    
-    // Create vibrant, varied sparkle colors
-    const sparkleHue = (time * 100 + i * 30) % 360;
-    const sparkleSaturation = 80 + Math.random() * 20;
-    const sparkleLightness = 60 + Math.random() * 40;
-    ctx.fillStyle = `hsl(${sparkleHue}, ${sparkleSaturation}%, ${sparkleLightness}%)`;
-    
-    ctx.globalAlpha = 0.7 + Math.random() * 0.3;
-    ctx.beginPath();
-    ctx.arc(sparkleX, sparkleY, sparkleSize, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    // Skip glow effect on mobile for performance
-    if (!_isMobile) {
-    ctx.globalAlpha = 0.3;
-    ctx.fillStyle = `hsl(${sparkleHue}, ${sparkleSaturation}%, ${sparkleLightness + 20}%)`;
-    ctx.beginPath();
-    ctx.arc(sparkleX, sparkleY, sparkleSize * 1.5, 0, 2 * Math.PI);
-    ctx.fill();
-    }
-    
-    ctx.restore();
-  }
-}
+// All old drawing functions removed - now using color variants system
 
 function getCanvasPoint(
   canvas: HTMLCanvasElement,
@@ -1116,14 +423,6 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
   canvas.style.width = width + 'px';
   canvas.style.height = height + 'px';
 
-  console.log(
-    'Canvas resized to HD:',
-    canvas.width,
-    'x',
-    canvas.height,
-    'devicePixelRatio:',
-    devicePixelRatio,
-  );
 
   // Re-initialize context and clear canvas after resize (handles rotation)
   if (ctx) {
@@ -1218,7 +517,6 @@ function detectMaximumVectorQuality(canvas: HTMLCanvasElement): { maxScale: numb
 
 async function exportWithOffscreenCanvas(canvas: HTMLCanvasElement, quality: string, format: string): Promise<void> {
   try {
-    console.log('Professional OffscreenCanvas export for true high resolution');
     
     // Create OffscreenCanvas at true high resolution
     const offscreen = new OffscreenCanvas(20000, 11250); // True 20K resolution
@@ -1260,7 +558,6 @@ async function exportWithOffscreenCanvas(canvas: HTMLCanvasElement, quality: str
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    console.log('Professional OffscreenCanvas export completed: 20000x11250');
     hideProcessingSpinner();
     
   } catch (error) {
@@ -1273,7 +570,6 @@ async function exportWithOffscreenCanvas(canvas: HTMLCanvasElement, quality: str
 
 function exportAsSVG(canvas: HTMLCanvasElement, _quality: string): void {
   try {
-    console.log('Professional SVG export for vector-like quality');
     
     // Get canvas data as base64
     const canvasData = canvas.toDataURL('image/png');
@@ -1302,7 +598,6 @@ function exportAsSVG(canvas: HTMLCanvasElement, _quality: string): void {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    console.log('Professional SVG export completed - vector-like quality');
     hideProcessingSpinner();
     
   } catch (error) {
@@ -1318,14 +613,12 @@ function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: s
     
     // Check for OffscreenCanvas support for true high resolution
     if (typeof OffscreenCanvas !== 'undefined' && quality === '20K') {
-      console.log('Using OffscreenCanvas for true high-resolution export');
       exportWithOffscreenCanvas(canvas, quality, format);
       return;
     }
     
     // Check for SVG export (vector-like quality)
     if (format === 'SVG') {
-      console.log('Using SVG export for vector-like quality');
       exportAsSVG(canvas, quality);
       return;
     }
@@ -1369,7 +662,6 @@ function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: s
         finalHeight = maxCanvasSize;
         finalWidth = Math.round(maxCanvasSize * aspectRatio);
       }
-      console.log(`${quality} resolution adjusted to browser limits: ${finalWidth}x${finalHeight}`);
     } else {
       // Use target dimensions
       finalWidth = targetWidth;
@@ -1433,22 +725,19 @@ function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: s
     }
     
     // Be honest about actual resolution vs claimed resolution
-    const actualResolution = `${finalWidth}x${finalHeight}`;
-    const claimedResolution = quality === '20K' ? '16K (browser limit)' : quality;
-    console.log(`${claimedResolution} export: ${actualResolution} at ${dpi} DPI (${(finalWidth * finalHeight / 1000000).toFixed(1)}M pixels)`);
+    const _actualResolution = `${finalWidth}x${finalHeight}`;
+    const _claimedResolution = quality === '20K' ? '16K (browser limit)' : quality;
     
     // Ensure we don't exceed browser limits
     if (finalWidth > maxCanvasSize || finalHeight > maxCanvasSize) {
       const maxScale = Math.min(maxCanvasSize / displayWidth, maxCanvasSize / displayHeight);
       finalWidth = displayWidth * maxScale;
       finalHeight = displayHeight * maxScale;
-      console.log(`${quality} scaled down to browser limits: ${finalWidth}x${finalHeight}`);
     }
     
     // Final honest logging
-    const finalActualResolution = `${finalWidth}x${finalHeight}`;
-    const finalClaimedResolution = quality === '20K' ? '16K (browser limit)' : quality;
-    console.log(`${finalClaimedResolution} export: ${finalActualResolution} (${(finalWidth * finalHeight / 1000000).toFixed(1)}M pixels)`);
+    const _finalActualResolution = `${finalWidth}x${finalHeight}`;
+    const _finalClaimedResolution = quality === '20K' ? '16K (browser limit)' : quality;
     
     // Set the temporary canvas to target resolution
     tempCanvas.width = finalWidth;
@@ -1472,21 +761,17 @@ function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: s
       // Enable subpixel rendering for ultra-crisp text
       tempCtx.fontKerning = 'normal';
       
-      console.log('20K: MAXIMUM professional rendering settings enabled');
     } else if (quality === '10K') {
       // 10K: High professional quality
       tempCtx.textBaseline = 'alphabetic';
       tempCtx.textAlign = 'start';
-      console.log('10K: High professional rendering settings enabled');
     }
     
     // For 20K, implement maximum pixel density rendering with smaller pixels
     if (quality === '20K') {
-      console.log(`Maximum pixel density rendering for 20K (${finalWidth}x${finalHeight})`);
       
       // Detect maximum possible quality for high-density rendering
       const maxQuality = detectMaximumVectorQuality(canvas);
-      console.log(`Maximum pixel density: ${maxQuality.maxWidth}x${maxQuality.maxHeight} (${maxQuality.maxScale.toFixed(1)}x scale) - ${maxQuality.reason}`);
       
       // Create a canvas at maximum pixel density with smaller pixels
       const highDensityCanvas = document.createElement('canvas');
@@ -1539,7 +824,6 @@ function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: s
         tempCtx.imageSmoothingQuality = 'high';
         tempCtx.drawImage(highDensityCanvas, 0, 0, finalWidth, finalHeight);
         
-        console.log(`20K: Maximum pixel density rendering completed at ${maxQuality.maxScale.toFixed(1)}x scale (${maxQuality.reason})`);
       } else {
         // Fallback to direct scaling
         tempCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
@@ -1550,7 +834,6 @@ function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: s
       
       if (quality === '10K' || quality === '20K' || renderScaleFactor > 8) {
         // For ultra-high resolutions, use ENHANCED multi-stage rendering
-        console.log(`ENHANCED ultra-high quality rendering for ${quality} (${finalWidth}x${finalHeight})`);
         
         // Stage 1: Scale to 6K intermediate (ENHANCED from 4K)
         const stage1Size = 6144; // ENHANCED from 4096
@@ -1682,7 +965,6 @@ function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: s
           tempCtx.lineJoin = 'round';
           tempCtx.drawImage(intermediateCanvas, 0, 0, finalWidth, finalHeight);
           
-          console.log(`${quality}: ENHANCED single-stage rendering completed (${intermediateSize}px → ${finalWidth}x${finalHeight})`);
         } else {
           tempCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
         }
@@ -1813,7 +1095,6 @@ function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: s
       // Clean up
       URL.revokeObjectURL(url);
       
-      console.log(`Canvas saved successfully as ${format} in ${quality}! 💾`);
     }, mimeType, qualityValue);
     
   } catch (error) {
@@ -1842,7 +1123,6 @@ function initContext(canvas: HTMLCanvasElement): void {
     antialias: true,
     willReadFrequently: false,
   }) as CanvasRenderingContext2D | null;
-  console.log('Canvas context created:', !!ctx, 'Canvas element:', !!canvas, 'High-DPI:', devicePixelRatio * 2);
 
   if (!ctx) {
     console.error('Failed to get 2D context!');
@@ -1871,11 +1151,9 @@ function initContext(canvas: HTMLCanvasElement): void {
   ctx.textAlign = 'start';
   ctx.fontKerning = 'normal';
   
-  console.log(`Canvas initialized with ${qualityMultiplier}x quality multiplier (${devicePixelRatio * qualityMultiplier}x total DPI)`);
 
   // Clear and setup the canvas immediately
   clearCanvas(canvas);
-  console.log('Canvas context initialized successfully');
 }
 
 function clearCanvas(canvas: HTMLCanvasElement): void {
@@ -1895,8 +1173,8 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
   // Clear glitch trail (removed - no longer used)
   // glitchTrail = [];
 
-  // Clear fire trail
-  fireTrail = [];
+  // Clear fire trail (old system removed)
+  // fireTrail = [];
 
   // Clear chalk trail (removed - no longer used)
   // chalkTrail = [];
@@ -1904,7 +1182,6 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
   // Clear cosmic particles (removed - no longer used)
   // cosmicParticles = [];
 
-  console.log('Clearing canvas, size:', canvas.width, 'x', canvas.height);
 
   // Get display dimensions for proper scaling
   const displayWidth = canvas.clientWidth;
@@ -1942,7 +1219,6 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
   }
 
   ctx.lineWidth = 20; // DOUBLED from 10 to 20 for enhanced line quality
-  console.log('Canvas cleared and background drawn with ENHANCED line quality');
   
   // Update debug info if enabled
   if (showDebugInfo) {
@@ -2062,16 +1338,7 @@ function updateSizeDebugDisplay(): void {
 
 
 // Debug function for Apple Pencil testing
-function debugPointerEvent(e: PointerEvent): void {
-  console.log('Pointer Event Debug:', {
-    pointerType: e.pointerType,
-    pressure: e.pressure,
-    width: e.width,
-    height: e.height,
-    pointerId: e.pointerId,
-    isPrimary: e.isPrimary,
-    timeStamp: e.timeStamp,
-  });
+function debugPointerEvent(_e: PointerEvent): void {
 }
 
 function attachPointerHandlers(canvas: HTMLCanvasElement): void {
@@ -2105,7 +1372,6 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     if (isPencil) {
       // Ensure pressure is always valid for Apple Pencil
       pressure = Math.max(0.1, Math.min(1.0, pressure));
-      console.log('Apple Pencil detected - pressure:', pressure);
     }
 
     canvas.setPointerCapture(e.pointerId);
@@ -2284,17 +1550,6 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
 
         ctx.globalAlpha = 0.8;
 
-        console.log(
-          'Drawing dot at:',
-          x,
-          y,
-          'size:',
-          touchWidth,
-          'x',
-          _touchHeight,
-          'pressure:',
-          pressure,
-        );
 
         // Paint main ellipse with pulsing effect and HD quality (same for drawing and erasing)
         const pulseScale = 1 + Math.sin(Date.now() / 200) * 0.1; // Gentle pulsing
@@ -2309,7 +1564,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
         } else {
           // Normal drawing mode
           ctx.globalCompositeOperation = 'source-over';
-          ctx.fillStyle = getCurrentColor(downMultiplier);
+          ctx.fillStyle = '#000000'; // Default color - old system removed
         }
 
         // Create radial gradient for HD quality
@@ -2323,9 +1578,9 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
         } else {
           // For drawing, use the normal color gradient
           const gradient = ctx.createRadialGradient(x, y, 0, x, y, Math.max(radiusX, radiusY));
-          gradient.addColorStop(0, getCurrentColor(downMultiplier));
-          gradient.addColorStop(0.7, getCurrentColor(downMultiplier * 0.8));
-          gradient.addColorStop(1, getCurrentColor(downMultiplier * 0.6));
+          gradient.addColorStop(0, '#000000'); // Default color - old system removed
+          gradient.addColorStop(0.7, '#333333'); // Default color - old system removed
+          gradient.addColorStop(1, '#666666'); // Default color - old system removed
           ctx.fillStyle = gradient;
         }
         ctx.beginPath();
@@ -2352,12 +1607,12 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
             if (sparkleChance) {
               ctx.save();
               ctx.globalAlpha = 0.5; // Balanced alpha for performance
-              addSparkleEffect(ctx, x, y, maxSize);
+              // addSparkleEffect(ctx, x, y, maxSize); // Old function removed
               ctx.restore();
             }
           } else {
             // Other styles: Regular sparkle effects
-            addSparkleEffect(ctx, x, y, maxSize);
+            // addSparkleEffect(ctx, x, y, maxSize); // Old function removed
           }
         }
       }
@@ -2627,48 +1882,9 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
           // Normal drawing mode
           ctx.globalCompositeOperation = 'source-over';
           const colorT = Math.sin(t * Math.PI) * 0.12; // 20% more color variation (was 0.1)
-          const colorMultiplier = moveMultiplier + colorT;
+          const _colorMultiplier = moveMultiplier + colorT;
           
-          // Use Style 1's color generation if it's active
-          if (currentStyleIndex === 0) {
-            // Style 1: Use theme-based colors with dramatic rainbow cycling
-            const time = Date.now() * 0.001;
-            // Get the most up-to-date randomStyleParams
-            const currentRandomStyleParams = (window as any).randomStyleParams || randomStyleParams;
-            const baseHue = currentRandomStyleParams.baseHue;
-            const cycleSpeed = currentRandomStyleParams.cycleSpeed || 8;
-            
-            // Apply light performant filter for Style 1 (only occasionally for performance)
-            if (currentRandomStyleParams.filter && currentRandomStyleParams.filter !== 'none' && Math.random() < 0.3) {
-              ctx.filter = currentRandomStyleParams.filter;
-            }
-            
-            // Create dramatic rainbow cycling effect with theme-based base
-            const hueCycle = Math.sin(time * cycleSpeed) * 100; // Reduced rainbow range for more theme focus
-            const hueVariation = (Math.random() - 0.5) * 80 + hueCycle; // Much more dramatic hue variation
-            const saturationVariation = (Math.random() - 0.5) * 40 + Math.sin(time * 3) * 20; // Much more dramatic saturation
-            const lightnessVariation = (Math.random() - 0.5) * 35 + Math.sin(time * 2.5) * 15; // Much more dramatic lightness
-            
-            // Dramatic palette with theme-based cycling
-            const hue = (baseHue + hueVariation + 360) % 360;
-            const saturation = Math.max(70, Math.min(100, currentRandomStyleParams.saturation + saturationVariation));
-            const lightness = Math.max(35, Math.min(85, currentRandomStyleParams.lightness + lightnessVariation));
-            
-            ctx.fillStyle = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-            
-            // Debug: Log current drawing colors more frequently
-            if (Math.floor(time * 10) % 20 === 0) {
-              console.log(`🎨 Style 1 DRAWING: baseHue=${baseHue}, finalHue=${hue}, saturation=${saturation}, lightness=${lightness}, filter=${currentRandomStyleParams.filter}`);
-            }
-            
-            // Reset filter after drawing Style 1
-            if (currentRandomStyleParams.filter && currentRandomStyleParams.filter !== 'none') {
-              ctx.filter = 'none';
-            }
-          } else {
-            // Other styles: Use the original color generation
-            ctx.fillStyle = getCurrentColor(colorMultiplier);
-          }
+          // Old randomizer logic removed - now using color variants system
         }
 
         ctx.beginPath();
@@ -2701,7 +1917,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
             if (sparkleChance && Math.random() < sparkleChance) {
               ctx.save();
               ctx.globalAlpha = 0.5; // Balanced alpha for performance
-              addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, _touchHeight) / 2.5);
+              // addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, _touchHeight) / 2.5); // Old function removed
               ctx.restore();
             }
           } else {
@@ -2720,7 +1936,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
             if (Math.random() < sparkleChance) {
               ctx.save();
               ctx.globalAlpha = 0.4;
-              addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, _touchHeight) / 3);
+              // addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, _touchHeight) / 3); // Old function removed
               ctx.restore();
             }
           }
@@ -2759,7 +1975,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
         oscillator.stop(audioContext.currentTime + 0.2);
       }
     } catch (error) {
-      console.log('End sound failed:', error);
+      console.error('Error playing drawing end sound:', error);
     }
 
     // Reset pressure tracking for next stroke
@@ -2782,11 +1998,8 @@ function initAudio() {
   try {
     audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
     audioInitialized = true;
-    console.log('Audio context initialized');
-  } catch (error) {
-    console.log('Audio not supported');
+  } catch {
     // Mark as ready even if audio fails to prevent blocking
-    console.log('Audio not supported', error);
     audioInitialized = true;
   }
 }
@@ -2828,7 +2041,7 @@ function playSplashSound() {
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.6);
   } catch (error) {
-    console.log('Audio playback failed:', error);
+    console.error('Error playing splash sound:', error);
   }
 }
 
@@ -2855,8 +2068,8 @@ function playZoomSound() {
 
     oscillator.start(audioContext.currentTime);
     oscillator.stop(audioContext.currentTime + 0.3);
-  } catch (error) {
-    console.log('Audio playback failed:', error);
+  } catch(error) {
+    console.error('Error playing zoom sound:', error);
   }
 }
 
@@ -2888,101 +2101,13 @@ document.addEventListener('click', (e) => {
   }
 });
 
-// Global variables for random style parameters
-let randomStyleParams = {
-  baseHue: 216,
-  saturation: 90,
-  lightness: 50,
-  sparkleIntensity: 0.3,
-  sparkleSize: 2,
-  sparkleCount: 3,
-  glowIntensity: 0.2,
-  pulseSpeed: 0.02,
-  sizeMultiplier: 1.0,
-  cycleSpeed: 8, // Add cycle speed for vibe-based color cycling
-  filter: 'none', // Add filter for dramatic visual changes
-};
+// Old randomizer logic removed - now using color variants system
 
-// Make randomStyleParams globally accessible for Style 1
-(window as any).randomStyleParams = randomStyleParams;
-
-function generateRandomStyle1Parameters(): void {
-  // Generate aggressive, vibrant pen styles with high contrast and intensity
-  // Get current colors to avoid duplicates
-  const currentHue = randomStyleParams.baseHue;
-  const currentSaturation = randomStyleParams.saturation;
-  const currentLightness = randomStyleParams.lightness;
-  
-  // Generate new colors that are DRAMATICALLY different from current ones
-  let hue = Math.floor(Math.random() * 360);
-  let saturation = 90;
-  let lightness = 50;
-  let attempts = 0;
-  const maxAttempts = 15; // More attempts to find different colors
-  
-  do {
-    hue = Math.floor(Math.random() * 360); // Full color spectrum
-    
-    // Aggressive saturation: from strong (80%) to maximum (100%) - more vibrant
-    const saturationChoices = [80, 85, 90, 95, 100];
-    saturation = saturationChoices[Math.floor(Math.random() * saturationChoices.length)]!;
-    
-    // Aggressive lightness: from medium (35%) to bright (65%) for high contrast
-    const lightnessChoices = [35, 40, 45, 50, 55, 60, 65];
-    lightness = lightnessChoices[Math.floor(Math.random() * lightnessChoices.length)]!;
-    
-    attempts++;
-  } while (
-    attempts < maxAttempts && 
-    Math.abs(hue - currentHue) < 60 && // Much larger difference required
-    Math.abs(saturation - currentSaturation) < 20 && // Larger difference required
-    Math.abs(lightness - currentLightness) < 20 // Larger difference required
-  );
-
-  // Enhanced sparkle and glow effects for aggressive styles
-  const sparkleIntensity = Math.random() * 0.6 + 0.4; // 0.4 to 1.0 (more intense)
-  const sparkleSize = Math.random() * 3 + 1.0; // 1.0 to 4.0 (bigger sparkles)
-  const sparkleCount = Math.floor(Math.random() * 12) + 4; // 4 to 15 (more sparkles)
-  const glowIntensity = Math.random() * 0.8 + 0.2; // 0.2 to 1.0 (stronger glow)
-  const pulseSpeed = Math.random() * 0.3 + 0.1; // 0.1 to 0.4 (faster pulse)
-  const sizeMultiplier = Math.random() * 2.0 + 0.8; // 0.8 to 2.8 (more size variation)
-  
-  // Light performant filters for Style 1
-  const filters = [
-    'none',
-    'hue-rotate(90deg)',
-    'hue-rotate(180deg)',
-    'saturate(1.5)',
-    'brightness(1.2)',
-    'contrast(1.3)',
-  ];
-  const randomFilter = filters[Math.floor(Math.random() * filters.length)]!;
-
-  randomStyleParams = {
-    baseHue: hue,
-    saturation: saturation!,
-    lightness: lightness!,
-    sparkleIntensity: sparkleIntensity,
-    sparkleSize: sparkleSize,
-    sparkleCount: sparkleCount,
-    glowIntensity: glowIntensity,
-    pulseSpeed: pulseSpeed,
-    sizeMultiplier: sizeMultiplier,
-    cycleSpeed: 8, // Default cycle speed
-    filter: randomFilter, // Random dramatic filter
-  };
-  
-  // Update global reference for Style 1
-  (window as any).randomStyleParams = randomStyleParams;
-
-  console.log(`🎨 Style 1 NEW COLORS: baseHue=${hue}, saturation=${saturation}, lightness=${lightness}`);
-  // Style 1 parameters randomized
-}
+// Old generateRandomStyle1Parameters function removed - now using color variants
 
 
 function init(): void {
   const canvas = document.getElementById('app-canvas') as HTMLCanvasElement | null;
-  console.log('Init function called, canvas found:', !!canvas);
 
   if (!canvas) {
     console.error('Canvas element not found!');
@@ -2990,10 +2115,6 @@ function init(): void {
   }
 
   // Enhanced Apple Pencil and touch support
-  console.log('Device capabilities:', {
-    maxTouchPoints: window.navigator.maxTouchPoints,
-    hasPointerEvents: 'PointerEvent' in window,
-  });
 
   // Prevent all native touch behaviors that interfere with drawing
   document.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -3016,16 +2137,13 @@ function init(): void {
   (canvas.style as any).webkitUserSelect = 'none';
   canvas.style.userSelect = 'none';
 
-  console.log('Initializing canvas context...');
   initContext(canvas);
-  console.log('Canvas context initialized, ctx:', !!ctx);
 
   resizeCanvas(canvas);
 
   // Force a complete canvas reset to ensure everything is properly initialized
   if (ctx && canvas) {
     clearCanvas(canvas);
-    console.log('Canvas fully initialized and cleared');
   }
 
   const onResize = () => resizeCanvas(canvas);
@@ -3036,9 +2154,7 @@ function init(): void {
     if (document.visibilityState === 'visible') resizeCanvas(canvas);
   });
 
-  console.log('Attaching pointer handlers...');
   attachPointerHandlers(canvas);
-  console.log('Pointer handlers attached');
 
   // No complex animations needed for Style 2 anymore
 
@@ -3091,8 +2207,6 @@ function init(): void {
       // Set consistent white color for numbers
       styleSelectorButton.style.color = 'white';
 
-      console.log(`🎨 Switched to ${newStyle.name} style: ${newStyle.description}`);
-      console.log(`🎯 Style index: ${styleManager.getCurrentStyleIndex()}`);
       styleSelectorButton.title = `Current: ${newStyle.name}\nTap to switch drawing style`;
       
       // Update size number display for new style
@@ -3146,16 +2260,14 @@ function init(): void {
       // Randomize colors for CURRENT style only
       const currentStyle = styleManager.getCurrentStyle();
       
-      if (currentStyle.generateRandomParameters) {
-        currentStyle.generateRandomParameters();
-        console.log(`🎨 Randomized colors for ${currentStyle.name}!`);
+      if (currentStyle.nextColorVariant) {
+        currentStyle.nextColorVariant();
       }
         
       // Change button color (visual feedback)
         const randomHue = Math.floor(Math.random() * 360);
         styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
         
-      console.log('🎨 Colors randomized - size unchanged!');
 
       // Don't clear canvas - preserve existing drawing
     };
@@ -3171,7 +2283,7 @@ function init(): void {
     });
 
     // Initialize with random parameters and button color
-    generateRandomStyle1Parameters();
+    // generateRandomStyle1Parameters(); // Old function removed
     const randomHue = Math.floor(Math.random() * 360);
     styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
   }
@@ -3179,7 +2291,6 @@ function init(): void {
   // Pizza Size Selector functionality
   const sizeSelector = document.getElementById('size-selector');
   const vibrationKnob = document.getElementById('vibration-knob') as HTMLInputElement | null;
-  console.log('Size selector found:', !!sizeSelector);
   
   
   
@@ -3210,8 +2321,7 @@ function init(): void {
         oscillator.stop(audioCtx.currentTime + 0.1);
       }
       
-      const sizeNames = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Giant'];
-      console.log(`📱 Size changed to level ${currentSizeLevel} (${sizeNames[currentSizeLevel]}) - Selected size ${currentSizeLevel + 1}`);
+      const _sizeNames = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Giant'];
     };
 
     // Use pizza selector for desktop, numbers selector for mobile
@@ -3232,7 +2342,6 @@ function init(): void {
       if (numbersSizeSelector) {
         numbersSizeSelector.setSize(level);
       }
-      console.log(`Size level manually set to ${level}`);
     }
   };
   
@@ -3254,9 +2363,6 @@ function init(): void {
 
   // Keyboard controls for thickness slider and size level
   const handleThicknessKey = (event: KeyboardEvent) => {
-    console.log('🔑 Key pressed:', event.key);
-    console.log('🔑 Event target:', event.target);
-    console.log('🔑 Current size level before:', currentSizeLevel);
     
     const currentValue = thicknessMultiplier;
     const step = 0.2;
@@ -3267,20 +2373,16 @@ function init(): void {
       // Decrease thickness (higher pitch)
       const newValue = Math.max(min, currentValue - step);
       thicknessMultiplier = newValue;
-      console.log('🎯 Thickness decreased to:', newValue);
     } else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
       // Increase thickness (lower pitch)
       const newValue = Math.min(max, currentValue + step);
       thicknessMultiplier = newValue;
-      console.log('🎯 Thickness increased to:', newValue);
     } else if (event.key === '[' || event.key === '{') {
       // Decrease size level
       currentSizeLevel = Math.max(0, currentSizeLevel - 1);
-      console.log('📏 Size level decreased to:', currentSizeLevel + 1, 'currentSizeLevel:', currentSizeLevel);
     } else if (event.key === ']' || event.key === '}') {
       // Increase size level
       currentSizeLevel = Math.min(4, currentSizeLevel + 1);
-      console.log('📏 Size level increased to:', currentSizeLevel + 1, 'currentSizeLevel:', currentSizeLevel);
     }
   };
 
@@ -3307,10 +2409,8 @@ function init(): void {
       isEraserMode = !isEraserMode;
       if (isEraserMode) {
         eraserButton.classList.add('eraser-active');
-        console.log('Eraser mode activated! 🧽');
       } else {
         eraserButton.classList.remove('eraser-active');
-        console.log('Drawing mode activated! ✏️');
       }
     };
 
@@ -3345,7 +2445,6 @@ function init(): void {
       
       if (ctx && canvas) {
         clearCanvas(canvas);
-        console.log('Canvas cleared! ✨');
       }
     };
 
@@ -3449,7 +2548,6 @@ function init(): void {
   // Style buttons functionality (hidden but functional)
   function setActiveStyle(style: number) {
     currentStyle = style;
-    console.log(`Switched to Style ${style}`);
 
     // Update button states
     document.querySelectorAll('.style-button').forEach((btn, index) => {
@@ -3532,17 +2630,10 @@ const musicTrack = {
 function initMusicPlayer() {
   const musicControlButton = document.getElementById('music-control');
   
-  console.log('Initializing music player...', musicControlButton);
-  console.log('Audio context available:', typeof AudioContext !== 'undefined');
-  console.log('Web Audio API supported:', !!(window.AudioContext || (window as any).webkitAudioContext));
 
   // Simple on/off music control
   musicControlButton?.addEventListener('click', (e) => {
     e.preventDefault();
-    console.log('=== MUSIC BUTTON CLICKED ===');
-    console.log('Button element:', musicControlButton);
-    console.log('isMusicPlaying:', isMusicPlaying);
-    console.log('currentMusic:', currentMusic);
     
     // Add strong click feedback
     if (musicControlButton) {
@@ -3563,18 +2654,14 @@ function initMusicPlayer() {
     if (musicControlButton) {
       if (musicControlButton.textContent === '🎵') {
         musicControlButton.textContent = '🎶';
-        console.log('Icon changed to playing state');
       } else {
         musicControlButton.textContent = '🎵';
-        console.log('Icon changed to stopped state');
       }
     }
     
     if (isMusicPlaying) {
-      console.log('Stopping music...');
       stopMusic();
     } else {
-      console.log('Starting music...');
       try {
         playMusic();
       } catch (error) {
@@ -3586,7 +2673,6 @@ function initMusicPlayer() {
   // Test audio context creation
   try {
     const testContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    console.log('Test audio context created successfully:', testContext.state);
     testContext.close();
   } catch (error) {
     console.error('Failed to create test audio context:', error);
@@ -3595,28 +2681,21 @@ function initMusicPlayer() {
 
 
 async function playMusic() {
-  console.log('=== PLAYMUSIC() CALLED ===');
   
   // Stop current music if playing
   if (currentMusic) {
-    console.log('Stopping current music first...');
     stopMusic();
   }
 
   const track = musicTrack;
-  console.log('Track loaded:', track);
   
   try {
-    console.log('Creating new audio context for music...');
     // Create a fresh audio context for music
     const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    console.log('Audio context created, state:', audioContext.state);
     
     // Resume audio context if suspended (required by some browsers)
     if (audioContext.state === 'suspended') {
-      console.log('Resuming suspended audio context...');
       await audioContext.resume();
-      console.log('Audio context resumed, new state:', audioContext.state);
     }
   
   // Create master gain for volume control
@@ -3670,7 +2749,6 @@ async function playMusic() {
   reverbGain.connect(audioContext.destination);
   
   // Play simple, reliable music instead of complex composition
-  console.log('Playing simple music...');
   playSimpleMusic(audioContext, masterGain, track);
   
   // Create a simple audio element for easier control
@@ -3694,15 +2772,11 @@ async function playMusic() {
 }
 
 function playSimpleMusic(audioContext: AudioContext, masterGain: GainNode, track: any) {
-  console.log('=== PLAYING EVOLVING SONG ===');
   
   const scale = track.scale.notes;
   const tempo = track.tempo;
   const beatDuration = 60 / tempo;
   
-  console.log('Scale:', scale);
-  console.log('Tempo:', tempo);
-  console.log('Beat duration:', beatDuration);
   
   // PART 1: Opening melody (beautiful C major progression)
   const part1Melody = [
@@ -3771,13 +2845,11 @@ function playSimpleMusic(audioContext: AudioContext, masterGain: GainNode, track
     { note: 8, duration: 3, volume: 0.7 }, // A4 (beautiful resolution)
   ];
   
-  console.log('Playing Part 1...');
   playSimpleMelody(audioContext, masterGain, part1Melody, scale, beatDuration);
   
   // Part 2 after Part 1
   setTimeout(() => {
     if (isMusicPlaying) {
-      console.log('Playing Part 2...');
       playSimpleMelody(audioContext, masterGain, part2Melody, scale, beatDuration);
     }
   }, part1Melody.reduce((sum, note) => sum + note.duration, 0) * beatDuration * 1000);
@@ -3785,7 +2857,6 @@ function playSimpleMusic(audioContext: AudioContext, masterGain: GainNode, track
   // Transition after Part 2
   setTimeout(() => {
     if (isMusicPlaying) {
-      console.log('Playing Transition...');
       playSimpleMelody(audioContext, masterGain, transitionMelody, scale, beatDuration);
     }
   }, (part1Melody.reduce((sum, note) => sum + note.duration, 0) + 
@@ -3794,7 +2865,6 @@ function playSimpleMusic(audioContext: AudioContext, masterGain: GainNode, track
   // Part 3 after Transition
   setTimeout(() => {
     if (isMusicPlaying) {
-      console.log('Playing Part 3...');
       playSimpleMelody(audioContext, masterGain, part3Melody, scale, beatDuration);
     }
   }, (part1Melody.reduce((sum, note) => sum + note.duration, 0) + 
@@ -3804,7 +2874,6 @@ function playSimpleMusic(audioContext: AudioContext, masterGain: GainNode, track
   // Ending after Part 3
   setTimeout(() => {
     if (isMusicPlaying) {
-      console.log('Playing Ending...');
       playSimpleMelody(audioContext, masterGain, endingMelody, scale, beatDuration);
     }
   }, (part1Melody.reduce((sum, note) => sum + note.duration, 0) + 
@@ -3819,27 +2888,22 @@ function playSimpleMusic(audioContext: AudioContext, masterGain: GainNode, track
                         part3Melody.reduce((sum, note) => sum + note.duration, 0) +
                         endingMelody.reduce((sum, note) => sum + note.duration, 0)) * beatDuration;
   
-  console.log('Total song duration:', totalDuration);
   
   setTimeout(() => {
     if (isMusicPlaying) {
-      console.log('Looping entire song...');
       playSimpleMusic(audioContext, masterGain, track);
     }
   }, totalDuration * 1000);
 }
 
 function playSimpleMelody(audioContext: AudioContext, masterGain: GainNode, melody: any[], scale: number[], beatDuration: number) {
-  console.log('=== PLAYING SIMPLE MELODY ===');
   let currentTime = audioContext.currentTime;
   
-  melody.forEach((note, index) => {
-    console.log(`Playing note ${index}:`, note);
+  melody.forEach((note, _index) => {
     
     const frequency = (scale[note.note] || 440) * 1.0;
     const duration = note.duration * beatDuration;
     
-    console.log(`Frequency: ${frequency}, Duration: ${duration}`);
     
     // Create oscillator
     const oscillator = audioContext.createOscillator();
@@ -3870,7 +2934,6 @@ function playSimpleMelody(audioContext: AudioContext, masterGain: GainNode, melo
     oscillator.start(currentTime);
     oscillator.stop(currentTime + duration);
     
-    console.log(`Started note ${index} at time ${currentTime}`);
     currentTime += duration;
   });
 }
@@ -3903,7 +2966,6 @@ function stopMusic() {
 }
 
 function updateMusicUI(playing: boolean) {
-  console.log('updateMusicUI called with playing:', playing);
   const musicButton = document.getElementById('music-control');
   
   // Clear on/off state with music note icons
@@ -3911,11 +2973,9 @@ function updateMusicUI(playing: boolean) {
     if (playing) {
       musicButton.classList.add('playing');
       musicButton.textContent = '🎶'; // Musical notes when playing
-      console.log('Music UI updated to playing state');
     } else {
       musicButton.classList.remove('playing');
       musicButton.textContent = '🎵'; // Single music note when off
-      console.log('Music UI updated to stopped state');
     }
   } else {
     console.error('Music button not found!');

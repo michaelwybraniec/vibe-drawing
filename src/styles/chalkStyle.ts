@@ -5,6 +5,15 @@ export class ChalkStyle implements DrawingStyle {
   description = 'Dusty chalk strokes with particle effects';
   icon = '5';
 
+  private currentVariant = 0;
+  private colorVariants = [
+    { color: '#FFFFFF', name: 'White Chalk' },
+    { color: '#F0F0F0', name: 'Off-White' },
+    { color: '#E8E8E8', name: 'Light Gray' },
+    { color: '#D0D0D0', name: 'Gray' },
+    { color: '#FFE4E1', name: 'Misty Rose' }
+  ];
+
   private lastSizeMultiplier = 0.25;
   private sizeSmoothingFactor = 0.15;
   private particles: Array<{
@@ -17,8 +26,27 @@ export class ChalkStyle implements DrawingStyle {
     color: string;
   }> = [];
 
+  draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
+    const { x, y, width, height } = point;
+    const { isEraserMode, thicknessMultiplier, currentSizeLevel, sizeMultipliers } = context;
+
+    if (isEraserMode) {
+      ctx.globalCompositeOperation = 'destination-out';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    const size = Math.max(width, height) * thicknessMultiplier * (sizeMultipliers[currentSizeLevel] || 1.0);
+    
+    ctx.save();
+    ctx.fillStyle = isEraserMode ? 'rgba(0,0,0,0)' : '#f0f0f0';
+    ctx.beginPath();
+    ctx.arc(x, y, size / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
   onStart(_point: DrawingPoint, _context: StyleContext): void {
-    console.log('🎨 Chalk style started');
     this.particles = [];
   }
 
@@ -37,7 +65,7 @@ export class ChalkStyle implements DrawingStyle {
 
       const prevPoint = points[index - 1];
       if (!prevPoint) return;
-      const t = (point.t - prevPoint.t) / 16; // Normalize time
+      const t = ((point.t || 0) - (prevPoint.t || 0)) / 16; // Normalize time
 
       if (t <= 0) return;
 
@@ -118,7 +146,6 @@ export class ChalkStyle implements DrawingStyle {
   }
 
   onEnd(_context: StyleContext): void {
-    console.log('🎨 Chalk style ended');
   }
 
   onClear(_context: StyleContext): void {
@@ -180,20 +207,16 @@ export class ChalkStyle implements DrawingStyle {
     }
   }
 
-  private getChalkColor(multiplier: number): string {
-    // Chalk colors - soft, dusty tones
-    const colors = [
-      '#FFFFFF', // White chalk
-      '#F0F0F0', // Off-white
-      '#E8E8E8', // Light gray
-      '#D0D0D0', // Gray
-      '#FFE4E1', // Misty rose
-      '#E6E6FA', // Lavender
-      '#F0F8FF', // Alice blue
-      '#F5F5DC', // Beige
-    ];
+  private getChalkColor(_multiplier: number): string {
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    return currentVariant.color;
+  }
 
-    const index = Math.floor(multiplier * colors.length) % colors.length;
-    return colors[index] || '#ff6b6b';
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+  }
+
+  resetToDefault(): void {
+    this.currentVariant = 0;
   }
 }

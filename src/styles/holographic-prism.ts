@@ -4,10 +4,16 @@ export class Style6 implements DrawingStyle {
   name = 'Holographic Prism';
   description = 'Holographic effects with prismatic light refraction';
   
-  private randomStyleParams = {
-    baseHue: 0,
-    saturation: 100,
-    lightness: 50,
+  private currentVariant = 0;
+  private colorVariants = [
+    { baseHue: 0, saturation: 100, lightness: 50, name: 'Rainbow Prism' },
+    { baseHue: 60, saturation: 100, lightness: 60, name: 'Golden Spectrum' },
+    { baseHue: 120, saturation: 100, lightness: 50, name: 'Green Hologram' },
+    { baseHue: 240, saturation: 100, lightness: 55, name: 'Blue Prism' },
+    { baseHue: 300, saturation: 100, lightness: 60, name: 'Purple Hologram' }
+  ];
+  
+  private styleParams = {
     prismIntensity: 0.8,
     refractionAngle: 30,
     hologramOpacity: 0.7,
@@ -23,7 +29,8 @@ export class Style6 implements DrawingStyle {
     
     // Holographic Prism Effect
     const time = Date.now() * 0.001;
-    const baseHue = this.randomStyleParams.baseHue;
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    const baseHue = currentVariant.baseHue;
     
     // Use global size system
     const baseMultiplier = 0.4 * (sizeMultipliers[currentSizeLevel] || 1.0);
@@ -47,8 +54,8 @@ export class Style6 implements DrawingStyle {
       const hue2 = (baseHue + 120 + time * 50) % 360;
       const hue3 = (baseHue + 240 + time * 50) % 360;
       
-      const saturation = this.randomStyleParams.saturation;
-      const lightness = this.randomStyleParams.lightness;
+      const saturation = currentVariant.saturation;
+      const lightness = currentVariant.lightness;
       
       // Main holographic circle with rainbow gradient
       const gradient = ctx.createRadialGradient(
@@ -61,14 +68,14 @@ export class Style6 implements DrawingStyle {
       gradient.addColorStop(0.66, `hsl(${hue3}, ${saturation}%, ${lightness}%)`);
       gradient.addColorStop(1, `hsl(${hue1}, ${saturation}%, ${lightness - 20}%)`);
       
-      ctx.globalAlpha = this.randomStyleParams.hologramOpacity;
+      ctx.globalAlpha = this.styleParams.hologramOpacity;
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(x, y, prismSize, 0, 2 * Math.PI);
       ctx.fill();
       
       // Prismatic light rays
-      if (Math.random() < this.randomStyleParams.prismIntensity) {
+      if (Math.random() < this.styleParams.prismIntensity) {
         const rayCount = 6;
         const rayAngle = (Math.PI * 2) / rayCount;
         
@@ -151,26 +158,12 @@ export class Style6 implements DrawingStyle {
     ctx.restore();
   }
 
-  generateRandomParameters(): void {
-    this.randomStyleParams = {
-      baseHue: Math.floor(Math.random() * 360),
-      saturation: 90 + Math.random() * 10,
-      lightness: 40 + Math.random() * 40,
-      prismIntensity: 0.5 + Math.random() * 0.5,
-      refractionAngle: 15 + Math.random() * 45,
-      hologramOpacity: 0.5 + Math.random() * 0.4,
-    };
-    console.log(`🌈 Style 6 NEW COLORS: baseHue=${this.randomStyleParams.baseHue}, prismIntensity=${this.randomStyleParams.prismIntensity}`);
+  nextColorVariant(): void {
+    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+    const _variant = this.colorVariants[this.currentVariant]!;
   }
 
   resetToDefault(): void {
-    this.randomStyleParams = {
-      baseHue: 0,
-      saturation: 100,
-      lightness: 50,
-      prismIntensity: 0.8,
-      refractionAngle: 30,
-      hologramOpacity: 0.7,
-    };
+    this.currentVariant = 0;
   }
 }

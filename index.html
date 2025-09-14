@@ -22,10 +22,30 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,700;1,300&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/vibe-drawing/assets/index-DAkoMJYT.js"></script>
-    <link rel="stylesheet" crossorigin href="/vibe-drawing/assets/index-Ca3xj1ff.css">
+    <script type="module" crossorigin src="/vibe-drawing/assets/index-DQorFzPJ.js"></script>
+    <link rel="stylesheet" crossorigin href="/vibe-drawing/assets/index-CWwxHfWN.css">
   </head>
   <body>
+    <!-- Copyright Header - Always visible -->
+    <div class="copyright-header">
+      <span class="copyright-text"
+        >Welcome to VIBE DRAWING — app for personal use only. Commercial use requires prior written
+        authorization. Developed with
+        <a href="https://www.overvibing.com" target="_blank" rel="noopener noreferrer"
+          >AWP (Agentic Workflow Protocol)</a
+        >
+        by
+        <a href="https://www.linkedin.com/in/one-front/" target="_blank" rel="noopener noreferrer"
+          >Michael Wybraniec</a
+        >
+        ©
+        <a href="https://www.one-front.com" target="_blank" rel="noopener noreferrer"
+          >ONE-FRONT.COM</a
+        >
+        2025++
+      </span>
+    </div>
+
     <!-- Splash Screen -->
     <div id="splash-screen" class="splash-screen">
       <div class="splash-content">
@@ -38,9 +58,22 @@
     </div>
 
     <!-- ONE-FRONT Link - Always visible after loading -->
-    <div class="one-front-credit">
-      by ONE-FRONT
-      <span class="info-icon" onclick="showInfoPopup()">ℹ</span>
+    <div class="one-front-credit" onclick="showInfoPopup()">
+      <span class="info-icon">ⓘ</span>
+    </div>
+
+    <!-- Debug Info Component -->
+    <div id="debug-info" class="debug-info" style="display: none">
+      <div class="debug-content">
+        <div class="debug-section">
+          <div class="debug-title">Current Settings</div>
+          <div id="debug-current-info"></div>
+        </div>
+        <div class="debug-section">
+          <div class="debug-title">Size Tracking</div>
+          <div id="debug-size-info"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Info Popup -->
@@ -78,6 +111,20 @@
         </div> -->
 
         <hr />
+
+        <div class="popup-section">
+          <h4>Developer Options 🔧</h4>
+          <div class="developer-buttons">
+            <button class="debug-checkbox-btn" id="debugger-toggle">
+              <span class="debug-icon">🔧</span>
+              <span class="debug-label">Debug</span>
+            </button>
+            <button class="debug-checkbox-btn" id="labels-toggle">
+              <span class="debug-icon">🏷️</span>
+              <span class="debug-label">Labels</span>
+            </button>
+          </div>
+        </div>
 
         <div class="popup-section">
           <p>
@@ -162,7 +209,12 @@
         <div class="star" style="left: 96%; top: 60%"></div>
       </div>
 
-      <div class="tools-container">
+      <!-- Menu Toggle Button - Always visible above toolbox -->
+      <div class="menu-toggle" id="menu-toggle">
+        <div class="menu-toggle-icon">▼</div>
+      </div>
+
+      <div class="tools-container" id="tools-container">
         <!-- <div class="tool-group">
           <div class="control-group">
             <span class="control-label">📳</span>
@@ -191,15 +243,7 @@
         </div>
 
         <div class="tool-group">
-          <input
-            type="range"
-            id="thickness-slider"
-            min="0.2"
-            max="5.0"
-            step="0.2"
-            value="1.0"
-            class="thickness-slider"
-          />
+          <div class="size-selector" id="size-selector"></div>
           <div class="tool-label">Size</div>
         </div>
 
@@ -216,6 +260,28 @@
         <div class="tool-group">
           <button id="save-as" class="tool-button">💾</button>
           <div class="tool-label">Save</div>
+        </div>
+
+        <div class="tool-group">
+          <button
+            id="music-control"
+            class="tool-button music-button"
+            title="Click to turn calm background music on/off"
+          >
+            🎵
+          </button>
+          <div class="tool-label">Music</div>
+        </div>
+
+        <div class="tool-group desktop-only">
+          <button
+            class="tool-button info-button"
+            onclick="showInfoPopup()"
+            title="About VIBE DRAWING"
+          >
+            ⓘ
+          </button>
+          <div class="tool-label">Info</div>
         </div>
       </div>
 
@@ -238,21 +304,19 @@
           <div class="quality-options">
             <label class="option-item">
               <input type="radio" name="quality" value="2K" checked />
-              <span><strong>2K</strong> (2048×1152, 12x scale, 600 DPI) - Web Quality</span>
+              <span><strong>2K</strong> - Web Quality</span>
             </label>
             <label class="option-item">
               <input type="radio" name="quality" value="5K" />
-              <span><strong>5K</strong> (5120×2880, 30x scale, 1200 DPI) - High-End Display</span>
+              <span><strong>5K</strong> - High Quality</span>
             </label>
             <label class="option-item">
               <input type="radio" name="quality" value="10K" />
-              <span
-                ><strong>10K</strong> (10240×5760, 60x scale, 2400 DPI) - Professional Quality</span
-              >
+              <span><strong>10K</strong> - Professional</span>
             </label>
             <label class="option-item">
               <input type="radio" name="quality" value="20K" />
-              <span><strong>16K</strong> (16384×9216, 120x scale, 4800 DPI) - MAXIMUM QUALITY</span>
+              <span><strong>20K</strong> - Maximum Quality</span>
             </label>
           </div>
         </div>
@@ -281,7 +345,7 @@
 
         <hr />
 
-        <div class="popup-section">
+        <div class="popup-section mobile-hide">
           <p>
             <strong>Want to know more?</strong> ->
             <a href="#" onclick="showInfoPopup(); closeSaveModal(); return false;"

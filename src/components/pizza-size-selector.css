@@ -1,7 +1,7 @@
 /* Pizza Size Selector Component Styles */
 .pizza-size-selector {
-  width: 48px;
-  height: 48px;
+  width: 100%;
+  height: 100%;
   position: relative;
   cursor: pointer;
   display: flex;
@@ -17,10 +17,17 @@
   opacity: 1 !important;
 }
 
+/* Touch feedback for mobile - immediate response */
+.pizza.pressed {
+  transform: rotate(-30deg) scale(0.95);
+  opacity: 0.8;
+  transition: none;
+}
+
 .pizza {
   position: relative;
-  width: 44px;
-  height: 44px;
+  width: 50%; /* Smaller to match other icons */
+  height: 50%; /* Smaller to match other icons */
   border-radius: 50%;
   border: 2px solid #d8a657;
   transform: rotate(-30deg); /* Rotate so first slice is at the top */
@@ -35,16 +42,10 @@
   background: #f4a261;
   opacity: 0.4;
   cursor: pointer;
-  transition:
-    opacity 0.15s,
-    background 0.15s;
+  /* No transitions - immediate response */
 }
 
-/* Hover effects for color feedback */
-.slice:hover {
-  opacity: 0.7;
-  background: #e76f51;
-}
+/* No hover effects - keep it simple */
 
 /* Rotations for each slice */
 .slice.s1 {
@@ -71,9 +72,4 @@
   background: gold;
 }
 
-/* Hide on mobile - only show on desktop */
-@media (max-width: 768px) {
-  .pizza-size-selector {
-    display: none !important;
-  }
-}
+/* Pizza selector now works on both mobile and desktop */

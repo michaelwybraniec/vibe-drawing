@@ -36,33 +36,37 @@ export class PizzaSizeSelector {
     if (pizza) {
       this.slices = Array.from(pizza.querySelectorAll('.slice')) as HTMLElement[];
 
-      // Handle hovering for preview (CSS handles the visual feedback)
-      pizza.addEventListener('mouseover', (e) => {
-        // Check if the target is a slice
-        if ((e.target as HTMLElement).classList.contains('slice')) {
-          const n = parseInt((e.target as HTMLElement).dataset.n || '1');
-          this.highlight(n);
-        }
+      // Use touch events for mobile (immediate response)
+      pizza.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        pizza.classList.add('pressed');
+        this.cycleSize();
       });
 
-      // Handle mouse leaving the whole pizza area to reset the preview
-      pizza.addEventListener('mouseleave', () => {
-        this.highlight(this.locked);
+      pizza.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        pizza.classList.remove('pressed');
       });
 
-      // Handle click to "lock" the selection
+      // Use click events for desktop
       pizza.addEventListener('click', (e) => {
-        if ((e.target as HTMLElement).classList.contains('slice')) {
-          this.locked = parseInt((e.target as HTMLElement).dataset.n || '1');
-          this.highlight(this.locked);
-          const sizeIndex = this.locked - 1; // Convert to 0-based index
-          this.setSize(sizeIndex);
-        }
+        e.stopPropagation();
+        this.cycleSize();
       });
 
       // Initialize with current selection
       this.highlight(this.locked);
     }
+  }
+
+  private cycleSize(): void {
+    // Cycle through sizes 0-5 (display as 1-6)
+    this.currentSize = (this.currentSize + 1) % 6;
+    this.locked = this.currentSize + 1; // Convert to 1-based for display
+    this.highlight(this.locked);
+    this.onSizeChange(this.currentSize);
   }
 
   // Function to highlight slices up to a given number

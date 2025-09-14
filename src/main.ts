@@ -96,8 +96,8 @@ const styleManager = new StyleManager();
 // Animation frame for style animations
 let _animationId: number | null = null;
 
-// Web vs Mobile detection
-const isWebApp = !('ontouchstart' in window) || window.navigator.maxTouchPoints === 0;
+// Web vs Mobile detection - use screen width as primary method
+const isWebApp = window.innerWidth > 768;
 
 // Size control variables - 3 fixed sizes for all styles
 let currentSizeLevel = 2; // 0=tiny, 1=small, 2=medium, 3=large, 4=huge, 5=giant (6 sizes total)
@@ -2324,12 +2324,17 @@ function init(): void {
       const _sizeNames = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Giant'];
     };
 
-    // Use pizza selector for desktop, numbers selector for mobile
-    if (isWebApp) {
-      pizzaSizeSelector = new PizzaSizeSelector(sizeSelector, currentSizeLevel, sizeChangeCallback);
-  } else {
-      numbersSizeSelector = new NumbersSizeSelector(sizeSelector, currentSizeLevel, sizeChangeCallback);
-    }
+    // Use pizza selector for both desktop and mobile (single-click cycling)
+    console.log('Mobile detection:', {
+      hasOntouchstart: 'ontouchstart' in window,
+      maxTouchPoints: window.navigator.maxTouchPoints,
+      isWebApp: isWebApp,
+      windowWidth: window.innerWidth,
+      userAgent: navigator.userAgent
+    });
+    
+    console.log('Using PizzaSizeSelector (single-click cycling for all devices)');
+    pizzaSizeSelector = new PizzaSizeSelector(sizeSelector, currentSizeLevel, sizeChangeCallback);
   }
   
   // Test function to manually change size level (for debugging)

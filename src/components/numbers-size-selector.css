@@ -1,4 +1,4 @@
-/* Numbers Size Selector Component Styles for Mobile - Single Button */
+/* Numbers Size Selector Component Styles for Mobile - Inherit from .size-selector */
 .numbers-size-selector {
   width: 100%;
   height: 100%;
@@ -9,39 +9,64 @@
 }
 
 .size-number-btn {
+  /* Match .tool-button exactly - NO backgrounds, NO hover effects */
   width: 100%;
   height: 100%;
   border: none;
-  border-radius: 8px;
-  background: rgba(244, 162, 97, 0.2);
-  color: #d8a657;
-  font-size: 16px;
+  border-radius: 50%;
+  background: transparent;
+  color: white;
   font-weight: bold;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  touch-action: manipulation;
+  /* Mobile touch optimizations - match .tool-button */
+  min-width: 44px;
+  min-height: 44px;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
   user-select: none;
   -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  min-height: 40px;
+  opacity: 0.8; /* Match .tool-button default opacity */
 }
 
+/* NO hover effects - match style selector exactly */
 .size-number-btn:hover {
-  background: rgba(244, 162, 97, 0.4);
-  transform: scale(1.05);
-  opacity: 0.9;
+  opacity: 1;
+  background: transparent;
+  transform: none;
 }
 
 .size-number-btn:active,
 .size-number-btn.pressed {
+  opacity: 0.7;
   transform: scale(0.95);
-  background: rgba(244, 162, 97, 0.6);
+  background: transparent;
+}
+
+/* Mobile touch feedback - match .tool-button exactly */
+@media (max-width: 768px) {
+  .size-number-btn {
+    /* Use container sizing on mobile - don't override */
+    width: 100%;
+    height: 100%;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .size-number-btn:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+    background: transparent;
+    transition: all 0.1s ease;
+  }
 }
 
 /* Hide on desktop - only show on mobile */
-@media (min-width: 769px) {
+@media (min-width: 768px) {
   .numbers-size-selector {
     display: none !important;
   }

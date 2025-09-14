@@ -3,7 +3,7 @@ import { DrawingStyle, DrawingPoint, StyleContext } from './baseStyle.js';
 import { TriangleStyle } from './triangle-draw.js';
 import { Style1 } from './classic.js';
 import { Style2 } from './3d-sphere.js';
-// import { Style7 } from './plasma-energy.js';
+// import { Style7 } from './plasma-energy.js
 import { Style8 } from './classic-rainbow.js';
 import { CleanPlasmaStyle } from './clean-plasma.js';
 

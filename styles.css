@@ -36,11 +36,10 @@
   text-decoration: underline;
 }
 
-/* Mobile responsive copyright header */
+/* Hide copyright header on mobile to save screen space */
 @media (max-width: 768px) {
   .copyright-header {
-    font-size: 9px;
-    padding: 4px 0;
+    display: none !important;
   }
 }
 
@@ -120,7 +119,7 @@
 /* Debug Info Component */
 .debug-info {
   position: fixed;
-  top: 80px;
+  top: 40px;
   left: 15px;
   width: 400px;
   background: rgba(0, 0, 0, 0.4);
@@ -174,7 +173,7 @@
 /* Mobile responsive debug info */
 @media (max-width: 768px) {
   .debug-info {
-    top: 60px;
+    top: 80px;
     left: 10px;
     right: 10px;
     width: auto;
@@ -454,15 +453,19 @@ body
 }
 
 .info-icon {
-  color: white;
+  color: rgba(255 255 255 / 0.39);
   background: none;
   border: none;
   padding: 0;
   margin: 0;
+  margin-right: 10px;
   line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 80%;
+  height: 80%;
+  text-align: center;
 }
 
 /* Info Popup */
@@ -842,14 +845,20 @@ body {
   }
 }
 
-/* Info button - exact same styling as original ONE-FRONT credit */
+/* Info button - smaller and softer color */
 .info-button {
   background: transparent !important;
   border: none !important;
-  color: white !important;
+  color: rgba(255, 255, 255, 0.39) !important;
   border-radius: 50% !important;
   opacity: 0.8 !important;
   transition: all 0.3s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  font-size: 1.8em !important;
 }
 
 .info-button:hover {
@@ -1097,12 +1106,29 @@ body {
   transform: scale(1.05);
 }
 
-/* Disable hover effects on mobile for clear button */
+/* Disable hover effects and transitions on mobile for all buttons */
 @media (max-width: 768px) {
+  .tool-button:hover {
+    opacity: 0.8;
+    background: transparent !important;
+    transform: none;
+  }
+
   .clear-button:hover {
     opacity: 0.8;
     background: transparent !important;
     transform: none;
+  }
+
+  .size-selector:hover {
+    opacity: 0.8;
+    background: transparent !important;
+    transform: none;
+  }
+
+  /* Remove transitions on mobile for immediate response */
+  .size-selector {
+    transition: none !important;
   }
 }
 

@@ -19,6 +19,11 @@ export class TriangleStyle implements DrawingStyle {
     const { x, y, width, height } = point;
     const { isEraserMode } = context;
     
+    // Calculate size multiplier like in onMove
+    const sizeMultiplier = this.calculateSizeMultiplier(point, context);
+    const sizeVariation = 1 + Math.random() * 0.2;
+    const finalSize = Math.max(width, height) * sizeVariation * sizeMultiplier;
+    
     ctx.save();
     if (isEraserMode) {
       ctx.globalCompositeOperation = 'destination-out';
@@ -27,7 +32,7 @@ export class TriangleStyle implements DrawingStyle {
       ctx.globalCompositeOperation = 'source-over';
     }
     
-    this.drawTriangle(ctx, x, y, Math.max(width, height) / 2);
+    this.drawTriangle(ctx, x, y, finalSize);
     ctx.restore();
   }
 
@@ -74,9 +79,9 @@ export class TriangleStyle implements DrawingStyle {
 
       // Calculate final size
       const touchWidth = point.width || 1;
-      const _touchHeight = point.height || 1;
-      const sizeVariation = 0.9 + Math.random() * 0.2;
-      const finalSize = (touchWidth / 2) * sizeVariation * sizeMultiplier;
+      const touchHeight = point.height || 1;
+      const sizeVariation = 3.9 + Math.random() * 0.2;
+      const finalSize = Math.max(touchWidth, touchHeight) * sizeVariation * sizeMultiplier;
 
       if (isEraserMode) {
         // Eraser: create dark areas
@@ -168,7 +173,7 @@ export class TriangleStyle implements DrawingStyle {
     const touchArea = Math.sqrt((point.width || 1) * (point.height || 1));
 
     if (isWebApp) {
-      const baseMultiplier = 0.16 * (sizeMultipliers[currentSizeLevel] || 1.0);
+      const baseMultiplier = 0.4 * (sizeMultipliers[currentSizeLevel] || 1.0);
       return baseMultiplier * thicknessMultiplier;
     } else {
       const minArea = 5;
@@ -177,9 +182,9 @@ export class TriangleStyle implements DrawingStyle {
 
       let baseMultiplier;
       if ((point.width || 0) === 0 || (point.height || 0) === 0) {
-        baseMultiplier = 0.2;
+        baseMultiplier = 3.4;
       } else {
-        baseMultiplier = 0.1 + normalizedArea * 0.18;
+        baseMultiplier = 4.2 + normalizedArea * 0.4;
       }
 
       const sizeVariation = 0.95 + Math.random() * 0.1;

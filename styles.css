@@ -1,3 +1,198 @@
+/* Copyright Header */
+.copyright-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 10001;
+  /* margin: 1px; */
+  padding-top: 2px;
+  padding: 8px 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 8px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+.copyright-text {
+  font-weight: 400;
+  opacity: 0.6;
+}
+
+.copyright-text a {
+  /* font-weight: 600; */
+  color: #db982d;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  opacity: 1;
+}
+
+.copyright-text a:hover {
+  color: #db982d;
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Mobile responsive copyright header */
+@media (max-width: 768px) {
+  .copyright-header {
+    font-size: 9px;
+    padding: 4px 0;
+  }
+}
+
+/* Developer Options Buttons */
+.developer-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 15px 0;
+}
+
+.debug-checkbox-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(244, 162, 97, 0.2);
+  color: #d8a657;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.debug-checkbox-btn:hover {
+  background: rgba(244, 162, 97, 0.4);
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.debug-checkbox-btn:active {
+  transform: scale(0.95);
+  background: rgba(244, 162, 97, 0.6);
+}
+
+.debug-checkbox-btn.active {
+  background: rgba(255, 215, 0, 0.3);
+  color: #ffd700;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+}
+
+.debug-icon {
+  font-size: 16px;
+}
+
+.debug-label {
+  font-size: 14px;
+}
+
+/* Mobile responsive developer buttons */
+@media (max-width: 768px) {
+  .developer-buttons {
+    gap: 8px;
+    margin: 12px 0;
+  }
+
+  .debug-checkbox-btn {
+    padding: 10px 18px;
+    font-size: 15px;
+  }
+
+  .debug-icon {
+    font-size: 18px;
+  }
+
+  .debug-label {
+    font-size: 15px;
+  }
+}
+
+/* Debug Info Component */
+.debug-info {
+  position: fixed;
+  top: 80px;
+  left: 15px;
+  width: 400px;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  z-index: 1000;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Roboto',
+    sans-serif;
+}
+
+.debug-content {
+  padding: 20px;
+}
+
+.debug-section {
+  margin-bottom: 24px;
+}
+
+.debug-section:last-child {
+  margin-bottom: 0;
+}
+
+.debug-title {
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffff00;
+  margin-bottom: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.debug-section div:not(.debug-title) {
+  font-size: 12px;
+  font-weight: bold;
+  color: #ffffff;
+  line-height: 1.6;
+  margin-bottom: 6px;
+  padding: 4px 0;
+  padding-left: 8px;
+}
+
+.debug-section div:not(.debug-title):last-child {
+  margin-bottom: 0;
+}
+
+/* Mobile responsive debug info */
+@media (max-width: 768px) {
+  .debug-info {
+    top: 60px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+  }
+
+  .debug-content {
+    padding: 20px;
+  }
+
+  .debug-title {
+    font-size: 11px;
+  }
+
+  .debug-section div:not(.debug-title) {
+    font-size: 11px;
+  }
+}
+
 /* Splash Screen */
 .splash-screen {
   position: fixed;
@@ -137,7 +332,7 @@
   }
 }
 
-/* ONE-FRONT Link */
+/* ONE-FRONT Link - Hide on mobile to prevent duplicates */
 .one-front-link {
   position: fixed;
   bottom: 20px;
@@ -158,6 +353,13 @@
   z-index: 1000;
 }
 
+/* Hide one-front-link on mobile to prevent bottom duplicate */
+@media (max-width: 768px) {
+  .one-front-link {
+    display: none !important;
+  }
+}
+
 .one-front-link.show {
   opacity: 0.7;
   pointer-events: none;
@@ -172,23 +374,39 @@
   position: fixed;
   bottom: 25px;
   right: 25px;
-  font-family:
-    'Inter',
-    -apple-system,
-    BlinkMacSystemFont,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  font-size: 10px;
-  font-weight: 700;
-  color: white;
-  opacity: 0;
-
-  pointer-events: none;
+  opacity: 0.8;
+  pointer-events: auto;
   z-index: 1000;
-  text-align: right;
-  max-width: 90%;
-  line-height: 1.3;
+
+  /* Exact same styling as tool buttons */
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+  min-width: 44px;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.one-front-link {
+  display: none !important;
+}
+
+body
+  *:not(.tools-container):not(.tool-button):not(.clear-button):not(.thickness-slider):not(
+    .tool-label
+  ):not(.one-front-credit)::before,
+body
+  *:not(.tools-container):not(.tool-button):not(.clear-button):not(.thickness-slider):not(
+    .tool-label
+  ):not(.one-front-credit)::after {
+  display: none !important;
 }
 
 .one-front-credit.show {
@@ -196,28 +414,55 @@
   pointer-events: auto;
 }
 
-.info-icon {
-  margin-left: 2px;
-  cursor: pointer;
-  font-size: 14px;
-  opacity: 0.8;
-  transition: all 0.2s ease;
-  color: black;
-  background: white;
-  padding: 0px;
-  border-radius: 50%;
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
+.one-front-credit:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
 }
 
-.info-icon:hover {
-  opacity: 1;
+.one-front-credit:active {
+  opacity: 0.7;
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile positioning - top right, smaller size */
+@media (max-width: 768px) {
+  .one-front-credit {
+    bottom: auto;
+    right: 10px;
+    top: 15px;
+    left: auto;
+    transform: none;
+    /* Smaller size for mobile */
+    width: 44px;
+    height: 44px;
+    font-size: 20px;
+  }
+
+  .one-front-credit:hover {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.05);
+  }
+
+  .one-front-credit:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.info-icon {
   color: white;
-  background: darkslategray;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Info Popup */
@@ -234,12 +479,25 @@
   -webkit-backdrop-filter: blur(30px);
 }
 
+/* Mobile optimizations for all modals */
+@media (max-width: 768px) {
+  .info-popup {
+    /* Reduce blur for better mobile performance */
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+  }
+}
+
 .info-popup-content {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(222, 222, 222, 0.1);
+  background: rgba(0, 0, 0, 0.4);
+  /* backdrop-filter: blur(20px); */
+  -webkit-backdrop-filter: blur(20px);
+  /* border: 1px solid rgba(255, 255, 255, 0.1); */
+  /* box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3); */
   padding: 30px;
   border-radius: 20px;
   max-width: 600px;
@@ -254,11 +512,36 @@
   font-size: 14px;
   line-height: 1.6;
   color: white;
-  border: 1px solid rgba(73, 73, 73, 0.2);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   text-align: justify;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Mobile-first modal design */
+@media (max-width: 768px) {
+  .info-popup-content {
+    /* Mobile-first: Fixed full screen width, content to top */
+    width: 100vw;
+    height: auto;
+    max-width: none;
+    max-height: 100vh;
+    padding: 12px;
+    border-radius: 0;
+    font-size: 16px;
+    line-height: 1.5;
+    overflow: hidden;
+    /* Full screen positioning */
+    top: 0;
+    left: 0;
+    transform: none;
+    box-sizing: border-box;
+    margin: 0;
+    /* Mobile-first flex layout - content to top */
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: flex-start;
+  }
 }
 
 .close-popup {
@@ -269,6 +552,23 @@
   cursor: pointer;
   color: rgba(255, 255, 255, 0.8);
   transition: color 0.3s ease;
+}
+
+/* Mobile-first close button */
+@media (max-width: 768px) {
+  .close-popup {
+    /* Mobile-first: Optimal touch target */
+    top: 8px;
+    right: 12px;
+    font-size: 32px;
+    padding: 8px;
+    min-width: 48px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.9);
+  }
 }
 
 .close-popup:hover {
@@ -283,11 +583,27 @@
   text-align: left;
 }
 
+/* Mobile optimizations for modal headings */
+@media (max-width: 768px) {
+  .info-popup-content h3 {
+    font-size: 16px;
+    margin: 0 0 15px 0;
+  }
+}
+
 .info-popup-content h4 {
   margin: 0 0 10px 0;
   font-size: 16px;
   font-weight: 600;
   color: #ffd700;
+}
+
+/* Mobile optimizations for modal subheadings */
+@media (max-width: 768px) {
+  .info-popup-content h4 {
+    font-size: 14px;
+    margin: 0 0 8px 0;
+  }
 }
 
 .popup-section {
@@ -297,6 +613,18 @@
 .popup-section p {
   margin: 0 0 10px 0;
   line-height: 1.5;
+}
+
+/* Mobile optimizations for popup sections */
+@media (max-width: 768px) {
+  .popup-section {
+    margin-bottom: 15px;
+  }
+
+  .popup-section p {
+    margin: 0 0 8px 0;
+    line-height: 1.4;
+  }
 }
 
 .audience-grid {
@@ -310,7 +638,6 @@
   background: rgba(255, 255, 255, 0.1);
   padding: 12px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .audience-item strong {
@@ -329,7 +656,6 @@
   text-align: right;
   margin-top: 20px;
   padding-top: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .signature p {
@@ -424,11 +750,45 @@ body {
   -khtml-user-drag: none;
   -moz-user-drag: none;
   -o-user-drag: none;
-  user-drag: none;
   /* Custom pencil cursor for children */
   cursor: crosshair;
   /* Ensure proper pointer events for Apple Pencil */
   pointer-events: auto;
+}
+
+/* Menu Toggle Button - Clean rectangle design */
+.menu-toggle {
+  position: fixed;
+  bottom: 120px; /* Position above the toolbox */
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1002;
+  width: 50px;
+  height: 25px;
+  background: none;
+  border: none;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.menu-toggle:hover {
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.menu-toggle-icon {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  font-weight: bold;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.menu-toggle.collapsed .menu-toggle-icon {
+  color: rgba(255, 255, 255, 1);
 }
 
 .tools-container {
@@ -438,17 +798,85 @@ body {
   transform: translateX(-50%);
   z-index: 1001;
   display: flex;
-  gap: 15px;
-  align-items: flex-end;
+  gap: 12px;
+  align-items: center;
   justify-content: center;
+  /* Mobile optimizations */
+  padding: 8px 25px;
+  max-width: 100vw;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  transition: all 0.3s ease;
+  /* Nice transparent background with rounded corners */
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.tools-container.collapsed {
+  transform: translateX(-50%) translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Desktop-only info button in toolbox */
+.desktop-only {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .desktop-only {
+    display: flex;
+  }
+
+  /* Hide the floating info button on desktop */
+  .one-front-credit {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+
+/* Info button - exact same styling as original ONE-FRONT credit */
+.info-button {
+  background: transparent !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 50% !important;
+  opacity: 0.8 !important;
+  transition: all 0.3s ease !important;
+}
+
+.info-button:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.05) !important;
+}
+
+.info-button:active {
+  opacity: 0.7 !important;
+  transform: scale(0.95) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
 }
 
 .tool-group {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   min-width: 50px;
+  height: 100%;
+  /* Perfect alignment */
+  margin: 0;
+  padding: 0;
+  /* Ensure consistent spacing */
+  flex: 1;
 }
 
 .tool-label {
@@ -457,11 +885,20 @@ body {
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
   text-align: center;
+  display: none; /* Hidden by default */
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
   letter-spacing: 0.2px;
   min-width: 50px;
+  height: 12px;
+  line-height: 12px;
+  /* Ensure perfect alignment */
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .left-controls {
@@ -474,8 +911,15 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  gap: 4px;
   min-width: 50px;
+  height: 100%;
+  /* Perfect alignment */
+  margin: 0;
+  padding: 0;
+  /* Ensure consistent spacing */
+  flex: 1;
 }
 
 .control-label {
@@ -513,31 +957,41 @@ body {
   background: #ffffff;
 }
 
-.thickness-slider {
-  width: 30px;
-  height: 20px;
-  border-radius: 8px;
-  background: #616161;
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
+/* 3D Sphere Size Selector - Single Button Style */
+.size-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
   cursor: pointer;
-  margin-bottom: 24px;
+  transition: all 0.2s ease;
+  /* Match other tool buttons */
+  opacity: 0.8;
+}
+
+/* Hover effect for the button */
+.size-selector:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
 }
 
 .thickness-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #e0e0e0;
   cursor: pointer;
 }
 
 .thickness-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
   background: #e0e0e0;
   cursor: pointer;
@@ -566,27 +1020,35 @@ body {
 }
 
 .tool-button {
-  width: 50px;
-  height: 50px;
   border-radius: 50%;
   background: transparent;
   border: none;
-  font-size: 25px;
   font-weight: bold;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: none;
+  transition: all 0.2s ease;
   touch-action: manipulation;
+  /* Mobile touch optimizations */
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  opacity: 0.8;
+  /* Ensure perfect alignment */
+  margin: 0;
+  padding: 0;
 }
 
 .tool-button:hover {
-  /* No hover effect */
-}
-
-.tool-button.active {
-  /* No active animation */
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
 }
 
 /* Prevent emoji animations */
@@ -602,51 +1064,89 @@ body {
   animation: none !important;
 }
 
-/* Rotate cyclone emoji slightly to the left */
-.tool-button {
-  transform: rotate(-15deg);
-}
+/* All tool buttons have no rotation for consistency */
 
 .clear-button {
-  width: 50px;
-  height: 50px;
   border-radius: 50%;
   background: transparent;
   border: none;
-  font-size: 25px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: none;
+  transition: all 0.2s ease;
+  opacity: 0.8;
   touch-action: manipulation;
+  /* Mobile touch optimizations */
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Ensure perfect alignment */
+  margin: 0;
+  padding: 0;
+}
+
+.clear-button:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+}
+
+/* Disable hover effects on mobile for clear button */
+@media (max-width: 768px) {
+  .clear-button:hover {
+    opacity: 0.8;
+    background: transparent !important;
+    transform: none;
+  }
+}
+
+/* Eraser active state - doesn't interfere with hover effects */
+.tool-button.eraser-active {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.tool-button.eraser-active:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  border: 2px solid rgba(255, 255, 255, 0.7) !important;
+  transform: scale(1.05);
+}
+
+/* Save button - Professional sizing handled by responsive system */
+
+/* Save modal buttons */
+.save-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 10px;
+}
+
+/* Mobile optimizations for save modal buttons */
+@media (max-width: 768px) {
+  .save-btn {
+    /* Larger touch targets for mobile */
+    padding: 12px 24px;
+    font-size: 16px;
+    margin-left: 8px;
+    min-height: 44px;
+    min-width: 80px;
+  }
 }
 
 /* Make tools bigger on all screens */
 @media (min-width: 768px) {
-  .tool-button {
-    width: 58px;
-    height: 58px;
-    font-size: 29px;
-  }
-  .clear-button {
-    width: 58px;
-    height: 58px;
-    font-size: 29px;
-  }
-  .thickness-slider {
-    width: 100px;
-    height: 14px;
-    border-radius: 7px;
-  }
-  .thickness-slider::-webkit-slider-thumb {
-    width: 24px;
-    height: 24px;
-  }
-  .thickness-slider::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
-  }
+  /* Keep all icons the same size */
   .thickness-label {
     font-size: 18px;
   }
@@ -668,29 +1168,6 @@ body {
 }
 
 @media (min-width: 1200px) {
-  .tool-button {
-    width: 66px;
-    height: 66px;
-    font-size: 33px;
-  }
-  .clear-button {
-    width: 66px;
-    height: 66px;
-    font-size: 33px;
-  }
-  .thickness-slider {
-    width: 120px;
-    height: 16px;
-    border-radius: 8px;
-  }
-  .thickness-slider::-webkit-slider-thumb {
-    width: 28px;
-    height: 28px;
-  }
-  .thickness-slider::-moz-range-thumb {
-    width: 28px;
-    height: 28px;
-  }
   .thickness-label {
     font-size: 20px;
   }
@@ -712,41 +1189,86 @@ body {
 }
 
 @media (min-width: 1920px) {
-  .tool-button {
-    width: 74px;
-    height: 74px;
-    font-size: 60px;
-  }
-  .clear-button {
-    width: 70px;
-    height: 70px;
-    font-size: 56px;
-  }
-  .thickness-slider {
-    width: 140px;
-    height: 18px;
-    border-radius: 9px;
-  }
-  .thickness-slider::-webkit-slider-thumb {
-    width: 32px;
-    height: 32px;
-  }
-  .thickness-slider::-moz-range-thumb {
-    width: 32px;
-    height: 32px;
-  }
   .thickness-label {
     font-size: 22px;
   }
 }
 
-.tool-button:active,
-.clear-button:active {
-  /* Simple opacity change instead of transform */
+.tool-button:active {
   opacity: 0.7;
+  transform: scale(0.95);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.clear-button:active {
+  opacity: 0.7;
+  transform: scale(0.95);
+  background: transparent !important;
+}
+
+/* Enhanced mobile touch feedback */
+@media (max-width: 768px) {
+  .tool-button:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+    background: rgba(255, 255, 255, 0.2);
+    transition: all 0.1s ease;
+  }
+
+  .clear-button:active {
+    opacity: 0.7;
+    transform: scale(0.95);
+    background: transparent !important;
+    transition: all 0.1s ease;
+  }
+
+  /* Prevent text selection on mobile */
+  .tool-button,
+  .clear-button,
+  .tool-label {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
 }
 
 /* Spin animations completely removed */
+
+/* Music Button - Same as other tool buttons */
+.music-button {
+  background: transparent;
+  color: white;
+  position: relative;
+  /* Override only rotation, allow scale effects */
+  transform: rotate(0deg) !important;
+}
+
+.music-button:hover {
+  transform: rotate(0deg) scale(1.05) !important;
+}
+
+.music-button:active {
+  transform: rotate(0deg) scale(0.95) !important;
+}
+
+.music-button.playing {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  animation: musicPulse 2s ease-in-out infinite;
+}
+
+@keyframes musicPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
 
 .style-buttons-container {
   position: fixed;
@@ -766,7 +1288,6 @@ body {
   border-radius: 20px;
   font-size: 14px;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease;
   backdrop-filter: blur(10px);
   font-weight: bold;
@@ -774,14 +1295,12 @@ body {
 
 .style-button:hover {
   transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   background: rgba(255, 255, 255, 1);
 }
 
 .style-button.active {
   background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
   color: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
 }
 
 @keyframes logoZoomIn {
@@ -986,4 +1505,542 @@ body {
 }
 .star:nth-child(50) {
   animation-delay: 1.9s;
+}
+
+/* Save Modal Options - using existing info-popup styles */
+.quality-options,
+.format-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Mobile optimizations for save modal options */
+@media (max-width: 768px) {
+  .quality-options,
+  .format-options {
+    gap: 10px;
+    margin-top: 15px;
+  }
+}
+
+.option-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid transparent;
+}
+
+/* Mobile optimizations for option items */
+@media (max-width: 768px) {
+  .option-item {
+    /* Larger touch targets for mobile */
+    padding: 16px 18px;
+    min-height: 44px;
+    border-radius: 10px;
+  }
+}
+
+.option-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(5px);
+}
+
+/* Remove side animations on mobile */
+@media (max-width: 768px) {
+  .option-item:hover {
+    transform: none; /* Remove translateX animation on mobile */
+  }
+}
+
+.option-item input[type='radio'] {
+  margin-right: 12px;
+  accent-color: #ffd700;
+  transform: scale(1.2);
+}
+
+/* Mobile optimizations for radio buttons */
+@media (max-width: 768px) {
+  .option-item input[type='radio'] {
+    margin-right: 15px;
+    transform: scale(1.4); /* Larger radio buttons for mobile */
+    min-width: 20px;
+    min-height: 20px;
+  }
+}
+
+.option-item span {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* Mobile optimizations for option text */
+@media (max-width: 768px) {
+  .option-item span {
+    font-size: 15px; /* Slightly larger text for mobile */
+  }
+
+  /* Mobile-first save modal content - top aligned */
+  .info-popup-content h3 {
+    font-size: 20px;
+    margin: 0 0 12px 0;
+    text-align: center;
+    font-weight: 700;
+    color: #ffd700;
+  }
+
+  .popup-section {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+  }
+
+  .popup-section h4 {
+    font-size: 16px;
+    margin: 0 0 8px 0;
+    text-align: center;
+    font-weight: 600;
+    color: white;
+  }
+
+  .quality-options,
+  .format-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 0;
+  }
+
+  /* Mobile-first option items */
+  .option-item {
+    padding: 12px 14px;
+    min-height: 44px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .option-item:active {
+    transform: scale(0.98);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .option-item span {
+    font-size: 15px;
+    line-height: 1.3;
+    font-weight: 500;
+  }
+
+  /* Hide unnecessary elements on mobile */
+  .popup-section hr {
+    display: none;
+  }
+
+  /* Mobile-first signature section */
+  .signature {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .signature .save-btn {
+    width: 100%;
+    margin: 0;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+  }
+
+  .signature .save-btn:active {
+    transform: scale(0.98);
+  }
+
+  /* Hide the "Want to know more?" section on mobile to save space */
+  .mobile-hide {
+    display: none;
+  }
+
+  /* Hide line breaks and separators on mobile */
+  .popup-section hr {
+    display: none;
+  }
+
+  /* Hide line breaks in text on mobile for better space usage */
+  .info-popup-content br {
+    display: none;
+  }
+
+  /* Mobile-first info modal content - optimized space usage */
+  .info-popup-content .popup-section {
+    margin-bottom: 8px;
+  }
+
+  .info-popup-content .popup-section p {
+    margin: 0 0 6px 0;
+    line-height: 1.4;
+    font-size: 14px;
+    text-align: left;
+  }
+
+  /* Mobile-first audience grid - compact vertical layout */
+  .info-popup-content .audience-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .info-popup-content .audience-item {
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 6px;
+    line-height: 1.3;
+    text-align: left;
+  }
+
+  /* Mobile-first visual hierarchy - compact but readable */
+  .info-popup-content h3 {
+    font-size: 20px;
+    color: #ffd700;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+  .info-popup-content h4 {
+    font-size: 16px;
+    color: white;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  /* Mobile-first signature section - compact */
+  .info-popup-content .signature {
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  .info-popup-content .signature p {
+    margin: 2px 0;
+    font-size: 13px;
+  }
+
+  /* Mobile-first links styling */
+  .info-popup-content a {
+    color: #98fb98;
+    text-decoration: none;
+    font-weight: 600;
+    word-break: break-word;
+  }
+
+  .info-popup-content a:hover {
+    color: #90ee90;
+    text-decoration: underline;
+  }
+
+  /* Mobile-first strong text */
+  .info-popup-content strong {
+    color: #ffd700;
+    font-weight: 700;
+  }
+
+  /* Hide line breaks in all modals on mobile for better space usage */
+  .info-popup-content br,
+  .save-modal br,
+  .processing-modal br {
+    display: none;
+  }
+}
+
+.option-item input[type='radio']:checked + span {
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.option-item input[type='radio']:checked + span strong {
+  color: #ffd700;
+}
+
+.cancel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+.confirm-btn {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #1a1a2e;
+  border: 1px solid #ffd700;
+  font-weight: 700;
+}
+
+.confirm-btn:hover {
+  background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+  transform: translateY(-1px);
+}
+
+/* Mobile responsive for save options */
+@media (max-width: 768px) {
+  .option-item {
+    padding: 10px 12px;
+  }
+
+  .option-item span {
+    font-size: 13px;
+  }
+
+  .save-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    margin-left: 5px;
+  }
+}
+
+/* Mobile optimizations for bottom icons */
+@media (max-width: 768px) {
+  .tools-container {
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    max-width: calc(100vw - 20px);
+    /* Grid layout for mobile - 7 columns */
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    padding: 8px 20px;
+    align-items: center;
+    justify-items: center;
+    /* Nice transparent background with rounded corners */
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 20px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .tool-label {
+    font-size: 10px;
+    margin-top: 2px;
+    text-align: center;
+    display: none; /* Keep hidden by default */
+  }
+
+  /* Remove ONE-FONT branding below the grid */
+  .tools-container::after {
+    display: none !important;
+    margin-top: 8px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+}
+
+/* Extra small mobile screens */
+@media (max-width: 480px) {
+  .tools-container {
+    bottom: 8px;
+    gap: 3px;
+    padding: 6px 16px;
+    /* Keep grid layout for small screens - 7 columns */
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    justify-items: center;
+    align-items: center;
+    /* Nice transparent background with rounded corners */
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 18px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .tool-label {
+    font-size: 9px;
+    text-align: center;
+    display: none; /* Keep hidden by default */
+  }
+
+  /* Remove ONE-FONT branding for small screens */
+  .tools-container::after {
+    display: none !important;
+    margin-top: 6px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+}
+
+/* Processing Spinner Styles */
+.processing-modal {
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+}
+
+.processing-content {
+  text-align: center;
+  padding: 20px;
+}
+
+.processing-content .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top: 4px solid #ffd700;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px auto;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.processing-content > h3 {
+  color: #ffd700;
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.processing-content > p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 20px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+/* Simple processing info */
+.processing-info {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  font-style: italic;
+  margin-top: 10px;
+}
+
+/* Mobile-first processing modal */
+@media (max-width: 768px) {
+  .processing-modal {
+    /* Mobile-first: Fixed full screen */
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+    border-radius: 0;
+    top: 0;
+    left: 0;
+    transform: none;
+    box-sizing: border-box;
+    margin: 0;
+    overflow: hidden;
+  }
+
+  .processing-content {
+    /* Mobile-first: Content to top, not centered */
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    height: 100vh;
+    padding: 16px;
+    box-sizing: border-box;
+    gap: 16px;
+    padding-top: 60px; /* Add top padding to position content nicely */
+  }
+
+  .processing-content .spinner {
+    width: 60px;
+    height: 60px;
+    border-width: 5px;
+    border-top-color: #ffd700;
+    border-right-color: #ffd700;
+    animation: spin 1s linear infinite;
+  }
+
+  .processing-content > h3 {
+    font-size: 20px;
+    margin: 0;
+    font-weight: 700;
+    color: #ffd700;
+  }
+
+  .processing-content > p {
+    font-size: 16px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    text-align: center;
+  }
+
+  .processing-info {
+    font-size: 12px;
+    margin: 0;
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+  }
+}
+
+/* ===== PROFESSIONAL APP-LIKE BUTTON SYSTEM ===== */
+/* Optimized for both large screens and mobile phones */
+
+/* Base sizes - Mobile First Approach */
+.tool-button,
+.clear-button,
+.info-icon,
+.one-front-credit,
+#save-as,
+.size-selector {
+  width: 56px;
+  height: 56px;
+  font-size: 28px;
+}
+
+/* Large screens - Slightly larger for better desktop experience */
+@media (min-width: 1024px) {
+  .tool-button,
+  .clear-button,
+  .info-icon,
+  .one-front-credit,
+  #save-as,
+  .size-selector {
+    width: 64px;
+    height: 64px;
+    font-size: 32px;
+  }
+}
+
+/* Extra large screens - Optimal for large monitors */
+@media (min-width: 1440px) {
+  .tool-button,
+  .clear-button,
+  .info-icon,
+  .one-front-credit,
+  #save-as,
+  .size-selector {
+    width: 72px;
+    height: 72px;
+    font-size: 36px;
+  }
 }

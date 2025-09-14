@@ -1,10 +1,12 @@
 import { DrawingStyle, DrawingPoint, StyleContext } from './baseStyle.js';
-import { ParticleStyle } from './particleStyle.js';
-import { LavaStyle } from './lavaStyle.js';
-import { NeonStyle } from './neonStyle.js';
-import { WatercolorStyle } from './watercolorStyle.js';
-import { ChalkStyle } from './chalkStyle.js';
-import { GlowStyle } from './glowStyle.js';
+import { Style1 } from './classic.js';
+import { Style2 } from './3d-sphere.js';
+import { Style3 } from './glitch-wave.js';
+import { Style4 } from './fire-lava.js';
+import { Style5 } from './water-drops.js';
+import { Style6 } from './holographic-prism.js';
+import { Style7 } from './plasma-energy.js';
+import { Style8 } from './classic-rainbow.js';
 
 export class StyleManager {
   private styles: DrawingStyle[] = [];
@@ -14,12 +16,14 @@ export class StyleManager {
   constructor() {
     // Initialize all available styles
     this.styles = [
-      new ParticleStyle(),
-      new LavaStyle(),
-      new NeonStyle(),
-      new WatercolorStyle(),
-      new ChalkStyle(),
-      new GlowStyle(),
+      new Style1(),      // Classic
+      new Style2(),      // 3D Sphere
+      new Style3(),      // Glitch Wave
+      new Style4(),      // Fire Lava
+      new Style5(),      // Water Drops
+      new Style6(),      // Holographic Prism
+      new Style7(),      // Plasma Energy
+      new Style8(),      // Classic Rainbow
     ];
 
     this.currentStyle = this.styles[0]!;

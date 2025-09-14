@@ -5,6 +5,26 @@ export class GlowStyle implements DrawingStyle {
   description = 'Bright neon strokes with glowing effects';
   icon = '6';
 
+  draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
+    // Simple draw implementation for glow style
+    const { x, y, width, height } = point;
+    const { isEraserMode } = context;
+    
+    ctx.save();
+    if (isEraserMode) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = '#000000';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#00FFFF';
+    }
+    
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(width, height) / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
   private lastSizeMultiplier = 0.25;
   private sizeSmoothingFactor = 0.15;
   private glowTrails: Array<{
@@ -36,7 +56,7 @@ export class GlowStyle implements DrawingStyle {
 
       const prevPoint = points[index - 1];
       if (!prevPoint) return;
-      const t = (point.t - prevPoint.t) / 16; // Normalize time
+      const t = ((point.t || 0) - (prevPoint.t || 0)) / 16; // Normalize time
 
       if (t <= 0) return;
 

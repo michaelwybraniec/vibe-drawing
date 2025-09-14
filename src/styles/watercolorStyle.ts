@@ -5,6 +5,26 @@ export class WatercolorStyle implements DrawingStyle {
   description = 'Soft watercolor brush strokes with color blending';
   icon = '4';
 
+  draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
+    // Simple draw implementation for watercolor style
+    const { x, y, width, height } = point;
+    const { isEraserMode } = context;
+    
+    ctx.save();
+    if (isEraserMode) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = '#000000';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#BAE1FF';
+    }
+    
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(width, height) / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
   private lastSizeMultiplier = 0.25;
   private sizeSmoothingFactor = 0.15;
   private brushStrokes: Array<{
@@ -15,14 +35,14 @@ export class WatercolorStyle implements DrawingStyle {
     opacity: number;
   }> = [];
 
-  onStart(point: DrawingPoint, context: StyleContext): void {
+  onStart(_point: DrawingPoint, _context: StyleContext): void {
     console.log('🎨 Watercolor style started');
     this.brushStrokes = [];
   }
 
   onMove(points: DrawingPoint[], context: StyleContext): void {
     console.log('🎨 WatercolorStyle.onMove called');
-    const { ctx, isEraserMode, thicknessMultiplier, currentSizeLevel, sizeMultipliers, isWebApp } =
+    const { ctx, isEraserMode, thicknessMultiplier: _thicknessMultiplier, currentSizeLevel: _currentSizeLevel, sizeMultipliers: _sizeMultipliers, isWebApp: _isWebApp } =
       context;
 
     if (points.length < 2) return;
@@ -36,7 +56,7 @@ export class WatercolorStyle implements DrawingStyle {
 
       const prevPoint = points[index - 1];
       if (!prevPoint) return;
-      const t = (point.t - prevPoint.t) / 16; // Normalize time
+      const t = ((point.t || 0) - (prevPoint.t || 0)) / 16; // Normalize time
 
       if (t <= 0) return;
 
@@ -49,7 +69,7 @@ export class WatercolorStyle implements DrawingStyle {
 
       // Calculate final size
       const touchWidth = point.width || 1;
-      const touchHeight = point.height || 1;
+      const _touchHeight = point.height || 1;
       const sizeVariation = 0.8 + Math.random() * 0.4; // More variation for watercolor
       const finalSize = (touchWidth / 2) * sizeVariation * sizeMultiplier;
 
@@ -93,11 +113,11 @@ export class WatercolorStyle implements DrawingStyle {
     ctx.restore();
   }
 
-  onEnd(context: StyleContext): void {
+  onEnd(_context: StyleContext): void {
     console.log('🎨 Watercolor style ended');
   }
 
-  onClear(context: StyleContext): void {
+  onClear(_context: StyleContext): void {
     this.brushStrokes = [];
   }
 

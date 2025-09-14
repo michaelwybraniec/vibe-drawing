@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Simple Pizza Selector</title>
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: #f6e7d7;
+        font-family: sans-serif;
+      }
+
+      .pizza {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        border: 10px solid #d8a657;
+      }
+
+      .slice {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        /* This clip-path creates a 60-degree slice */
+        clip-path: polygon(50% 50%, 100% 0, 100% 50.01%); /* Added 0.01% to prevent a tiny gap */
+        background: #f4a261;
+        opacity: 0.4;
+        cursor: pointer;
+        transition:
+          opacity 0.15s,
+          background 0.15s;
+      }
+
+      /* Rotations for each slice */
+      .slice.s1 {
+        transform: rotate(0deg);
+      }
+      .slice.s2 {
+        transform: rotate(60deg);
+      }
+      .slice.s3 {
+        transform: rotate(120deg);
+      }
+      .slice.s4 {
+        transform: rotate(180deg);
+      }
+      .slice.s5 {
+        transform: rotate(240deg);
+      }
+      .slice.s6 {
+        transform: rotate(300deg);
+      }
+
+      .slice.active {
+        opacity: 1;
+        background: gold;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="pizza" id="pizza">
+       
+      <div class="slice s1" data-n="1"></div>
+       
+      <div class="slice s2" data-n="2"></div>
+       
+      <div class="slice s3" data-n="3"></div>
+       
+      <div class="slice s4" data-n="4"></div>
+       
+      <div class="slice s5" data-n="5"></div>
+       
+      <div class="slice s6" data-n="6"></div>
+    </div>
+    <script>
+      const pizza = document.getElementById('pizza');
+      const slices = [...pizza.querySelectorAll('.slice')];
+      let locked = 0; // Number of slices selected
+
+      // Handle hovering for preview
+      pizza.addEventListener('mouseover', (e) => {
+        // Check if the target is a slice
+        if (e.target.classList.contains('slice')) {
+          const n = +e.target.dataset.n;
+          highlight(n);
+        }
+      });
+
+      // Handle mouse leaving the whole pizza area to reset the preview
+      pizza.addEventListener('mouseleave', () => {
+        highlight(locked);
+      });
+
+      // Handle click to "lock" the selection
+      pizza.addEventListener('click', (e) => {
+        if (e.target.classList.contains('slice')) {
+          locked = +e.target.dataset.n;
+          highlight(locked);
+          console.log('Selected:', locked);
+        }
+      });
+
+      // Function to highlight slices up to a given number
+      function highlight(n) {
+        slices.forEach((s) => {
+          s.classList.toggle('active', +s.dataset.n <= n);
+        });
+      }
+    </script>
+  </body>
+</html>

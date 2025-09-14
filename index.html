@@ -15,6 +15,8 @@
     <link rel="shortcut icon" href="logo-144.png" />
 
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="src/components/pizza-size-selector.css" />
+    <link rel="stylesheet" href="src/components/numbers-size-selector.css" />
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#111111" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,6 +27,26 @@
     />
   </head>
   <body>
+    <!-- Copyright Header - Always visible -->
+    <div class="copyright-header">
+      <span class="copyright-text"
+        >Welcome to VIBE DRAWING — app for personal use only. Commercial use requires prior written
+        authorization. Developed with
+        <a href="https://www.overvibing.com" target="_blank" rel="noopener noreferrer"
+          >AWP (Agentic Workflow Protocol)</a
+        >
+        by
+        <a href="https://www.linkedin.com/in/one-front/" target="_blank" rel="noopener noreferrer"
+          >Michael Wybraniec</a
+        >
+        ©
+        <a href="https://www.one-front.com" target="_blank" rel="noopener noreferrer"
+          >ONE-FRONT.COM</a
+        >
+        2025++
+      </span>
+    </div>
+
     <!-- Splash Screen -->
     <div id="splash-screen" class="splash-screen">
       <div class="splash-content">
@@ -37,9 +59,22 @@
     </div>
 
     <!-- ONE-FRONT Link - Always visible after loading -->
-    <div class="one-front-credit">
-      by ONE-FRONT
-      <span class="info-icon" onclick="showInfoPopup()">ℹ</span>
+    <div class="one-front-credit" onclick="showInfoPopup()">
+      <span class="info-icon">ℹ</span>
+    </div>
+
+    <!-- Debug Info Component -->
+    <div id="debug-info" class="debug-info" style="display: none">
+      <div class="debug-content">
+        <div class="debug-section">
+          <div class="debug-title">Current Settings</div>
+          <div id="debug-current-info"></div>
+        </div>
+        <div class="debug-section">
+          <div class="debug-title">Size Tracking</div>
+          <div id="debug-size-info"></div>
+        </div>
+      </div>
     </div>
 
     <!-- Info Popup -->
@@ -77,6 +112,20 @@
         </div> -->
 
         <hr />
+
+        <div class="popup-section">
+          <h4>Developer Options 🔧</h4>
+          <div class="developer-buttons">
+            <button class="debug-checkbox-btn" id="debugger-toggle">
+              <span class="debug-icon">🔧</span>
+              <span class="debug-label">Debug</span>
+            </button>
+            <button class="debug-checkbox-btn" id="labels-toggle">
+              <span class="debug-icon">🏷️</span>
+              <span class="debug-label">Labels</span>
+            </button>
+          </div>
+        </div>
 
         <div class="popup-section">
           <p>
@@ -161,7 +210,12 @@
         <div class="star" style="left: 96%; top: 60%"></div>
       </div>
 
-      <div class="tools-container">
+      <!-- Menu Toggle Button - Always visible above toolbox -->
+      <div class="menu-toggle" id="menu-toggle">
+        <div class="menu-toggle-icon">▼</div>
+      </div>
+
+      <div class="tools-container" id="tools-container">
         <!-- <div class="tool-group">
           <div class="control-group">
             <span class="control-label">📳</span>
@@ -190,15 +244,7 @@
         </div>
 
         <div class="tool-group">
-          <input
-            type="range"
-            id="thickness-slider"
-            min="0.2"
-            max="5.0"
-            step="0.2"
-            value="1.0"
-            class="thickness-slider"
-          />
+          <div class="size-selector" id="size-selector"></div>
           <div class="tool-label">Size</div>
         </div>
 
@@ -211,6 +257,33 @@
           <button id="clear-canvas" class="clear-button">🗑️</button>
           <div class="tool-label">Clear</div>
         </div>
+
+        <div class="tool-group">
+          <button id="save-as" class="tool-button">💾</button>
+          <div class="tool-label">Save</div>
+        </div>
+
+        <div class="tool-group">
+          <button
+            id="music-control"
+            class="tool-button music-button"
+            title="Click to turn calm background music on/off"
+          >
+            🎵
+          </button>
+          <div class="tool-label">Music</div>
+        </div>
+
+        <div class="tool-group desktop-only">
+          <button
+            class="tool-button info-button"
+            onclick="showInfoPopup()"
+            title="About VIBE DRAWING"
+          >
+            ℹ
+          </button>
+          <div class="tool-label">Info</div>
+        </div>
       </div>
 
       <div class="style-buttons-container" style="display: none">
@@ -219,6 +292,88 @@
         <button id="style-3" class="style-button">Style 3</button>
       </div>
     </main>
+
+    <!-- Save Options Modal -->
+    <div id="save-modal" class="info-popup">
+      <div class="info-popup-content">
+        <span class="close-popup" onclick="closeSaveModal()">&times;</span>
+
+        <h3>Export Options 💾</h3>
+
+        <div class="popup-section">
+          <h4>Quality Resolution</h4>
+          <div class="quality-options">
+            <label class="option-item">
+              <input type="radio" name="quality" value="2K" checked />
+              <span><strong>2K</strong> - Web Quality</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="quality" value="5K" />
+              <span><strong>5K</strong> - High Quality</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="quality" value="10K" />
+              <span><strong>10K</strong> - Professional</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="quality" value="20K" />
+              <span><strong>20K</strong> - Maximum Quality</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="popup-section">
+          <h4>Export Format</h4>
+          <div class="format-options">
+            <label class="option-item">
+              <input type="radio" name="format" value="PNG" checked />
+              <span><strong>PNG</strong> - Lossless quality, perfect for graphics</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="format" value="JPEG" />
+              <span><strong>JPEG</strong> - Compressed, great for photos</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="format" value="WEBP" />
+              <span><strong>WebP</strong> - Modern format, smaller files</span>
+            </label>
+            <label class="option-item">
+              <input type="radio" name="format" value="SVG" />
+              <span><strong>SVG</strong> - Vector-like quality, scalable</span>
+            </label>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="popup-section mobile-hide">
+          <p>
+            <strong>Want to know more?</strong> ->
+            <a href="#" onclick="showInfoPopup(); closeSaveModal(); return false;"
+              >Learn about VIBE DRAWING</a
+            >
+          </p>
+        </div>
+
+        <div class="signature">
+          <button id="cancel-save" class="save-btn cancel-btn">Cancel</button>
+          <button id="confirm-save" class="save-btn confirm-btn">Export Now</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Processing Spinner -->
+    <div id="processing-spinner" class="info-popup" style="display: none">
+      <div class="info-popup-content processing-modal">
+        <div class="processing-content">
+          <div class="spinner"></div>
+          <h3>Processing Export ⚡</h3>
+          <p>Creating your high-quality artwork...</p>
+          <p class="processing-info">Made with VIBE-CODING & AWP by Mike</p>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="src/main.ts"></script>
   </body>
 </html>

@@ -1,0 +1,48 @@
+/* Numbers Size Selector Component Styles for Mobile - Single Button */
+.numbers-size-selector {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.size-number-btn {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 8px;
+  background: rgba(244, 162, 97, 0.2);
+  color: #d8a657;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 40px;
+}
+
+.size-number-btn:hover {
+  background: rgba(244, 162, 97, 0.4);
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+.size-number-btn:active,
+.size-number-btn.pressed {
+  transform: scale(0.95);
+  background: rgba(244, 162, 97, 0.6);
+}
+
+/* Hide on desktop - only show on mobile */
+@media (min-width: 769px) {
+  .numbers-size-selector {
+    display: none !important;
+  }
+}

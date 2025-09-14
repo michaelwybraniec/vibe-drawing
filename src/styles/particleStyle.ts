@@ -5,6 +5,26 @@ export class ParticleStyle implements DrawingStyle {
   description = 'Smooth particle-based drawing with haptic feedback';
   icon = '1';
 
+  draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
+    // Simple draw implementation for particle style
+    const { x, y, width, height } = point;
+    const { isEraserMode } = context;
+    
+    ctx.save();
+    if (isEraserMode) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = '#000000';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#FF6B6B';
+    }
+    
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(width, height) / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
   private lastSizeMultiplier = 0.25;
   private sizeSmoothingFactor = 0.15;
   private previousPoint: DrawingPoint | null = null;
@@ -28,7 +48,7 @@ export class ParticleStyle implements DrawingStyle {
     points.forEach((point, index) => {
       if (!this.previousPoint) return;
 
-      const t = (point.t - this.previousPoint.t) / 16; // Normalize time
+      const t = ((point.t || 0) - (this.previousPoint.t || 0)) / 16; // Normalize time
 
       if (t <= 0) return;
 
@@ -110,21 +130,9 @@ export class ParticleStyle implements DrawingStyle {
   }
 
   private getCurrentColor(_multiplier: number): string {
-    // Use global randomStyleParams for Style 1 color generation
-    const time = Date.now() * 0.001;
-    const baseHue = (window as any).randomStyleParams?.baseHue || 216;
-    const _cycleSpeed = (window as any).randomStyleParams?.cycleSpeed || 8; // Unused but kept for future use
-    
-    // Create theme-specific color variations (less rainbow, more theme-focused)
-    const hueVariation = (Math.random() - 0.5) * 60; // Smaller hue variation for theme consistency
-    const saturationVariation = (Math.random() - 0.5) * 15 + Math.sin(time * 2) * 5; // Subtle saturation variation
-    const lightnessVariation = (Math.random() - 0.5) * 20 + Math.sin(time * 1.5) * 8; // Subtle lightness variation
-    
-    // Theme-focused palette with limited hue cycling
-    const hue = (baseHue + hueVariation + 360) % 360;
-    const saturation = Math.max(70, Math.min(100, ((window as any).randomStyleParams?.saturation || 90) + saturationVariation));
-    const lightness = Math.max(35, Math.min(75, ((window as any).randomStyleParams?.lightness || 50) + lightnessVariation));
-    
+    const hue = (Date.now() * 0.1) % 360;
+    const saturation = 80 + Math.sin(Date.now() * 0.001) * 20;
+    const lightness = 50 + Math.sin(Date.now() * 0.002) * 30;
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }
 

@@ -1,16 +1,15 @@
 export interface DrawingPoint {
   x: number;
   y: number;
-  t: number;
+  width: number;
+  height: number;
+  t?: number;
   speed?: number;
   pressure?: number;
-  width?: number;
-  height?: number;
 }
 
 export interface StyleContext {
   ctx: CanvasRenderingContext2D;
-  canvas: HTMLCanvasElement;
   isEraserMode: boolean;
   thicknessMultiplier: number;
   currentSizeLevel: number;
@@ -21,17 +20,17 @@ export interface StyleContext {
 export interface DrawingStyle {
   name: string;
   description: string;
-  icon: string;
+  icon?: string;
 
-  // Core methods
+  // Core drawing method
+  draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void;
+
+  // Optional methods
   onStart?(point: DrawingPoint, context: StyleContext): void;
   onMove?(points: DrawingPoint[], context: StyleContext): void;
   onEnd?(context: StyleContext): void;
-
-  // Optional methods
   onClear?(context: StyleContext): void;
   animate?(context: StyleContext): void;
-
-  // Style-specific properties
-  properties?: Record<string, any>;
+  generateRandomParameters?(): void;
+  resetToDefault?(): void;
 }

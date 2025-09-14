@@ -21,6 +21,26 @@ export class LavaStyle implements DrawingStyle {
   description = 'Flowing lava lines that melt and drip';
   icon = '2';
 
+  draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
+    // Simple draw implementation for lava style
+    const { x, y, width, height } = point;
+    const { isEraserMode } = context;
+    
+    ctx.save();
+    if (isEraserMode) {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.fillStyle = '#000000';
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#ff4500';
+    }
+    
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(width, height) / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.restore();
+  }
+
   private lavaLines: LavaLine[] = [];
   private currentLavaLine: LavaLine | null = null;
   private animationId: number | null = null;
@@ -63,11 +83,11 @@ export class LavaStyle implements DrawingStyle {
 
     // Start animation if not already running
     if (!this.animationId) {
-      this.startAnimation(context);
+      this.startAnimation(_context);
     }
   }
 
-  onClear(context: StyleContext): void {
+  onClear(_context: StyleContext): void {
     this.lavaLines = [];
     this.currentLavaLine = null;
     if (this.animationId) {
@@ -108,14 +128,14 @@ export class LavaStyle implements DrawingStyle {
       sizeMultiplier: this.calculateSizeMultiplier(point, context),
       touchWidth: point.width || 1,
       touchHeight: point.height || 1,
-      time: point.t,
+      time: point.t || 0,
     };
 
     this.currentLavaLine.points.push(lavaPoint);
   }
 
   private drawLavaLines(context: StyleContext): void {
-    const { ctx, isEraserMode } = context;
+    const { ctx, isEraserMode: _isEraserMode } = context;
 
     ctx.save();
 
@@ -133,7 +153,7 @@ export class LavaStyle implements DrawingStyle {
   }
 
   private drawLavaLine(line: LavaLine, context: StyleContext, isMelting: boolean): void {
-    const { ctx, isEraserMode } = context;
+    const { ctx, isEraserMode: _isEraserMode } = context;
 
     if (line.points.length < 2) return;
 
@@ -145,7 +165,7 @@ export class LavaStyle implements DrawingStyle {
     gradient.addColorStop(0.5, '#ff6347'); // Tomato
     gradient.addColorStop(1, '#ff8c00'); // Dark orange
 
-    ctx.strokeStyle = isEraserMode ? '#151E35' : gradient;
+    ctx.strokeStyle = _isEraserMode ? '#151E35' : gradient;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -167,7 +187,7 @@ export class LavaStyle implements DrawingStyle {
     ctx.stroke();
 
     // Add glowing effect
-    if (!isEraserMode) {
+    if (!_isEraserMode) {
       ctx.shadowColor = '#ff4500';
       ctx.shadowBlur = 10;
       ctx.stroke();
@@ -236,7 +256,7 @@ export class LavaStyle implements DrawingStyle {
     }
   }
 
-  private startAnimation(context: StyleContext): void {
-    this.animate(context);
+  private startAnimation(_context: StyleContext): void {
+    this.animate(_context);
   }
 }

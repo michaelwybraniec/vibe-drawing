@@ -173,10 +173,8 @@ function setupEventListeners(canvas: HTMLCanvasElement): void {
 }
 
 function createStyleContext(): StyleContext {
-  const canvas = document.getElementById('app-canvas') as HTMLCanvasElement;
   return {
     ctx: ctx!,
-    canvas,
     isEraserMode,
     thicknessMultiplier,
     currentSizeLevel,
@@ -249,7 +247,7 @@ function updateStyleUI(): void {
   const currentStyle = styleManager.getCurrentStyle();
   const styleButton = document.getElementById('style-button');
   if (styleButton) {
-    styleButton.textContent = currentStyle.icon;
+    styleButton.textContent = currentStyle.icon || '🎨';
     styleButton.title = `${currentStyle.name}: ${currentStyle.description}`;
   }
 }

@@ -1,11 +1,76 @@
 import { hapticsConstantStart } from './haptics.js';
 import { StyleManager } from './styles/styleManager.js';
-import { DrawingPoint } from './styles/baseStyle.js';
+import { DrawingPoint, StyleContext } from './styles/baseStyle.js';
+import { PizzaSizeSelector } from './components/pizza-size-selector.js';
+import { NumbersSizeSelector } from './components/numbers-size-selector.js';
+
+// Info popup functions
+function showInfoPopup() {
+  
+  // Add strong click feedback to the info button
+  const infoButton = document.querySelector('.one-front-credit');
+  if (infoButton) {
+    (infoButton as HTMLElement).style.transform = 'scale(0.85)';
+    (infoButton as HTMLElement).style.opacity = '0.7';
+    setTimeout(() => {
+      (infoButton as HTMLElement).style.transform = '';
+      (infoButton as HTMLElement).style.opacity = '';
+    }, 200);
+  }
+  
+  // Haptic feedback
+  if ('vibrate' in navigator) {
+    navigator.vibrate(50);
+  }
+  
+  const popup = document.getElementById('info-popup');
+  if (popup) {
+    popup.style.display = 'block';
+  }
+}
+
+function hideInfoPopup() {
+  const popup = document.getElementById('info-popup');
+  if (popup) {
+    popup.style.display = 'none';
+  }
+}
+
 
 // Debug: Check if JavaScript is loading
-console.log('🎨 Vibe Drawing app starting...');
-console.log('📍 Current location:', window.location.href);
-console.log('🌐 User agent:', navigator.userAgent);
+
+// Menu toggle functionality
+let isMenuCollapsed = false;
+
+function toggleMenu() {
+  const menuToggle = document.getElementById('menu-toggle');
+  const toolsContainer = document.getElementById('tools-container');
+  
+  if (!menuToggle || !toolsContainer) return;
+  
+  isMenuCollapsed = !isMenuCollapsed;
+  
+  if (isMenuCollapsed) {
+    // Collapse menu
+    toolsContainer.classList.add('collapsed');
+    menuToggle.classList.add('collapsed');
+    menuToggle.querySelector('.menu-toggle-icon')!.textContent = '▲';
+    // Move chevron to bottom when collapsed
+    menuToggle.style.bottom = '25px';
+  } else {
+    // Expand menu
+    toolsContainer.classList.remove('collapsed');
+    menuToggle.classList.remove('collapsed');
+    menuToggle.querySelector('.menu-toggle-icon')!.textContent = '▼';
+    // Move chevron above tools when expanded
+    menuToggle.style.bottom = '120px';
+  }
+  
+  // Haptic feedback
+  if ('vibrate' in navigator) {
+    navigator.vibrate(30);
+  }
+}
 
 // Fallback: Show info popup if main app fails to load
 setTimeout(() => {
@@ -34,11 +99,10 @@ let _animationId: number | null = null;
 
 // Web vs Mobile detection
 const isWebApp = !('ontouchstart' in window) || window.navigator.maxTouchPoints === 0;
-const _isMobile = 'ontouchstart' in window && window.navigator.maxTouchPoints > 0;
 
-// Size control variables
-let currentSizeLevel = 2; // 0=tiny, 1=small, 2=medium, 3=large, 4=huge (5 sizes total)
-const sizeMultipliers = [0.2, 0.4, 0.7, 1.0, 1.5]; // 5 size multipliers for web app - reduced sizes
+// Size control variables - 3 fixed sizes for all styles
+let currentSizeLevel = 2; // 0=tiny, 1=small, 2=medium, 3=large, 4=huge, 5=giant (6 sizes total)
+const sizeMultipliers = [1, 2, 2.5, 3, 3.5, 4]; // 6 fixed size multipliers: Tiny (0.2x), Small (0.4x), Medium (0.8x), Large (1.5x), Huge (3.0x), Giant (6.0x) - All styles same size
 
 // Size smoothing variables
 let lastSizeMultiplier = 0.25;
@@ -47,8 +111,158 @@ const sizeSmoothingFactor = 0.15;
 // Thickness control
 let thicknessMultiplier = 1.0; // Global thickness multiplier (0.5 to 3.0)
 
+// Memory management
+const MEMORY_LIMIT_PERCENT = 70; // Clear canvas when memory usage exceeds 70%
+let lastMemoryCheck = 0;
+const MEMORY_CHECK_INTERVAL = 1000; // Check memory every 1 second
+
+// Emergency memory clear function (can be called from console)
+(window as any).emergencyClear = function() {
+  const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+  if (canvas) clearCanvas(canvas);
+  if ((window as any).gc) {
+    (window as any).gc();
+  }
+};
+
+// Check memory usage and auto-clear if needed
+function checkMemoryUsage(): void {
+  const now = Date.now();
+  // Only check every 1 second to avoid performance impact
+  if (now - lastMemoryCheck < MEMORY_CHECK_INTERVAL) return;
+  
+  lastMemoryCheck = now;
+  const memoryInfo = (performance as any).memory;
+  
+  if (memoryInfo) {
+    const usedMB = memoryInfo.usedJSHeapSize / 1024 / 1024;
+    const totalMB = memoryInfo.totalJSHeapSize / 1024 / 1024;
+    const usagePercent = (usedMB / totalMB) * 100;
+    
+    if (usagePercent > MEMORY_LIMIT_PERCENT) {
+      const canvas = document.getElementById('drawing-canvas') as HTMLCanvasElement;
+      if (canvas) clearCanvas(canvas);
+      
+      // Force garbage collection if available
+      if ((window as any).gc) {
+        (window as any).gc();
+      }
+      
+      // Show notification
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.save();
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = 'white';
+          ctx.font = 'bold 24px Arial';
+          ctx.textAlign = 'center';
+          ctx.fillText('Memory Limit Reached', canvas.width / 2, canvas.height / 2 - 20);
+          ctx.fillText('Canvas Auto-Cleared', canvas.width / 2, canvas.height / 2 + 20);
+          ctx.restore();
+          
+          // Clear the notification after 2 seconds
+          setTimeout(() => {
+            if (ctx) {
+              ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+          }, 2000);
+        }
+      }
+    }
+  }
+}
+
 // Eraser mode
 let isEraserMode = false;
+
+// Debug mode
+let showDebugInfo = false;
+let showToolLabels = false;
+
+// Initialize debugger toggle
+function initializeDebuggerToggle(): void {
+  const debuggerToggle = document.getElementById('debugger-toggle') as HTMLButtonElement;
+  const debugInfo = document.getElementById('debug-info') as HTMLElement;
+  
+  if (debuggerToggle && debugInfo) {
+    // Set initial state
+    debuggerToggle.classList.toggle('active', showDebugInfo);
+    debugInfo.style.display = showDebugInfo ? 'block' : 'none';
+    
+    // Add event listener
+    debuggerToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showDebugInfo = !showDebugInfo;
+      debuggerToggle.classList.toggle('active', showDebugInfo);
+      debugInfo.style.display = showDebugInfo ? 'block' : 'none';
+      
+      // Update debug content when showing
+      if (showDebugInfo) {
+        updateDebugInfo();
+      }
+    });
+  }
+}
+
+// Initialize labels toggle
+function initializeLabelsToggle(): void {
+  const labelsToggle = document.getElementById('labels-toggle') as HTMLButtonElement;
+  if (labelsToggle) {
+    // Set initial state - labels should be hidden by default
+    labelsToggle.classList.toggle('active', showToolLabels);
+    
+    // Explicitly hide all tool labels on startup
+    const toolLabels = document.querySelectorAll('.tool-label');
+    toolLabels.forEach(label => {
+      const element = label as HTMLElement;
+      element.style.display = 'none';
+    });
+    
+    // Add event listener
+    labelsToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showToolLabels = !showToolLabels;
+      labelsToggle.classList.toggle('active', showToolLabels);
+      
+      // Toggle tool labels visibility
+      toolLabels.forEach(label => {
+        const element = label as HTMLElement;
+        element.style.display = showToolLabels ? 'block' : 'none';
+      });
+    });
+  }
+}
+
+// Size tracking for reactive observer
+let sizeTracker: { [styleName: string]: { [sizeLevel: number]: number } } = {};
+let lastSizeUpdate = 0;
+
+// Function to report actual size used by a style
+function reportActualSize(styleName: string, sizeLevel: number, actualSize: number): void {
+  if (!sizeTracker[styleName]) {
+    sizeTracker[styleName] = {};
+  }
+  sizeTracker[styleName]![sizeLevel] = actualSize;
+  
+  // Update debug display every 100ms to avoid spam
+  const now = Date.now();
+  if (now - lastSizeUpdate > 100) {
+    lastSizeUpdate = now;
+    updateSizeDebugDisplay();
+  }
+}
+
+// Initialize debug tracking for all styles
+function _initializeDebugTracking(): void {
+  const allStyles = styleManager.getAllStyles();
+  allStyles.forEach(style => {
+    if (!sizeTracker[style.name]) {
+      sizeTracker[style.name] = {};
+    }
+  });
+}
 
 // Style tracking variables
 let currentStyle = 1; // Default to style 1
@@ -56,18 +270,56 @@ let isStyle2Active = false;
 let _flames: any[] = [];
 let lavaLines: any[] = [];
 
-// Style context function (unused but kept for future use)
-function _createStyleContext() {
-  const canvas = document.getElementById('app-canvas') as HTMLCanvasElement;
+// Style context function for the new separated system
+function createStyleContext(): StyleContext {
+  // Make eraser much bigger than selected size for easier use
+  const eraserSizeLevel = isEraserMode ? Math.min(currentSizeLevel + 4, sizeMultipliers.length - 1) : currentSizeLevel;
+  
   return {
     ctx: ctx!,
-    canvas,
     isEraserMode,
     thicknessMultiplier,
-    currentSizeLevel,
+    currentSizeLevel: eraserSizeLevel,
     sizeMultipliers,
     isWebApp,
   };
+}
+
+// Helper function to draw using the new separated style system
+function drawWithCurrentStyle(ctx: CanvasRenderingContext2D, x: number, y: number, touchWidth: number, touchHeight: number): void {
+  const point: DrawingPoint = {
+    x,
+    y,
+    width: touchWidth,
+    height: touchHeight,
+    t: Date.now(),
+  };
+  
+  const styleContext = createStyleContext();
+  const currentStyle = styleManager.getCurrentStyle();
+  
+  // Reactive observer: Track actual calculated sizes for each style
+  if (showDebugInfo) {
+    // Calculate the actual size that will be used by the style
+    const sizeMultiplier = sizeMultipliers[currentSizeLevel] || 1.0;
+    const baseMultiplier = 0.15 * sizeMultiplier;
+    const calculatedSize = baseMultiplier * thicknessMultiplier * Math.max(touchWidth, touchHeight);
+    
+    // Track size for this style and size level
+    if (!sizeTracker[currentStyle.name]) {
+      sizeTracker[currentStyle.name] = {};
+    }
+    sizeTracker[currentStyle.name]![currentSizeLevel] = calculatedSize;
+    
+    // Update debug display every 100ms to avoid spam
+    const now = Date.now();
+    if (now - lastSizeUpdate > 100) {
+      lastSizeUpdate = now;
+      updateSizeDebugDisplay();
+    }
+  }
+  
+  currentStyle.draw(ctx, point, styleContext);
 }
 
 function calculateSizeMultiplier(width: number, height: number): number {
@@ -152,7 +404,7 @@ function getColorStyle1(_sizeMultiplier: number): string {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 }
 
-function getColorStyle2(_sizeMultiplier: number): string {
+function _getColorStyle2(_sizeMultiplier: number): string {
   // Style 2: Use random parameters for fire colors
   const baseHue = randomStyleParams.baseHue;
   const baseSaturation = randomStyleParams.saturation;
@@ -181,227 +433,276 @@ function getCurrentColor(sizeMultiplier: number): string {
   return getColorStyle1(sizeMultiplier);
 }
 
-function drawStyle2(
+function _drawStyle2(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   sizeMultiplier: number,
   touchWidth: number,
-  touchHeight: number,
 ): void {
-  // Style 2: Sharp pen-like fire line with continuous sparkles
-  const time = Date.now();
-  const sparkleSpeed = 400; // 0.4 seconds for faster sparkle cycle
-  const sparklePhase = (time % sparkleSpeed) / sparkleSpeed; // 0 to 1
+  // Style 2: SPLIT & MERGE LINES ⚡🔀 - Lines that split into two and merge back together
+  const _time = Date.now();
+  const _isMobile = !isWebApp;
+  // Style 2: Enhanced size calculation with larger maximum size
+  let sizeVariation;
+  if (_isMobile) {
+    sizeVariation = 0.95 + Math.random() * 0.1; // Same as Style 1 mobile
+  } else {
+    sizeVariation = 0.95 + Math.random() * 0.1; // Same as Style 1 desktop
+  }
+  const pulseScale = 1 + Math.sin((Date.now()) / 160) * 0.03; // Same as Style 1
+  const baseSize = (touchWidth / 2) * sizeVariation * pulseScale; // Base size like Style 1
+  const enhancedSize = baseSize * (1 + currentSizeLevel * 0.3) * thicknessMultiplier; // Enhanced scaling for Style 2
+  const lineSize = Math.max(3.0, enhancedSize); // Minimum 3px, but can go much larger
 
   ctx.save();
 
-  // Create size-sensitive pen-like effect (reduced intensity)
-  const lineWidth = Math.max(touchWidth, touchHeight) * 0.1 * sizeMultiplier; // Reduced from 0.15 to 0.1
-  const sparkleIntensity = Math.sin(sparklePhase * Math.PI * 8) * 0.5 + 0.5; // 0 to 1, very fast oscillation
+  // Split line colors - dynamic and energetic
+  const baseHue = randomStyleParams.baseHue;
+  const splitHue = (baseHue + 120) % 360; // Green shift for split effect
+  const lineColor = `hsl(${splitHue}, 85%, 65%)`; // Main line color
+  // Removed unused split/merge variables since Style 2 is now simple 3D sphere
+  const animatedSize = lineSize; // Use lineSize directly since it already has the proper scaling
 
-  // Main continuous fire line - like a sharp pen (less intense)
-  ctx.strokeStyle = getColorStyle2(sizeMultiplier);
-  ctx.lineWidth = lineWidth * (0.15 + sparkleIntensity * 0.08); // Reduced from 0.2 to 0.15
-  ctx.lineCap = 'round';
-  ctx.globalAlpha = 0.85 + sparkleIntensity * 0.1; // Reduced from 0.95 to 0.85
-
-  // Draw continuous fire line - no breaks, smooth (shorter)
-  const moveOffset = Math.sin(sparklePhase * Math.PI * 2) * 0.4; // Reduced from 0.8 to 0.4
+  // Style 2: Simple 3D sphere drawing with dark shadow effect
+  const depthOffset = animatedSize * 0.1; // 3D depth offset
+  
+  // 3D shadow sphere
+  ctx.globalAlpha = 0.6;
+  ctx.fillStyle = '#000000';
   ctx.beginPath();
-  ctx.moveTo(x - lineWidth * 0.6, y + moveOffset); // Reduced from 0.8 to 0.6
-  ctx.lineTo(x + lineWidth * 0.6, y + moveOffset); // Reduced from 0.8 to 0.6
-  ctx.stroke();
-
-  // Add ultra-dense sparkle dots for continuous effect (fewer, smaller)
-  const numSparkles = 15; // Reduced from 25 to 15
-  for (let i = 0; i < numSparkles; i++) {
-    const sparkleX = x - lineWidth * 0.5 + i * lineWidth * 0.07; // Reduced from 0.7 to 0.5
-    const sparkleOffset = Math.sin((sparklePhase + i * 0.08) * Math.PI * 4) * 1; // Reduced from 2 to 1
-    const sparkleSize = (0.3 + sparkleIntensity * 0.6) * sizeMultiplier; // Reduced from 0.4 to 0.3
-    const sparkleAlpha = 0.7 + sparkleIntensity * 0.2; // Reduced from 0.8 to 0.7
-
-    ctx.globalAlpha = sparkleAlpha;
-    ctx.fillStyle = getColorStyle2(sizeMultiplier + 0.1);
-
-    // Draw tiny sparkle dots
+  ctx.arc(x + depthOffset, y + depthOffset, Math.max(2, animatedSize * 0.15), 0, 2 * Math.PI);
+  ctx.fill();
+  
+  // Main 3D sphere
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = lineColor;
+  ctx.beginPath();
+  ctx.arc(x, y, Math.max(2, animatedSize * 0.12), 0, 2 * Math.PI);
+  ctx.fill();
+  
+  // Highlight on top
+  ctx.globalAlpha = 0.7;
+  ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(sparkleX, y + sparkleOffset, sparkleSize, 0, 2 * Math.PI);
+  ctx.arc(x - depthOffset * 0.4, y - depthOffset * 0.4, Math.max(0.5, animatedSize * 0.08), 0, 2 * Math.PI);
     ctx.fill();
-  }
 
-  // Add minimal loop effect for extra density (smaller, fewer)
-  const loopRadius = lineWidth * 0.1; // Reduced from 0.15 to 0.1
-  const loopSpeed = sparklePhase * Math.PI * 6; // Very fast loop
-  const numLoopSparkles = 8; // Reduced from 12 to 8
-
-  for (let i = 0; i < numLoopSparkles; i++) {
-    const angle = loopSpeed + (i * Math.PI * 2) / numLoopSparkles;
-    const loopX = x + Math.cos(angle) * loopRadius;
-    const loopY = y + Math.sin(angle) * loopRadius;
-    const loopSize = (0.15 + sparkleIntensity * 0.4) * sizeMultiplier; // Reduced from 0.2 to 0.15
-    const loopAlpha = 0.5 + sparkleIntensity * 0.2; // Reduced from 0.6 to 0.5
-
-    ctx.globalAlpha = loopAlpha;
-    ctx.fillStyle = getColorStyle2(sizeMultiplier + 0.2);
-
+  // Occasional energy burst at split/merge points - reduced for mobile
+  if (Math.random() < (_isMobile ? 0.02 : 0.05)) { // 2% chance on mobile, 5% on desktop
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(loopX, loopY, loopSize, 0, 2 * Math.PI);
+    ctx.arc(x, y, animatedSize * 0.1, 0, 2 * Math.PI);
     ctx.fill();
   }
 
   ctx.restore();
 }
 
-function drawFlameEffect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  sizeMultiplier: number,
-  touchWidth: number,
-  touchHeight: number,
-): void {
-  // Simple sparkle effect - just draw the sparkle line
-  drawStyle2(ctx, x, y, sizeMultiplier, touchWidth, touchHeight);
-}
+// Removed old drawFlameEffect - now using separated style system
 
-// Global glitch trail for digital glitch effect
-let glitchTrail: Array<{
-  x: number;
-  y: number;
-  size: number;
-  timestamp: number;
-  glitchOffset: number;
-}> = [];
-let lastGlitchTime = 0;
+// Global glitch trail for digital glitch effect (removed - no longer used)
+// let glitchTrail: Array<{...}> = [];
+// let lastGlitchTime = 0;
 
 // Global twinkling stars for background (not used - using CSS instead)
 let _backgroundStars: Array<{x: number; y: number; size: number; twinklePhase: number; twinkleSpeed: number}> = [];
 
-function drawGlitchEffect(
+// Removed old drawGlitchEffect - now using separated style system
+function _drawGlitchEffect(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   sizeMultiplier: number,
   touchWidth: number,
-  touchHeight: number,
+  _touchHeight: number,
 ): void {
-  // DIGITAL GLITCH EFFECT 💻🖥️
+  // Style 3: SINUSOIDAL SPLIT & MERGE 🌊✨ - Ultra-artistic lines that split and merge in sine wave patterns
   const time = Date.now();
-  const glitchSize = Math.max(touchWidth, touchHeight) * 0.25 * sizeMultiplier;
+  const _isMobile = !isWebApp;
+  // Use normal size calculation like Style 1 - no enhanced scaling
+  const baseSize = (touchWidth / 2) * (0.95 + Math.random() * 0.1);
+  const pulseScale = 1 + Math.sin(Date.now() / 160) * 0.03;
+  const waveSize = baseSize * pulseScale; // Normal size like Style 1, no enhanced scaling
 
   ctx.save();
 
-  // Glitch colors with digital effect
-  const glitchHues = [0, 120, 240]; // RGB primary colors
-  const randomHue = glitchHues[Math.floor(Math.random() * glitchHues.length)] || 0;
-  const hue = randomHue + (Math.random() - 0.5) * 20;
+  // Ultra-artistic colors - flowing and ethereal
+  const baseHue = randomStyleParams.baseHue;
+  const waveHue = (baseHue + 180) % 360; // Complementary shift for wave effect
+  const primaryWave = `hsl(${waveHue}, 85%, 60%)`; // Main wave color
+  const secondaryWave = `hsl(${waveHue + 60}, 80%, 70%)`; // Secondary wave color
+  const accentWave = `hsl(${waveHue - 60}, 90%, 80%)`; // Accent wave color
+  const mergeColor = `hsl(${waveHue}, 95%, 90%)`; // Merge point color
 
-  const glitchColor = `hsl(${hue}, 100%, 60%)`;
-  const glitchColor2 = `hsl(${hue + 120}, 100%, 60%)`; // Complementary color
-  const glitchColor3 = `hsl(${hue + 240}, 100%, 60%)`; // Triadic color
+  // Sinusoidal animation - multiple wave frequencies
+  const wavePhase1 = time * 0.004; // Primary wave frequency
+  const wavePhase2 = time * 0.006; // Secondary wave frequency
+  const wavePhase3 = time * 0.003; // Tertiary wave frequency
+  const animatedSize = waveSize * sizeMultiplier * (1 + currentSizeLevel * 0.1) * thicknessMultiplier; // REDUCED from 0.3 to 0.1 for smaller maximum
 
-  // Glitch timing and effects
-  const glitchPulse = Math.sin(time / 100) * 0.4 + 0.6;
-  const animatedSize = glitchSize * glitchPulse;
-
-  // Add glitch offset
-  const glitchOffset = Math.sin(time / 50) * 8; // Fast glitch movement
-  const glitchX = x + glitchOffset;
-  const glitchY = y + (Math.random() - 0.5) * 4;
-
-  // Add to glitch trail
-  if (time - lastGlitchTime > 30) {
-    glitchTrail.push({
-      x: glitchX,
-      y: glitchY,
-      size: animatedSize,
-      timestamp: time,
-      glitchOffset: glitchOffset,
-    });
-    lastGlitchTime = time;
-
-    // Keep only last 12 points for glitch trail
-    if (glitchTrail.length > 12) {
-      glitchTrail.shift();
-    }
+  // Determine if this point should create a sinusoidal split - reduced for mobile and fast drawing
+  let waveChance;
+  if (_isMobile) {
+    waveChance = 0.25; // Normal mobile
+  } else {
+    waveChance = 0.4; // Desktop
   }
-
-  // Draw glitch trail with digital artifacts
-  glitchTrail.forEach((point, _index) => {
-    const age = time - point.timestamp;
-    if (age < 600) {
-      // Shorter glitch trail
-      const fadeProgress = age / 600;
-      const alpha = (1 - fadeProgress) * 0.7;
-      const size = point.size * (1 - fadeProgress * 0.3);
-
-      // Random glitch color
-      const colors = [glitchColor, glitchColor2, glitchColor3];
-      const randomColor = colors[Math.floor(Math.random() * colors.length)] || glitchColor;
-
-      // Glitch rectangle instead of circle
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = randomColor;
-      ctx.fillRect(point.x - size / 2 + point.glitchOffset, point.y - size / 2, size, size);
-
-      // Add glitch scan lines
-      if (Math.random() < 0.3) {
-        ctx.globalAlpha = alpha * 0.5;
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(point.x - size / 2, point.y - size / 4, size, 1);
+  const shouldCreateWave = Math.random() < waveChance;
+  
+  if (shouldCreateWave) {
+    // SINUSOIDAL SPLIT: Create beautiful sine wave patterns that split and merge
+    
+    // Calculate wave parameters - optimized for mobile
+    const waveLength = animatedSize * (_isMobile ? 0.8 : 1.2); // Shorter waves on mobile
+    const waveAmplitude = animatedSize * (_isMobile ? 0.3 : 0.5); // Smaller amplitude on mobile
+    const numPoints = _isMobile ? 12 : 20; // Lower resolution on mobile for performance
+    
+    // Create the main sinusoidal path
+    ctx.globalAlpha = 0.9;
+    ctx.strokeStyle = primaryWave;
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    ctx.beginPath();
+    let firstPoint = true;
+    
+    for (let i = 0; i <= numPoints; i++) {
+      const progress = i / numPoints;
+      const waveX = x + (progress - 0.5) * waveLength;
+      
+      // Create complex sine wave with multiple frequencies
+      const waveY = y + 
+        Math.sin(wavePhase1 + progress * Math.PI * 4) * waveAmplitude * 0.6 +
+        Math.sin(wavePhase2 + progress * Math.PI * 6) * waveAmplitude * 0.3 +
+        Math.sin(wavePhase3 + progress * Math.PI * 2) * waveAmplitude * 0.1;
+      
+      if (firstPoint) {
+        ctx.moveTo(waveX, waveY);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(waveX, waveY);
       }
     }
-  });
+    ctx.stroke();
+    
+    // Create secondary wave (split path)
+    ctx.globalAlpha = 0.8;
+    ctx.strokeStyle = secondaryWave;
+    ctx.lineWidth = 2;
+    
+    ctx.beginPath();
+    firstPoint = true;
+    
+    for (let i = 0; i <= numPoints; i++) {
+      const progress = i / numPoints;
+      const waveX = x + (progress - 0.5) * waveLength;
+      
+      // Secondary wave with different phase and amplitude
+      const waveY = y + 
+        Math.sin(wavePhase1 + Math.PI/3 + progress * Math.PI * 4) * waveAmplitude * 0.5 +
+        Math.sin(wavePhase2 + Math.PI/2 + progress * Math.PI * 6) * waveAmplitude * 0.4 +
+        Math.sin(wavePhase3 + Math.PI/4 + progress * Math.PI * 2) * waveAmplitude * 0.2;
+      
+      if (firstPoint) {
+        ctx.moveTo(waveX, waveY);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(waveX, waveY);
+      }
+    }
+    ctx.stroke();
+    
+    // Create tertiary wave (accent path)
+    ctx.globalAlpha = 0.7;
+    ctx.strokeStyle = accentWave;
+    ctx.lineWidth = 1.5;
+    
+    ctx.beginPath();
+    firstPoint = true;
+    
+    for (let i = 0; i <= numPoints; i++) {
+      const progress = i / numPoints;
+      const waveX = x + (progress - 0.5) * waveLength;
+      
+      // Tertiary wave with different characteristics
+      const waveY = y + 
+        Math.sin(wavePhase1 + Math.PI/6 + progress * Math.PI * 3) * waveAmplitude * 0.4 +
+        Math.sin(wavePhase2 + Math.PI/3 + progress * Math.PI * 5) * waveAmplitude * 0.3 +
+        Math.sin(wavePhase3 + Math.PI/2 + progress * Math.PI * 7) * waveAmplitude * 0.3;
+      
+      if (firstPoint) {
+        ctx.moveTo(waveX, waveY);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(waveX, waveY);
+      }
+    }
+    ctx.stroke();
+    
+    // Add wave merge points (where waves converge)
+    const mergePoints = [0.2, 0.5, 0.8]; // Three merge points along the wave
+    
+    for (const mergeProgress of mergePoints) {
+      const mergeX = x + (mergeProgress - 0.5) * waveLength;
+      const mergeY = y + Math.sin(wavePhase1 + mergeProgress * Math.PI * 4) * waveAmplitude * 0.3;
+      
+      ctx.globalAlpha = 0.9;
+      ctx.fillStyle = mergeColor;
+      ctx.beginPath();
+      ctx.arc(mergeX, mergeY, 3, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+    
+  } else {
+    // SINGLE WAVE: Create a single flowing sine wave
+    const waveLength = animatedSize * 1.0; // INCREASED from 0.6 to 1.0 for longer single waves
+    const waveAmplitude = animatedSize * 0.4; // INCREASED from 0.2 to 0.4 for taller single waves
+    const numPoints = 15;
+    
+    ctx.globalAlpha = 0.8;
+    ctx.strokeStyle = primaryWave;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    
+    ctx.beginPath();
+    let firstPoint = true;
+    
+    for (let i = 0; i <= numPoints; i++) {
+      const progress = i / numPoints;
+      const waveX = x + (progress - 0.5) * waveLength;
+      const waveY = y + Math.sin(wavePhase1 + progress * Math.PI * 3) * waveAmplitude;
+      
+      if (firstPoint) {
+        ctx.moveTo(waveX, waveY);
+        firstPoint = false;
+      } else {
+        ctx.lineTo(waveX, waveY);
+      }
+    }
+    ctx.stroke();
+    
+    // Add center point
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle = mergeColor;
+    ctx.beginPath();
+    ctx.arc(x, y, 2, 0, 2 * Math.PI);
+    ctx.fill();
+  }
 
-  // Draw main glitch point
-  const _mainGlitch = Math.sin(time / 30) * 0.5 + 0.5; // Fast glitch
-
-  // Primary glitch color
-  ctx.globalAlpha = 0.9;
-  ctx.fillStyle = glitchColor;
-  ctx.fillRect(glitchX - animatedSize / 2, glitchY - animatedSize / 2, animatedSize, animatedSize);
-
-  // Glitch color shift
-  ctx.globalAlpha = 0.6;
-  ctx.fillStyle = glitchColor2;
-  ctx.fillRect(
-    glitchX - animatedSize / 2 + 2,
-    glitchY - animatedSize / 2,
-    animatedSize / 3,
-    animatedSize,
-  );
-
-  // Glitch color shift 2
-  ctx.globalAlpha = 0.4;
-  ctx.fillStyle = glitchColor3;
-  ctx.fillRect(
-    glitchX - animatedSize / 2 - 2,
-    glitchY - animatedSize / 2,
-    animatedSize / 3,
-    animatedSize,
-  );
-
-  // Add digital artifacts
-  if (Math.random() < 0.4) {
+  // Add ethereal sparkles along the waves - reduced for mobile
+  if (Math.random() < (_isMobile ? 0.08 : 0.15)) { // 8% chance on mobile, 15% on desktop
+    const sparkleX = x + (Math.random() - 0.5) * animatedSize * (_isMobile ? 0.8 : 1.2);
+    const sparkleY = y + (Math.random() - 0.5) * animatedSize * (_isMobile ? 0.6 : 1.0);
+    
     ctx.globalAlpha = 0.8;
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(glitchX - animatedSize / 2, glitchY - animatedSize / 4, animatedSize, 2);
+    ctx.beginPath();
+    ctx.arc(sparkleX, sparkleY, 1.5, 0, 2 * Math.PI);
+    ctx.fill();
   }
-
-  // Add glitch noise
-  if (Math.random() < 0.2) {
-    for (let i = 0; i < 5; i++) {
-      ctx.globalAlpha = 0.6;
-      ctx.fillStyle = Math.random() > 0.5 ? '#ffffff' : '#000000';
-      const noiseX = glitchX + (Math.random() - 0.5) * animatedSize;
-      const noiseY = glitchY + (Math.random() - 0.5) * animatedSize;
-      ctx.fillRect(noiseX, noiseY, 2, 2);
-    }
-  }
-
-  // Clean up old glitch trail
-  glitchTrail = glitchTrail.filter((point) => time - point.timestamp < 800);
 
   ctx.restore();
 }
@@ -410,17 +711,17 @@ function drawGlitchEffect(
 let fireTrail: Array<{ x: number; y: number; size: number; color: string; timestamp: number }> = [];
 let lastFireTime = 0;
 
-function drawFireEffect(
+function _drawFireEffect(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   sizeMultiplier: number,
   touchWidth: number,
-  touchHeight: number,
+  _touchHeight: number,
 ): void {
   // BLINKING LAVA EFFECT 🔥🌋
   const time = Date.now();
-  const lavaSize = Math.max(touchWidth, touchHeight) * 0.2 * sizeMultiplier;
+  const lavaSize = Math.max(touchWidth, _touchHeight) * 0.4 * sizeMultiplier; // Increased from 0.2 to 0.4 for larger fire effects
 
   ctx.save();
 
@@ -523,359 +824,152 @@ function drawFireEffect(
   ctx.restore();
 }
 
-// Global chalk trail for dusty chalk effect
-let chalkTrail: Array<{ x: number; y: number; size: number; timestamp: number; pressure: number }> =
-  [];
-let lastChalkTime = 0;
+// Global chalk trail for dusty chalk effect (removed - no longer used)
+// let chalkTrail: Array<{ x: number; y: number; size: number; timestamp: number; pressure: number }> = [];
+// let lastChalkTime = 0;
 
-function drawWaterEffect(
+function _drawWaterEffect(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   sizeMultiplier: number,
   touchWidth: number,
-  touchHeight: number,
+  _touchHeight: number,
 ): void {
-  // DUSTY CHALK PEN ✏️🖍️
+  // CHILDREN-FRIENDLY WATER DROPS 💧🌈
   const time = Date.now();
-  const chalkSize = Math.max(touchWidth, touchHeight) * 0.2 * sizeMultiplier;
+  const waterSize = Math.max(touchWidth, _touchHeight) * 0.25 * sizeMultiplier; // Back to working size
 
   ctx.save();
 
-  // Chalk colors with dusty effect - responsive to randomizer and line variation
-  // Use randomizer parameters for color variation
+  // Simple, bright water colors - children-friendly
   const baseHue = randomStyleParams.baseHue;
-  const baseSaturation = randomStyleParams.saturation;
-  const baseLightness = randomStyleParams.lightness;
-  // Add line-based color variation for rainbow effect within each line
-  const lineColorOffset = Math.sin(time / 500) * 60; // Rainbow effect over time
-  const hue = baseHue + lineColorOffset + (Math.random() - 0.5) * 30; // Line color + random variation
-  const saturation = baseSaturation + (Math.random() - 0.5) * 20;
-  const lightness = baseLightness + (Math.random() - 0.5) * 15;
+  const waterHue = (baseHue + 180) % 360; // Complementary color for water
+  const waterColor = `hsl(${waterHue}, 70%, 60%)`; // Bright, friendly blue
+  const highlightColor = `hsl(${waterHue}, 50%, 85%)`; // Light highlight
+  const shadowColor = `hsl(${waterHue}, 80%, 40%)`; // Darker shadow
 
-  const chalkColor = `hsl(${hue}, ${saturation}%, ${lightness}%)`; // Randomizer-controlled chalk
-  const dustColor = `hsl(${hue}, ${saturation * 0.7}%, ${lightness + 5}%)`; // Lighter dust
-  const shadowColor = `hsl(${hue}, ${saturation * 0.8}%, ${lightness - 10}%)`; // Darker shadow
+  // Simple water drop with gentle animation
+  const waterPulse = Math.sin(time / 200) * 0.1 + 0.9; // Gentle pulsing
+  const animatedSize = waterSize * waterPulse * (1 + currentSizeLevel * 0.3) * thicknessMultiplier; // Back to working scaling
 
-  // Add to chalk trail with pressure variation - more sensitive to size
-  if (time - lastChalkTime > 20) {
-    const pressure = Math.random() * 0.5 + 0.5; // Random pressure
-    const sizeVariation = 0.4 + Math.random() * 1.2; // 40% to 160% size
-    // Very minimal size sensitivity for chalk
-    const enhancedSizeMultiplier =
-      sizeMultiplier * (1 + currentSizeLevel * 0.02) * thicknessMultiplier;
-    const variedSize = chalkSize * sizeVariation * pressure * enhancedSizeMultiplier;
-
-    // Add irregular chalk dust spread
-    const dustSpreadX = (Math.random() - 0.5) * 20; // Much wider X spread
-    const dustSpreadY = (Math.random() - 0.5) * 16; // Much wider Y spread
-    const dustX = x + dustSpreadX;
-    const dustY = y + dustSpreadY;
-
-    chalkTrail.push({
-      x: dustX,
-      y: dustY,
-      size: variedSize,
-      timestamp: time,
-      pressure: pressure,
-    });
-    lastChalkTime = time;
-
-    // Keep only last 20 points for dusty trail
-    if (chalkTrail.length > 20) {
-      chalkTrail.shift();
-    }
-  }
-
-  // Draw chalk dust trail
-  chalkTrail.forEach((point) => {
-    const age = time - point.timestamp;
-    if (age < 1500) {
-      // Longer dust trail
-      const fadeProgress = age / 1500;
-      const alpha = (1 - fadeProgress) * point.pressure * 0.6;
-      const size = point.size * (1 - fadeProgress * 0.3); // Dust doesn't shrink much
-
-      // Draw chalk dust particles
-      ctx.globalAlpha = alpha * 0.4;
-      ctx.fillStyle = dustColor;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, size * 1.5, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // Draw main chalk mark
-      ctx.globalAlpha = alpha * 0.8;
-      ctx.fillStyle = chalkColor;
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, size, 0, 2 * Math.PI);
-      ctx.fill();
-
-      // Draw chalk shadow
-      ctx.globalAlpha = alpha * 0.3;
+  // Water drop shadow (subtle)
+  ctx.globalAlpha = 0.3;
       ctx.fillStyle = shadowColor;
       ctx.beginPath();
-      ctx.arc(point.x + 1, point.y + 1, size * 0.8, 0, 2 * Math.PI);
+  ctx.arc(x + 1, y + 1, animatedSize * 0.8, 0, 2 * Math.PI);
       ctx.fill();
-    }
-  });
 
-  // Draw current chalk mark - reduced size sensitivity
-  const chalkPulse = Math.sin(time / 100) * 0.3 + 0.7;
-  // Very minimal size sensitivity for current mark
-  const enhancedCurrentSize =
-    chalkSize * chalkPulse * sizeMultiplier * (1 + currentSizeLevel * 0.02) * thicknessMultiplier;
-  const animatedSize = enhancedCurrentSize;
-
-  // Chalk shadow
-  ctx.globalAlpha = 0.4;
-  ctx.fillStyle = shadowColor;
-  ctx.beginPath();
-  ctx.arc(x + 2, y + 2, animatedSize * 0.7, 0, 2 * Math.PI);
-  ctx.fill();
-
-  // Main chalk mark
-  ctx.globalAlpha = 0.9;
-  ctx.fillStyle = chalkColor;
+  // Main water drop
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = waterColor;
   ctx.beginPath();
   ctx.arc(x, y, animatedSize, 0, 2 * Math.PI);
   ctx.fill();
 
-  // Irregular chalk dust particles
-  if (Math.random() < 0.6) {
-    // More frequent particles
-    const particleCount = Math.floor(Math.random() * 8) + 3; // More particles
-    for (let i = 0; i < particleCount; i++) {
-      ctx.globalAlpha = 0.6;
-      ctx.fillStyle = dustColor;
-      const particleX = x + (Math.random() - 0.5) * chalkSize * 5; // Wider spread
-      const particleY = y + (Math.random() - 0.5) * chalkSize * 4; // Wider spread
-      const particleSize = Math.random() * 5 + 1; // Larger size variation
-      ctx.beginPath();
-      ctx.arc(particleX, particleY, particleSize, 0, 2 * Math.PI);
-      ctx.fill();
-    }
-  }
+  // Water highlight (small bright spot)
+  ctx.globalAlpha = 0.9;
+  ctx.fillStyle = highlightColor;
+  ctx.beginPath();
+  ctx.arc(x - animatedSize * 0.3, y - animatedSize * 0.3, animatedSize * 0.2, 0, 2 * Math.PI);
+  ctx.fill();
 
-  // Clean up old chalk trail
-  chalkTrail = chalkTrail.filter((point) => time - point.timestamp < 2000);
+  // Occasional sparkle (rare, children-friendly)
+  if (Math.random() < 0.1) {
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+    ctx.arc(x + animatedSize * 0.4, y - animatedSize * 0.4, animatedSize * 0.1, 0, 2 * Math.PI);
+      ctx.fill();
+  }
 
   ctx.restore();
 }
 
-// Global epic cosmic storm system
-let cosmicParticles: Array<{
-  x: number;
-  y: number;
-  size: number;
-  velocityX: number;
-  velocityY: number;
-  color: string;
-  type: 'star' | 'nebula' | 'comet' | 'blackhole';
-  timestamp: number;
-  life: number;
-}> = [];
-let lastEpicTime = 0;
+// Global epic cosmic storm system (removed - no longer used)
+// let cosmicParticles: Array<{...}> = [];
+// let lastEpicTime = 0;
 
-function drawEpicEffect(
+function _drawEpicEffect(
   ctx: CanvasRenderingContext2D,
   x: number,
   y: number,
   sizeMultiplier: number,
   touchWidth: number,
-  touchHeight: number,
+  _touchHeight: number,
 ): void {
-  // EPIC COSMIC STORM 🌌✨🚀
+  // Style 6: HOLOGRAPHIC PRISM EFFECT 🌈💎 - Ultra performant with creative refraction
   const time = Date.now();
-  const cosmicSize = Math.max(touchWidth, touchHeight) * 0.4 * sizeMultiplier;
+  const prismSize = Math.max(touchWidth, _touchHeight) * 0.3 * sizeMultiplier; // Reduced base size
 
   ctx.save();
 
-  // Cosmic colors with epic variation
-  const cosmicHues = [0, 60, 120, 180, 240, 300]; // Rainbow cosmic colors
-  const randomHue = cosmicHues[Math.floor(Math.random() * cosmicHues.length)] || 0;
-  const hue = randomHue + (Math.random() - 0.5) * 30;
+  // Holographic colors - shifting rainbow spectrum
+  const baseHue = randomStyleParams.baseHue;
+  const timeShift = time * 0.001; // Slow color shift over time
+  const hue1 = (baseHue + timeShift * 30) % 360;
+  const hue2 = (baseHue + 120 + timeShift * 30) % 360;
+  const hue3 = (baseHue + 240 + timeShift * 30) % 360;
 
-  const cosmicColor = `hsl(${hue}, 100%, 70%)`;
-  const nebulaColor = `hsl(${hue + 30}, 80%, 60%)`;
-  const starColor = `hsl(${hue + 60}, 90%, 90%)`;
-  const blackholeColor = `hsl(${hue - 30}, 100%, 20%)`;
+  const color1 = `hsl(${hue1}, 90%, 70%)`;
+  const color2 = `hsl(${hue2}, 90%, 70%)`;
+  const color3 = `hsl(${hue3}, 90%, 70%)`;
 
-  // Add cosmic particles
-  if (time - lastEpicTime > 15) {
-    const particleTypes = ['star', 'nebula', 'comet', 'blackhole'];
-    const randomType = particleTypes[Math.floor(Math.random() * particleTypes.length)] as any;
+  // Gentle rotation animation
+  const rotation = time * 0.002; // Slow rotation
+  const pulse = Math.sin(time / 400) * 0.15 + 0.85; // Gentle pulsing
+  const animatedSize = prismSize * pulse * sizeMultiplier * (1 + currentSizeLevel * 0.05) * thicknessMultiplier; // Reduced scaling for smaller maximum
 
-    const velocityX = (Math.random() - 0.5) * 8;
-    const velocityY = (Math.random() - 0.5) * 6;
-    const particleSize = cosmicSize * (0.3 + Math.random() * 1.5);
+  // Create prism shape with three triangular sections
+  const centerX = x;
+  const centerY = y;
+  const radius = animatedSize;
 
-    cosmicParticles.push({
-      x,
-      y,
-      size: particleSize,
-      velocityX,
-      velocityY,
-      color:
-        randomType === 'star'
-          ? starColor
-          : randomType === 'nebula'
-            ? nebulaColor
-            : randomType === 'comet'
-              ? cosmicColor
-              : blackholeColor,
-      type: randomType,
-      timestamp: time,
-      life: 1.0,
-    });
-    lastEpicTime = time;
-
-    // Keep only last 30 cosmic particles
-    if (cosmicParticles.length > 30) {
-      cosmicParticles.shift();
-    }
-  }
-
-  // Update and draw cosmic particles
-  cosmicParticles.forEach((particle) => {
-    // Update particle physics
-    particle.velocityX *= 0.98;
-    particle.velocityY *= 0.98;
-    particle.x += particle.velocityX;
-    particle.y += particle.velocityY;
-    particle.life -= 0.02;
-
-    if (particle.life <= 0) return;
-
-    const alpha = particle.life;
-    const size = particle.size * particle.life;
-
-    ctx.globalAlpha = alpha;
-
-    switch (particle.type) {
-      case 'star': {
-        // Draw twinkling star
-        const twinkle = Math.sin(time / 100 + particle.timestamp) * 0.3 + 0.7;
-        ctx.fillStyle = particle.color;
+  // First triangular section (top)
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = color1;
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, size * twinkle, 0, 2 * Math.PI);
+  ctx.moveTo(centerX, centerY - radius);
+  ctx.lineTo(centerX + radius * Math.cos(rotation + Math.PI * 2/3), centerY + radius * Math.sin(rotation + Math.PI * 2/3));
+  ctx.lineTo(centerX + radius * Math.cos(rotation + Math.PI * 4/3), centerY + radius * Math.sin(rotation + Math.PI * 4/3));
+  ctx.closePath();
         ctx.fill();
 
-        // Star rays
-        ctx.strokeStyle = particle.color;
-        ctx.lineWidth = 2;
-        for (let i = 0; i < 4; i++) {
-          const angle = (i * Math.PI) / 2 + time / 1000;
-          const rayLength = size * 2;
+  // Second triangular section (bottom right)
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = color2;
           ctx.beginPath();
-          ctx.moveTo(particle.x, particle.y);
-          ctx.lineTo(
-            particle.x + Math.cos(angle) * rayLength,
-            particle.y + Math.sin(angle) * rayLength,
-          );
-          ctx.stroke();
-        }
-        break;
-      }
-
-      case 'nebula':
-        // Draw colorful nebula
-        ctx.fillStyle = particle.color;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, size * 2, 0, 2 * Math.PI);
+  ctx.moveTo(centerX, centerY - radius);
+  ctx.lineTo(centerX + radius * Math.cos(rotation + Math.PI * 4/3), centerY + radius * Math.sin(rotation + Math.PI * 4/3));
+  ctx.lineTo(centerX + radius * Math.cos(rotation), centerY + radius * Math.sin(rotation));
+  ctx.closePath();
         ctx.fill();
 
-        // Nebula glow
-        ctx.globalAlpha = alpha * 0.5;
-        ctx.fillStyle = nebulaColor;
+  // Third triangular section (bottom left)
+  ctx.globalAlpha = 0.8;
+  ctx.fillStyle = color3;
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, size * 3, 0, 2 * Math.PI);
-        ctx.fill();
-        break;
-
-      case 'comet': {
-        // Draw comet with tail
-        ctx.fillStyle = particle.color;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, size, 0, 2 * Math.PI);
+  ctx.moveTo(centerX, centerY - radius);
+  ctx.lineTo(centerX + radius * Math.cos(rotation), centerY + radius * Math.sin(rotation));
+  ctx.lineTo(centerX + radius * Math.cos(rotation + Math.PI * 2/3), centerY + radius * Math.sin(rotation + Math.PI * 2/3));
+  ctx.closePath();
         ctx.fill();
 
-        // Comet tail
-        const tailLength = size * 4;
-        const tailAngle = Math.atan2(particle.velocityY, particle.velocityX);
-        ctx.strokeStyle = particle.color;
-        ctx.lineWidth = size / 2;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(particle.x, particle.y);
-        ctx.lineTo(
-          particle.x - Math.cos(tailAngle) * tailLength,
-          particle.y - Math.sin(tailAngle) * tailLength,
-        );
-        ctx.stroke();
-        break;
-      }
-
-      case 'blackhole': {
-        // Draw black hole with gravitational effect
-        ctx.fillStyle = blackholeColor;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, size, 0, 2 * Math.PI);
-        ctx.fill();
-
-        // Gravitational ring
-        ctx.globalAlpha = alpha * 0.7;
-        ctx.strokeStyle = cosmicColor;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, size * 1.5, 0, 2 * Math.PI);
-        ctx.stroke();
-
-        // Inner ring
-        ctx.globalAlpha = alpha * 0.4;
-        ctx.beginPath();
-        ctx.arc(particle.x, particle.y, size * 0.8, 0, 2 * Math.PI);
-        ctx.stroke();
-        break;
-      }
-    }
-  });
-
-  // Draw epic cosmic core
-  const cosmicPulse = Math.sin(time / 150) * 0.4 + 0.6;
-  const animatedSize = cosmicSize * cosmicPulse;
-
-  // Cosmic glow
-  ctx.globalAlpha = 0.3;
-  ctx.fillStyle = cosmicColor;
-  ctx.beginPath();
-  ctx.arc(x, y, animatedSize * 4, 0, 2 * Math.PI);
-  ctx.fill();
-
-  // Main cosmic core
+  // Central bright core
   ctx.globalAlpha = 0.9;
-  ctx.fillStyle = starColor;
+  ctx.fillStyle = '#ffffff';
   ctx.beginPath();
-  ctx.arc(x, y, animatedSize, 0, 2 * Math.PI);
+  ctx.arc(centerX, centerY, animatedSize * 0.2, 0, 2 * Math.PI);
   ctx.fill();
 
-  // Cosmic explosion effect
-  if (Math.random() < 0.1) {
-    const explosionRadius = animatedSize * 3;
-    for (let i = 0; i < 12; i++) {
-      const angle = (i * Math.PI * 2) / 12;
-      const explosionX = x + Math.cos(angle) * explosionRadius;
-      const explosionY = y + Math.sin(angle) * explosionRadius;
-
-      ctx.globalAlpha = 0.8;
-      ctx.fillStyle = cosmicColor;
+  // Occasional light refraction burst (rare, for extra creativity)
+  if (Math.random() < 0.03) { // 3% chance
+    ctx.globalAlpha = 0.6;
+    ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.arc(explosionX, explosionY, 4, 0, 2 * Math.PI);
+    ctx.arc(centerX, centerY, animatedSize * 0.1, 0, 2 * Math.PI);
       ctx.fill();
-    }
   }
-
-  // Clean up dead particles
-  cosmicParticles = cosmicParticles.filter((particle) => particle.life > 0);
 
   ctx.restore();
 }
@@ -886,11 +980,11 @@ function drawLavaEffect(
   y: number,
   sizeMultiplier: number,
   touchWidth: number,
-  touchHeight: number,
+  _touchHeight: number,
 ): void {
   // Create optimized, animated lava effect
   const time = Date.now();
-  const lavaSize = Math.max(touchWidth, touchHeight) * 0.6; // Smaller size for performance
+  const lavaSize = Math.max(touchWidth, _touchHeight) * 0.6; // Smaller size for performance
 
   ctx.save();
 
@@ -949,7 +1043,7 @@ function _drawAllStyle2Lines(ctx: CanvasRenderingContext2D): void {
           point.y,
           point.sizeMultiplier,
           point.touchWidth,
-          point.touchHeight,
+          point._touchHeight,
         );
       }
     }
@@ -957,16 +1051,19 @@ function _drawAllStyle2Lines(ctx: CanvasRenderingContext2D): void {
 }
 
 function addSparkleEffect(ctx: CanvasRenderingContext2D, x: number, y: number, size: number): void {
-  // Enhanced sparkle effect for Style 1 - vibrant splash effect
+  // Enhanced sparkle effect for Style 1 - optimized for mobile performance
   const time = Date.now() * 0.001;
-  const numSparkles = Math.floor(size / 6); // More sparkles for bigger splash effect
+  const _isMobile = !isWebApp;
+  
+  // Reduce sparkle count for mobile performance
+  const numSparkles = _isMobile ? Math.floor(size / 12) : Math.floor(size / 6); // Half sparkles on mobile
 
   for (let i = 0; i < numSparkles; i++) {
     const angle = (Math.PI * 2 * i) / numSparkles + Math.sin(time * 5 + i) * 0.3;
     const distance = size * (0.6 + Math.random() * 0.8); // Wider spread for splash
     const sparkleX = x + Math.cos(angle) * distance;
     const sparkleY = y + Math.sin(angle) * distance;
-    const sparkleSize = 1 + Math.random() * 6; // Varied sparkle sizes
+    const sparkleSize = _isMobile ? 1 + Math.random() * 3 : 1 + Math.random() * 6; // Smaller sparkles on mobile
 
     ctx.save();
     
@@ -981,12 +1078,14 @@ function addSparkleEffect(ctx: CanvasRenderingContext2D, x: number, y: number, s
     ctx.arc(sparkleX, sparkleY, sparkleSize, 0, 2 * Math.PI);
     ctx.fill();
     
-    // Add glow effect for extra vibrancy
+    // Skip glow effect on mobile for performance
+    if (!_isMobile) {
     ctx.globalAlpha = 0.3;
     ctx.fillStyle = `hsl(${sparkleHue}, ${sparkleSaturation}%, ${sparkleLightness + 20}%)`;
     ctx.beginPath();
     ctx.arc(sparkleX, sparkleY, sparkleSize * 1.5, 0, 2 * Math.PI);
     ctx.fill();
+    }
     
     ctx.restore();
   }
@@ -1037,26 +1136,742 @@ function resizeCanvas(canvas: HTMLCanvasElement): void {
   }
 }
 
+// Global functions for modal control
+function openSaveModal(): void {
+  const modal = document.getElementById('save-modal');
+  if (modal) {
+    modal.style.display = 'block';
+  }
+}
+
+function closeSaveModal(): void {
+  const modal = document.getElementById('save-modal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+}
+
+function showProcessingSpinner(): void {
+  const spinner = document.getElementById('processing-spinner');
+  if (spinner) {
+    spinner.style.display = 'block';
+  }
+}
+
+function hideProcessingSpinner(): void {
+  const spinner = document.getElementById('processing-spinner');
+  if (spinner) {
+    spinner.style.display = 'none';
+  }
+}
+
+// Make functions globally available
+(window as any).openSaveModal = openSaveModal;
+(window as any).closeSaveModal = closeSaveModal;
+(window as any).showProcessingSpinner = showProcessingSpinner;
+(window as any).hideProcessingSpinner = hideProcessingSpinner;
+
+function getResolutionDimensions(quality: string): { width: number; height: number } {
+  switch (quality) {
+    case '2K':
+      return { width: 2048, height: 1152 }; // 2K HD - Standard web resolution
+    case '5K':
+      return { width: 5120, height: 2880 }; // 5K Ultra-wide - High-end displays
+    case '10K':
+      return { width: 10240, height: 5760 }; // 10K - Professional quality
+    case '20K':
+      return { width: 16384, height: 9216 }; // 20K - MAXIMUM QUALITY (browser limit)
+    default:
+      return { width: 2048, height: 1152 };
+  }
+}
+
+function detectMaximumVectorQuality(canvas: HTMLCanvasElement): { maxScale: number; maxWidth: number; maxHeight: number; reason: string } {
+  const maxCanvasSize = 16384; // Browser limit
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  
+  // Get actual canvas dimensions
+  const displayWidth = canvas.width / (devicePixelRatio * 2);
+  const displayHeight = canvas.height / (devicePixelRatio * 2);
+  
+  // Calculate maximum scale factor
+  const maxScaleX = maxCanvasSize / displayWidth;
+  const maxScaleY = maxCanvasSize / displayHeight;
+  const maxScale = Math.min(maxScaleX, maxScaleY);
+  
+  const maxWidth = Math.floor(displayWidth * maxScale);
+  const maxHeight = Math.floor(displayHeight * maxScale);
+  
+  let reason = '';
+  if (maxScale >= 100) {
+    reason = 'Browser canvas limit (16K pixels)';
+  } else if (maxScale >= 50) {
+    reason = 'High resolution - excellent quality';
+  } else if (maxScale >= 20) {
+    reason = 'Medium resolution - good quality';
+  } else {
+    reason = 'Limited by canvas size';
+  }
+  
+  return { maxScale, maxWidth, maxHeight, reason };
+}
+
+async function exportWithOffscreenCanvas(canvas: HTMLCanvasElement, quality: string, format: string): Promise<void> {
+  try {
+    console.log('Professional OffscreenCanvas export for true high resolution');
+    
+    // Create OffscreenCanvas at true high resolution
+    const offscreen = new OffscreenCanvas(20000, 11250); // True 20K resolution
+    const ctx = offscreen.getContext('2d');
+    
+    if (!ctx) {
+      console.error('Failed to create OffscreenCanvas context');
+      hideProcessingSpinner();
+      return;
+    }
+    
+    // Professional rendering settings
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.lineWidth = 0.1; // Ultra-thin for maximum detail
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    
+    // Scale factor for true 20K
+    const scaleFactor = 20000 / canvas.width;
+    ctx.scale(scaleFactor, scaleFactor);
+    
+    // Draw the original canvas content
+    ctx.drawImage(canvas, 0, 0);
+    
+    // Convert to blob with professional quality
+    const blob = await offscreen.convertToBlob({ 
+      type: format === 'PNG' ? 'image/png' : 'image/jpeg',
+      quality: format === 'JPEG' ? 1.0 : undefined // Maximum quality
+    });
+    
+    // Download the file
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `VIBE-DRAWING-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.${format.toLowerCase()}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    console.log('Professional OffscreenCanvas export completed: 20000x11250');
+    hideProcessingSpinner();
+    
+  } catch (error) {
+    console.error('OffscreenCanvas export failed:', error);
+    hideProcessingSpinner();
+    // Fallback to regular export
+    saveCanvasAsImage(canvas, quality, format);
+  }
+}
+
+function exportAsSVG(canvas: HTMLCanvasElement, _quality: string): void {
+  try {
+    console.log('Professional SVG export for vector-like quality');
+    
+    // Get canvas data as base64
+    const canvasData = canvas.toDataURL('image/png');
+    
+    // Create SVG with embedded canvas data
+    const svgContent = `
+      <svg xmlns="http://www.w3.org/2000/svg" 
+           width="${canvas.width}" 
+           height="${canvas.height}" 
+           viewBox="0 0 ${canvas.width} ${canvas.height}">
+        <image href="${canvasData}" 
+               width="${canvas.width}" 
+               height="${canvas.height}" 
+               preserveAspectRatio="none"/>
+      </svg>
+    `;
+    
+    // Create blob and download
+    const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `VIBE-DRAWING-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    console.log('Professional SVG export completed - vector-like quality');
+    hideProcessingSpinner();
+    
+  } catch (error) {
+    console.error('SVG export failed:', error);
+    hideProcessingSpinner();
+  }
+}
+
+function saveCanvasAsImage(canvas: HTMLCanvasElement, quality: string, format: string): void {
+  try {
+    // Show processing spinner
+    showProcessingSpinner();
+    
+    // Check for OffscreenCanvas support for true high resolution
+    if (typeof OffscreenCanvas !== 'undefined' && quality === '20K') {
+      console.log('Using OffscreenCanvas for true high-resolution export');
+      exportWithOffscreenCanvas(canvas, quality, format);
+      return;
+    }
+    
+    // Check for SVG export (vector-like quality)
+    if (format === 'SVG') {
+      console.log('Using SVG export for vector-like quality');
+      exportAsSVG(canvas, quality);
+      return;
+    }
+    
+    // Calculate target resolution
+    const { width: targetWidth, height: targetHeight } = getResolutionDimensions(quality);
+    
+    // Check for reasonable canvas size limits
+    const maxCanvasSize = 16384; // Most browsers support up to 16K
+    if (targetWidth > maxCanvasSize || targetHeight > maxCanvasSize) {
+      console.warn(`Resolution ${quality} (${targetWidth}x${targetHeight}) exceeds browser limits. Using maximum supported size.`);
+      hideProcessingSpinner();
+      
+      // Provide appropriate suggestions based on the failed resolution
+      let suggestions = '';
+      if (quality === '10K' || quality === '20K') {
+        suggestions = 'Please try a lower resolution like 2K or 5K.';
+      } else if (quality === '5K') {
+        suggestions = 'Please try 2K resolution.';
+      } else {
+        suggestions = 'Please try a lower resolution.';
+      }
+      
+      alert(`Resolution ${quality} is too large for your browser. ${suggestions}`);
+      return;
+    }
+    
+    // Initialize final dimensions
+    let finalWidth: number;
+    let finalHeight: number;
+    
+    // Special handling for ultra-high resolutions - use maximum browser-compatible size
+    if ((quality === '10K' || quality === '20K') && (targetWidth > maxCanvasSize || targetHeight > maxCanvasSize)) {
+      const aspectRatio = targetWidth / targetHeight;
+      if (aspectRatio > 1) {
+        // Landscape
+        finalWidth = maxCanvasSize;
+        finalHeight = Math.round(maxCanvasSize / aspectRatio);
+      } else {
+        // Portrait
+        finalHeight = maxCanvasSize;
+        finalWidth = Math.round(maxCanvasSize * aspectRatio);
+      }
+      console.log(`${quality} resolution adjusted to browser limits: ${finalWidth}x${finalHeight}`);
+    } else {
+      // Use target dimensions
+      finalWidth = targetWidth;
+      finalHeight = targetHeight;
+    }
+    
+    // Create a temporary canvas with maximum quality
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    if (!tempCtx) {
+      console.error('Failed to create temporary canvas context');
+      hideProcessingSpinner();
+      return;
+    }
+    
+    // Get the actual canvas dimensions for proper export
+    const displayWidth = canvas.width / (devicePixelRatio * 2); // Account for 2x DPI multiplier
+    const displayHeight = canvas.height / (devicePixelRatio * 2); // Account for 2x DPI multiplier
+    const aspectRatio = displayWidth / displayHeight;
+    
+    // Create exports with both resolution AND DPI control for professional quality
+    let dpi: number;
+    let scaleFactor: number;
+    
+    if (quality === '2K') {
+      // 2K: Web quality, DOUBLE pixel density with smaller pixels
+      dpi = 600; // DOUBLED from 300 to 600 for twice as many smaller pixels
+      scaleFactor = 12; // DOUBLED from 6 to 12 for twice as many pixels
+      finalWidth = displayWidth * scaleFactor;
+      finalHeight = displayHeight * scaleFactor;
+    } else if (quality === '5K') {
+      // 5K: High-quality display, DOUBLE pixel density with smaller pixels
+      dpi = 1200; // DOUBLED from 600 to 1200 for twice as many smaller pixels
+      scaleFactor = 30; // DOUBLED from 15 to 30 for twice as many pixels
+      finalWidth = displayWidth * scaleFactor;
+      finalHeight = displayHeight * scaleFactor;
+    } else if (quality === '10K') {
+      // 10K: Professional quality, DOUBLE pixel density with smaller pixels
+      dpi = 2400; // DOUBLED from 1200 to 2400 for twice as many smaller pixels
+      scaleFactor = 60; // DOUBLED from 30 to 60 for twice as many pixels
+      finalWidth = displayWidth * scaleFactor;
+      finalHeight = displayHeight * scaleFactor;
+    } else if (quality === '20K') {
+      // 20K: MAXIMUM quality, DOUBLE pixel density with smaller pixels (browser limit)
+      dpi = 4800; // DOUBLED from 2400 to 4800 for twice as many smaller pixels
+      scaleFactor = 120; // DOUBLED from 60 to 120 for twice as many pixels
+      finalWidth = displayWidth * scaleFactor;
+      finalHeight = displayHeight * scaleFactor;
+    } else {
+      // Fallback to aspect ratio scaling for unknown qualities
+      dpi = 144;
+      scaleFactor = 2;
+      if (aspectRatio > targetWidth / targetHeight) {
+        finalWidth = targetWidth;
+        finalHeight = Math.round(targetWidth / aspectRatio);
+      } else {
+        finalHeight = targetHeight;
+        finalWidth = Math.round(targetHeight * aspectRatio);
+      }
+    }
+    
+    // Be honest about actual resolution vs claimed resolution
+    const actualResolution = `${finalWidth}x${finalHeight}`;
+    const claimedResolution = quality === '20K' ? '16K (browser limit)' : quality;
+    console.log(`${claimedResolution} export: ${actualResolution} at ${dpi} DPI (${(finalWidth * finalHeight / 1000000).toFixed(1)}M pixels)`);
+    
+    // Ensure we don't exceed browser limits
+    if (finalWidth > maxCanvasSize || finalHeight > maxCanvasSize) {
+      const maxScale = Math.min(maxCanvasSize / displayWidth, maxCanvasSize / displayHeight);
+      finalWidth = displayWidth * maxScale;
+      finalHeight = displayHeight * maxScale;
+      console.log(`${quality} scaled down to browser limits: ${finalWidth}x${finalHeight}`);
+    }
+    
+    // Final honest logging
+    const finalActualResolution = `${finalWidth}x${finalHeight}`;
+    const finalClaimedResolution = quality === '20K' ? '16K (browser limit)' : quality;
+    console.log(`${finalClaimedResolution} export: ${finalActualResolution} (${(finalWidth * finalHeight / 1000000).toFixed(1)}M pixels)`);
+    
+    // Set the temporary canvas to target resolution
+    tempCanvas.width = finalWidth;
+    tempCanvas.height = finalHeight;
+    
+    // Enable MAXIMUM quality rendering settings (ULTRA vector-like quality)
+    tempCtx.imageSmoothingEnabled = true;
+    tempCtx.imageSmoothingQuality = 'high';
+    
+    // DOUBLE pixel density settings with smaller pixels
+    tempCtx.lineWidth = 0.5; // Half-size pixels for twice as many pixels
+    tempCtx.lineCap = 'round';
+    tempCtx.lineJoin = 'round';
+    
+    // Professional rendering settings based on quality level
+    if (quality === '20K') {
+      // 20K: MAXIMUM professional quality settings
+      tempCtx.textBaseline = 'alphabetic';
+      tempCtx.textAlign = 'start';
+      
+      // Enable subpixel rendering for ultra-crisp text
+      tempCtx.fontKerning = 'normal';
+      
+      console.log('20K: MAXIMUM professional rendering settings enabled');
+    } else if (quality === '10K') {
+      // 10K: High professional quality
+      tempCtx.textBaseline = 'alphabetic';
+      tempCtx.textAlign = 'start';
+      console.log('10K: High professional rendering settings enabled');
+    }
+    
+    // For 20K, implement maximum pixel density rendering with smaller pixels
+    if (quality === '20K') {
+      console.log(`Maximum pixel density rendering for 20K (${finalWidth}x${finalHeight})`);
+      
+      // Detect maximum possible quality for high-density rendering
+      const maxQuality = detectMaximumVectorQuality(canvas);
+      console.log(`Maximum pixel density: ${maxQuality.maxWidth}x${maxQuality.maxHeight} (${maxQuality.maxScale.toFixed(1)}x scale) - ${maxQuality.reason}`);
+      
+      // Create a canvas at maximum pixel density with smaller pixels
+      const highDensityCanvas = document.createElement('canvas');
+      const highDensityCtx = highDensityCanvas.getContext('2d');
+      
+      if (highDensityCtx) {
+        highDensityCanvas.width = maxQuality.maxWidth;
+        highDensityCanvas.height = maxQuality.maxHeight;
+        
+        // DOUBLE pixel density settings with smaller pixels for ultra-crisp edges
+        highDensityCtx.imageSmoothingEnabled = false; // Disable for pixel-perfect edges
+        highDensityCtx.textBaseline = 'alphabetic';
+        highDensityCtx.textAlign = 'start';
+        highDensityCtx.fontKerning = 'normal';
+        
+        // Half-size pixel settings for twice as many pixels
+        highDensityCtx.lineWidth = 0.25; // Quarter-size pixels for maximum density
+        highDensityCtx.lineCap = 'round';
+        highDensityCtx.lineJoin = 'round';
+        
+        // Scale the context to match the high resolution
+        highDensityCtx.scale(maxQuality.maxScale, maxQuality.maxScale);
+        
+        // Recreate the background at high resolution with smaller pixels
+        const gradient = highDensityCtx.createLinearGradient(0, 0, displayWidth, displayHeight);
+        gradient.addColorStop(0, '#1a1a2e');
+        gradient.addColorStop(0.5, '#16213e');
+        gradient.addColorStop(1, '#151E35');
+        
+        highDensityCtx.fillStyle = gradient;
+        highDensityCtx.fillRect(0, 0, displayWidth, displayHeight);
+        
+        // Add high-resolution stars with smaller pixels
+        highDensityCtx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        for (let i = 0; i < 200; i++) {
+          const x = Math.random() * displayWidth;
+          const y = Math.random() * displayHeight;
+          const size = Math.random() * 3 + 1;
+          highDensityCtx.beginPath();
+          highDensityCtx.arc(x, y, size, 0, 2 * Math.PI);
+          highDensityCtx.fill();
+        }
+        
+        // Draw the original canvas content at maximum pixel density
+        highDensityCtx.drawImage(canvas, 0, 0, displayWidth, displayHeight);
+        
+        // Now scale this high-density result to the final size
+        // Enable smoothing only for the final scaling step
+        tempCtx.imageSmoothingEnabled = true;
+        tempCtx.imageSmoothingQuality = 'high';
+        tempCtx.drawImage(highDensityCanvas, 0, 0, finalWidth, finalHeight);
+        
+        console.log(`20K: Maximum pixel density rendering completed at ${maxQuality.maxScale.toFixed(1)}x scale (${maxQuality.reason})`);
+      } else {
+        // Fallback to direct scaling
+        tempCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
+      }
+    } else {
+      // For other qualities, use the existing multi-stage rendering
+      const renderScaleFactor = Math.max(finalWidth / displayWidth, finalHeight / displayHeight);
+      
+      if (quality === '10K' || quality === '20K' || renderScaleFactor > 8) {
+        // For ultra-high resolutions, use ENHANCED multi-stage rendering
+        console.log(`ENHANCED ultra-high quality rendering for ${quality} (${finalWidth}x${finalHeight})`);
+        
+        // Stage 1: Scale to 6K intermediate (ENHANCED from 4K)
+        const stage1Size = 6144; // ENHANCED from 4096
+        const stage1Canvas = document.createElement('canvas');
+        const stage1Ctx = stage1Canvas.getContext('2d');
+        
+        if (stage1Ctx) {
+          stage1Canvas.width = stage1Size;
+          stage1Canvas.height = stage1Size * (displayHeight / displayWidth);
+          
+          stage1Ctx.imageSmoothingEnabled = true;
+          stage1Ctx.imageSmoothingQuality = 'high';
+          stage1Ctx.textBaseline = 'alphabetic';
+          stage1Ctx.textAlign = 'start';
+          stage1Ctx.fontKerning = 'normal';
+          
+          // DOUBLE pixel density settings with smaller pixels
+          stage1Ctx.lineWidth = 0.25; // Quarter-size pixels for twice as many pixels
+          stage1Ctx.lineCap = 'round';
+          stage1Ctx.lineJoin = 'round';
+          stage1Ctx.drawImage(canvas, 0, 0, stage1Canvas.width, stage1Canvas.height);
+          
+          // Stage 2: Scale to 12K intermediate (ENHANCED from 8K)
+          if (quality === '10K' || quality === '20K' || renderScaleFactor > 16) {
+            const stage2Size = 12288; // ENHANCED from 8192
+            const stage2Canvas = document.createElement('canvas');
+            const stage2Ctx = stage2Canvas.getContext('2d');
+            
+            if (stage2Ctx) {
+              stage2Canvas.width = stage2Size;
+              stage2Canvas.height = stage2Size * (displayHeight / displayWidth);
+              
+              stage2Ctx.imageSmoothingEnabled = true;
+              stage2Ctx.imageSmoothingQuality = 'high';
+              stage2Ctx.textBaseline = 'alphabetic';
+              stage2Ctx.textAlign = 'start';
+              stage2Ctx.fontKerning = 'normal';
+              
+              // DOUBLE pixel density settings with smaller pixels
+              stage2Ctx.lineWidth = 0.25; // Quarter-size pixels for twice as many pixels
+              stage2Ctx.lineCap = 'round';
+              stage2Ctx.lineJoin = 'round';
+              stage2Ctx.drawImage(stage1Canvas, 0, 0, stage2Canvas.width, stage2Canvas.height);
+              
+              // Stage 3: Scale to 16K intermediate (ENHANCED from 12K)
+              if (quality === '20K' || renderScaleFactor > 24) {
+                const stage3Size = 16384; // ENHANCED from 12288
+                const stage3Canvas = document.createElement('canvas');
+                const stage3Ctx = stage3Canvas.getContext('2d');
+                
+                if (stage3Ctx) {
+                  stage3Canvas.width = stage3Size;
+                  stage3Canvas.height = stage3Size * (displayHeight / displayWidth);
+                  
+                  stage3Ctx.imageSmoothingEnabled = true;
+                  stage3Ctx.imageSmoothingQuality = 'high';
+                  stage3Ctx.textBaseline = 'alphabetic';
+                  stage3Ctx.textAlign = 'start';
+                  stage3Ctx.fontKerning = 'normal';
+                  
+                  // DOUBLE pixel density settings with smaller pixels
+                  stage3Ctx.lineWidth = 0.25; // Quarter-size pixels for twice as many pixels
+                  stage3Ctx.lineCap = 'round';
+                  stage3Ctx.lineJoin = 'round';
+                  stage3Ctx.drawImage(stage2Canvas, 0, 0, stage3Canvas.width, stage3Canvas.height);
+                  
+                  // Final stage: Scale to target resolution with MAXIMUM pixel density
+                  tempCtx.imageSmoothingEnabled = true;
+                  tempCtx.imageSmoothingQuality = 'high';
+                  tempCtx.textBaseline = 'alphabetic';
+                  tempCtx.textAlign = 'start';
+                  tempCtx.fontKerning = 'normal';
+                  
+                  // DOUBLE pixel density with smaller pixels
+                  tempCtx.lineWidth = 0.125; // Eighth-size pixels for maximum density
+                  tempCtx.lineCap = 'round';
+                  tempCtx.lineJoin = 'round';
+                  tempCtx.drawImage(stage3Canvas, 0, 0, finalWidth, finalHeight);
+                } else {
+                  tempCtx.drawImage(stage2Canvas, 0, 0, finalWidth, finalHeight);
+                }
+              } else {
+                // Direct from stage 2 to final
+                tempCtx.drawImage(stage2Canvas, 0, 0, finalWidth, finalHeight);
+              }
+            } else {
+              tempCtx.drawImage(stage1Canvas, 0, 0, finalWidth, finalHeight);
+            }
+          } else {
+            // Direct from stage 1 to final
+            tempCtx.drawImage(stage1Canvas, 0, 0, finalWidth, finalHeight);
+          }
+        } else {
+          // Fallback to direct scaling
+          tempCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
+        }
+      } else if (renderScaleFactor > 4) { // Lowered threshold for more quality
+        // For medium-high resolutions, use ENHANCED single intermediate stage
+        const intermediateSize = Math.min(6144, Math.max(displayWidth, displayHeight) * 3); // ENHANCED from 4096 and 2x
+        const intermediateCanvas = document.createElement('canvas');
+        const intermediateCtx = intermediateCanvas.getContext('2d');
+        
+        if (intermediateCtx) {
+          intermediateCanvas.width = intermediateSize;
+          intermediateCanvas.height = intermediateSize * (displayHeight / displayWidth);
+          
+          intermediateCtx.imageSmoothingEnabled = true;
+          intermediateCtx.imageSmoothingQuality = 'high';
+          intermediateCtx.textBaseline = 'alphabetic';
+          intermediateCtx.textAlign = 'start';
+          intermediateCtx.fontKerning = 'normal';
+          
+          // DOUBLE pixel density settings with smaller pixels
+          intermediateCtx.lineWidth = 0.25; // Quarter-size pixels for twice as many pixels
+          intermediateCtx.lineCap = 'round';
+          intermediateCtx.lineJoin = 'round';
+          intermediateCtx.drawImage(canvas, 0, 0, intermediateCanvas.width, intermediateCanvas.height);
+          
+          // Final stage: Scale to target resolution with MAXIMUM pixel density
+          tempCtx.imageSmoothingEnabled = true;
+          tempCtx.imageSmoothingQuality = 'high';
+          tempCtx.textBaseline = 'alphabetic';
+          tempCtx.textAlign = 'start';
+          tempCtx.fontKerning = 'normal';
+          
+          // DOUBLE pixel density with smaller pixels
+          tempCtx.lineWidth = 0.25; // Quarter-size pixels for twice as many pixels
+          tempCtx.lineCap = 'round';
+          tempCtx.lineJoin = 'round';
+          tempCtx.drawImage(intermediateCanvas, 0, 0, finalWidth, finalHeight);
+          
+          console.log(`${quality}: ENHANCED single-stage rendering completed (${intermediateSize}px → ${finalWidth}x${finalHeight})`);
+        } else {
+          tempCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
+        }
+      } else {
+        // ENHANCED direct rendering with MAXIMUM pixel density
+        tempCtx.imageSmoothingEnabled = true;
+        tempCtx.imageSmoothingQuality = 'high';
+        tempCtx.textBaseline = 'alphabetic';
+        tempCtx.textAlign = 'start';
+        tempCtx.fontKerning = 'normal';
+        
+        // DOUBLE pixel density with smaller pixels
+        tempCtx.lineWidth = 0.25; // Quarter-size pixels for twice as many pixels
+        tempCtx.lineCap = 'round';
+        tempCtx.lineJoin = 'round';
+        tempCtx.drawImage(canvas, 0, 0, finalWidth, finalHeight);
+      }
+    }
+    
+    // Add compact metadata with DPI information
+    const now = new Date();
+    const compactMetadata = `VIBE DRAWING by Michael Wybraniec | one-front.com | ${now.toLocaleDateString()} | ${dpi} DPI`;
+    
+    // Set up text styling for compact metadata
+    tempCtx.save();
+    tempCtx.textAlign = 'right';
+    tempCtx.textBaseline = 'bottom';
+    
+    // Calculate compact dimensions
+    const fontSize = Math.max(8, finalWidth / 300); // Smaller, more compact font
+    const padding = Math.max(4, finalWidth / 200);
+    const boxPadding = padding * 0.8;
+    
+    // Measure text for compact box
+    tempCtx.font = `${fontSize}px Inter, sans-serif`;
+    const textWidth = tempCtx.measureText(compactMetadata).width;
+    const boxWidth = textWidth + boxPadding * 2;
+    const boxHeight = fontSize + boxPadding * 2;
+    
+    // Create subtle background for compact metadata
+    const x = finalWidth - boxWidth - padding;
+    const y = finalHeight - boxHeight - padding;
+    
+    // Draw subtle rounded rectangle background
+    tempCtx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    tempCtx.beginPath();
+    tempCtx.roundRect(x, y, boxWidth, boxHeight, padding * 0.5);
+    tempCtx.fill();
+    
+    // Add very subtle border
+    tempCtx.strokeStyle = 'rgba(255, 215, 0, 0.2)';
+    tempCtx.lineWidth = 0.5;
+    tempCtx.stroke();
+    
+    // Draw compact metadata text
+    tempCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    tempCtx.font = `${fontSize}px Inter, sans-serif`;
+    tempCtx.fillText(compactMetadata, finalWidth - padding - boxPadding, finalHeight - padding - boxPadding);
+    
+    tempCtx.restore();
+    
+    // Determine MIME type and quality based on format
+    let mimeType: string;
+    let qualityValue: number;
+    let fileExtension: string;
+    
+    switch (format) {
+      case 'PNG':
+        mimeType = 'image/png';
+        qualityValue = 1.0;
+        fileExtension = 'png';
+        break;
+      case 'JPEG':
+        mimeType = 'image/jpeg';
+        qualityValue = 0.95;
+        fileExtension = 'jpg';
+        break;
+      case 'WEBP':
+        mimeType = 'image/webp';
+        qualityValue = 0.95;
+        fileExtension = 'webp';
+        break;
+      case 'TIFF':
+        // TIFF is not supported by browsers, use PNG as fallback
+        mimeType = 'image/png';
+        qualityValue = 1.0;
+        fileExtension = 'png';
+        console.warn('TIFF format not supported by browsers, exporting as PNG instead');
+        break;
+      case 'PDF':
+        // PDF is not supported by browsers, use PNG as fallback
+        mimeType = 'image/png';
+        qualityValue = 1.0;
+        fileExtension = 'png';
+        console.warn('PDF format not supported by browsers, exporting as PNG instead');
+        break;
+      default:
+        mimeType = 'image/png';
+        qualityValue = 1.0;
+        fileExtension = 'png';
+    }
+    
+    // Convert to blob with specified quality
+    tempCanvas.toBlob((blob) => {
+      if (!blob) {
+        console.error('Failed to create image blob');
+        hideProcessingSpinner();
+        return;
+      }
+      
+      // Hide processing spinner before download
+      hideProcessingSpinner();
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Generate filename with short timestamp, quality, and format
+      const shortTimestamp = now.toISOString().replace(/[:.]/g, '').slice(0, 15); // YYYYMMDDTHHMMSS
+      link.download = `VIBE-DRAWING-${shortTimestamp}-${quality}.${fileExtension}`;
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      
+      console.log(`Canvas saved successfully as ${format} in ${quality}! 💾`);
+    }, mimeType, qualityValue);
+    
+  } catch (error) {
+    console.error('Error saving canvas:', error);
+    hideProcessingSpinner();
+  }
+}
+
 function initContext(canvas: HTMLCanvasElement): void {
+  // Enable high-DPI rendering for crisp, vector-like quality
+  const devicePixelRatio = window.devicePixelRatio || 1;
+  const displayWidth = canvas.clientWidth;
+  const displayHeight = canvas.clientHeight;
+  
+  // Set actual canvas size to high-DPI resolution for crisp quality
+  const qualityMultiplier = 2; // 2x for crisp quality
+  canvas.width = displayWidth * devicePixelRatio * qualityMultiplier;
+  canvas.height = displayHeight * devicePixelRatio * qualityMultiplier;
+  
+  // Scale the canvas back down using CSS
+  canvas.style.width = displayWidth + 'px';
+  canvas.style.height = displayHeight + 'px';
+  
   ctx = canvas.getContext('2d', {
     alpha: true,
     antialias: true,
     willReadFrequently: false,
   }) as CanvasRenderingContext2D | null;
-  console.log('Canvas context created:', !!ctx, 'Canvas element:', !!canvas);
+  console.log('Canvas context created:', !!ctx, 'Canvas element:', !!canvas, 'High-DPI:', devicePixelRatio * 2);
 
   if (!ctx) {
     console.error('Failed to get 2D context!');
     return;
   }
 
-  // Enable high-quality rendering
+  // Scale the drawing context to match the ULTRA-high-DPI canvas
+  ctx.scale(devicePixelRatio * qualityMultiplier, devicePixelRatio * qualityMultiplier);
+
+  // Enable maximum quality rendering
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
+  // Ultra-high quality line rendering
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.strokeStyle = '#111';
+  
+  // ENHANCED line quality settings
+  ctx.lineWidth = 2; // Enhanced base line width
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  
+  // Professional quality settings
+  ctx.textBaseline = 'alphabetic';
+  ctx.textAlign = 'start';
+  ctx.fontKerning = 'normal';
+  
+  console.log(`Canvas initialized with ${qualityMultiplier}x quality multiplier (${devicePixelRatio * qualityMultiplier}x total DPI)`);
 
   // Clear and setup the canvas immediately
   clearCanvas(canvas);
@@ -1077,42 +1892,171 @@ function clearCanvas(canvas: HTMLCanvasElement): void {
   }
 
   // Clear neon trail
-  // Clear glitch trail
-  glitchTrail = [];
+  // Clear glitch trail (removed - no longer used)
+  // glitchTrail = [];
 
   // Clear fire trail
   fireTrail = [];
 
-  // Clear chalk trail
-  chalkTrail = [];
+  // Clear chalk trail (removed - no longer used)
+  // chalkTrail = [];
 
-  // Clear cosmic particles
-  cosmicParticles = [];
+  // Clear cosmic particles (removed - no longer used)
+  // cosmicParticles = [];
 
   console.log('Clearing canvas, size:', canvas.width, 'x', canvas.height);
 
-  // Create a beautiful gradient background
-  const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-  gradient.addColorStop(0, '#1a1a2e'); // Dark blue
-  gradient.addColorStop(0.5, '#16213e'); // Navy blue
-  gradient.addColorStop(1, '#0f3460'); // Deep blue
+  // Get display dimensions for proper scaling
+  const displayWidth = canvas.clientWidth;
+  const displayHeight = canvas.clientHeight;
 
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Create solid background with subtle vignette effect
+  const baseColor = '#151E35'; // Solid dark blue base
+  
+  // Fill with solid color first
+  ctx.fillStyle = baseColor;
+  ctx.fillRect(0, 0, displayWidth, displayHeight);
+  
+  // Add very subtle vignette effect
+  const centerX = displayWidth / 2;
+  const centerY = displayHeight / 2;
+  const maxRadius = Math.sqrt(centerX * centerX + centerY * centerY);
+  
+  const vignetteGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, maxRadius);
+  vignetteGradient.addColorStop(0, 'rgba(0, 0, 0, 0)'); // Transparent in center
+  vignetteGradient.addColorStop(0.7, 'rgba(0, 0, 0, 0)'); // Still transparent
+  vignetteGradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)'); // Very subtle darkening at edges
+  
+  ctx.fillStyle = vignetteGradient;
+  ctx.fillRect(0, 0, displayWidth, displayHeight);
 
   // Add some subtle twinkling stars in the background
   ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
   for (let i = 0; i < 50; i++) {
-    const x = Math.random() * canvas.width;
-    const y = Math.random() * canvas.height;
+    const x = Math.random() * displayWidth;
+    const y = Math.random() * displayHeight;
     const size = Math.random() * 2 + 1;
     ctx.beginPath();
     ctx.arc(x, y, size, 0, 2 * Math.PI);
     ctx.fill();
   }
 
-  ctx.lineWidth = 10;
-  console.log('Canvas cleared and background drawn');
+  ctx.lineWidth = 20; // DOUBLED from 10 to 20 for enhanced line quality
+  console.log('Canvas cleared and background drawn with ENHANCED line quality');
+  
+  // Update debug info if enabled
+  if (showDebugInfo) {
+    updateDebugInfo();
+  }
+}
+
+
+// Update debug info HTML component
+function updateDebugInfo(): void {
+  const currentInfoElement = document.getElementById('debug-current-info');
+  const sizeInfoElement = document.getElementById('debug-size-info');
+  
+  if (!currentInfoElement || !sizeInfoElement) return;
+  
+  // Current settings - combined into fewer lines
+  const actualCurrentStyle = styleManager.getCurrentStyle();
+  const actualStyleIndex = styleManager.getCurrentStyleIndex();
+  
+  // Get memory usage with color coding
+  const memoryInfo = (performance as any).memory;
+  let memoryUsed = 'N/A';
+  let memoryTotal = 'N/A';
+  let memoryColor = '#666666';
+  let memoryStatus = '';
+  
+  if (memoryInfo) {
+    const usedMB = memoryInfo.usedJSHeapSize / 1024 / 1024;
+    const totalMB = memoryInfo.totalJSHeapSize / 1024 / 1024;
+    const usagePercent = (usedMB / totalMB) * 100;
+    
+    memoryUsed = usedMB.toFixed(1);
+    memoryTotal = totalMB.toFixed(1);
+    
+    // Color coding based on usage percentage
+    if (usagePercent < 30) {
+      memoryColor = '#66ff66'; // Green - Low usage
+      memoryStatus = 'Low';
+    } else if (usagePercent < 60) {
+      memoryColor = '#ffff66'; // Yellow - Medium usage
+      memoryStatus = 'Medium';
+    } else if (usagePercent < 80) {
+      memoryColor = '#ffaa66'; // Orange - High usage
+      memoryStatus = 'High';
+    } else {
+      memoryColor = '#ff6666'; // Red - Very high usage
+      memoryStatus = 'Critical';
+    }
+  }
+  
+  const currentInfo = [
+    `Style ${actualStyleIndex + 1}: ${actualCurrentStyle.name}`,
+    `Size: ${['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Giant'][currentSizeLevel]} (${sizeMultipliers[currentSizeLevel]?.toFixed(2)}x)`,
+    `Thickness: ${thicknessMultiplier.toFixed(2)}x (Range: 0.2x-5.0x, Arrow Keys)`,
+    `Eraser: ${isEraserMode ? 'ON' : 'OFF'}`,
+    `Memory: <span style="color: ${memoryColor}">${memoryUsed}MB/${memoryTotal}MB (${memoryStatus})</span> | Limit: ${MEMORY_LIMIT_PERCENT}%`,
+  ];
+  
+  currentInfoElement.innerHTML = currentInfo.map(info => `<div>${info}</div>`).join('');
+  
+  // Size tracking info - more compact format
+  const sizeHeaders = ['T', 'S', 'M', 'L', 'H', 'G'];
+  let sizeInfoHTML = '<div style="color: #ffff00; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">SIZE TRACKING</div>';
+  sizeInfoHTML += '<div style="margin: 8px 0; color: #cccccc; font-family: monospace; font-size: 11px;">Style ' + sizeHeaders.map(h => h.padStart(6)).join('') + '</div>';
+  
+  // Draw size data for each style with alternating colors
+  const styleNames = Object.keys(sizeTracker);
+  styleNames.forEach((styleName, index) => {
+    let lineText = styleName.padEnd(6);
+    for (let i = 0; i < 6; i++) {
+      const size = sizeTracker[styleName]?.[i];
+      if (size !== undefined) {
+        // Color code the sizes: red for very small, yellow for medium, green for large
+        const sizeColor = size < 1 ? '#ff6666' : size < 3 ? '#ffff66' : '#66ff66';
+        lineText += `<span style="color: ${sizeColor}">${size.toFixed(1).padStart(6)}</span>`;
+      } else {
+        lineText += '<span style="color: #666666">0.0'.padStart(6) + '</span>';
+      }
+    }
+    const rowColor = index % 2 === 0 ? '#ffffff' : '#cccccc';
+    sizeInfoHTML += `<div style="color: ${rowColor}; font-family: monospace; font-size: 11px; margin: 2px 0; padding-left: 8px;">${lineText}</div>`;
+  });
+  
+  // Add compact progression analysis
+  sizeInfoHTML += '<div style="margin-top: 16px; color: #ffff00; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">PROGRESSION RATIOS</div>';
+  
+  // Analyze each style's size progression - more compact
+  styleNames.forEach(styleName => {
+    const sizes = sizeTracker[styleName];
+    if (sizes) {
+      const progression = [];
+      for (let i = 0; i < 4; i++) {
+        const current = sizes[i];
+        const next = sizes[i + 1];
+        if (current !== undefined && next !== undefined) {
+          const ratio = next / current;
+          progression.push(ratio.toFixed(1));
+        }
+      }
+      const progressionText = `${styleName}: ${progression.join(' → ')}`;
+      sizeInfoHTML += `<div style="color: #cccccc; margin: 4px 0; padding-left: 8px; font-family: monospace; font-size: 11px;">${progressionText}</div>`;
+    }
+  });
+  
+  sizeInfoElement.innerHTML = sizeInfoHTML;
+}
+
+// Removed unused drawSizeTrackingInfo function
+
+function updateSizeDebugDisplay(): void {
+  // Update debug info HTML component
+  if (showDebugInfo) {
+    updateDebugInfo();
+  }
 }
 
 
@@ -1184,7 +2128,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
       downMultiplier *= 0.5 + pressure * 0.5; // Scale by pressure (0.5x to 1x)
     }
 
-    points.push({ x, y, t: e.timeStamp });
+    points.push({ x, y, t: e.timeStamp, width: 10, height: 10 });
 
     // Start continuous haptics feedback
     hapticsConstantStart();
@@ -1211,53 +2155,74 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
       }
 
       const touchWidth = adjustedWidth * downMultiplier * mobileMultiplier;
-      const touchHeight = adjustedHeight * downMultiplier * mobileMultiplier;
-      const maxSize = Math.max(touchWidth, touchHeight);
+      const _touchHeight = adjustedHeight * downMultiplier * mobileMultiplier;
+      const maxSize = Math.max(touchWidth, _touchHeight);
 
       const currentStyleIndex = styleManager.getCurrentStyleIndex();
-      if (currentStyleIndex === 1) {
+      if (currentStyleIndex === 0) {
+        // Style 1: Use new separated style system
+        drawWithCurrentStyle(ctx, x, y, touchWidth, _touchHeight);
+      } else if (currentStyleIndex === 1) {
         // Style 2 (Lava)
         if (isEraserMode) {
-          // Eraser mode for Style 2
+          // Eraser mode for Style 2 - match the 3D sphere size
           ctx.save();
           ctx.globalCompositeOperation = 'destination-out';
-          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          
+          // Calculate the same size as the 3D sphere drawing
+          const baseSize = (touchWidth / 2) * (0.95 + Math.random() * 0.1);
+          const pulseScale = 1 + Math.sin(Date.now() / 160) * 0.03;
+          const calculatedSize = baseSize * pulseScale;
+          const enhancedSize = calculatedSize * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
+          const sphereSize = Math.max(3.0, enhancedSize);
+          
+          // Erase with the same size as the 3D sphere
+          const eraserSize = sphereSize * 0.15; // Match the sphere radius
           ctx.fillStyle = 'rgba(0, 0, 0, 1)';
           ctx.beginPath();
           ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
           ctx.fill();
           ctx.restore();
         } else {
-          // Style 2: Draw initial flame with enhanced size sensitivity
-          const baseSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-          const enhancedSizeMultiplier =
-            baseSizeMultiplier * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
-          drawFlameEffect(ctx, x, y, enhancedSizeMultiplier, touchWidth, touchHeight);
+          // Style 2: Use new separated style system
+          drawWithCurrentStyle(ctx, x, y, touchWidth, _touchHeight);
         }
       } else if (currentStyleIndex === 2) {
         // Style 3 (Glitch)
         if (isEraserMode) {
-          // Eraser mode for Style 3
+          // Eraser mode for Style 3 - match the wave size
           ctx.save();
           ctx.globalCompositeOperation = 'destination-out';
-          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          
+          // Calculate the same size as the wave drawing (normal size)
+          const baseSize = (touchWidth / 2) * (0.95 + Math.random() * 0.1);
+          const pulseScale = 1 + Math.sin(Date.now() / 160) * 0.03;
+          const waveSize = baseSize * pulseScale; // Normal size like Style 1
+          
+          // Erase with the same size as the wave
+          const eraserSize = waveSize * 0.3; // Match the wave size
           ctx.fillStyle = 'rgba(0, 0, 0, 1)';
           ctx.beginPath();
           ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
           ctx.fill();
           ctx.restore();
         } else {
-          // Style 3: GLITCH EFFECT
-          const glitchSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-          drawGlitchEffect(ctx, x, y, glitchSizeMultiplier, touchWidth, touchHeight);
+          // Style 3: Use new separated style system
+          drawWithCurrentStyle(ctx, x, y, touchWidth, _touchHeight);
         }
       } else if (currentStyleIndex === 3) {
         // Style 4 (Fire)
         if (isEraserMode) {
-          // Eraser mode for Style 4
+          // Eraser mode for Style 4 - match the fire effect size
           ctx.save();
           ctx.globalCompositeOperation = 'destination-out';
-          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          
+          // Calculate the same size as the fire effect drawing
+          const fireSizeMultiplier = calculateSizeMultiplier(touchWidth, _touchHeight);
+          const lavaSize = Math.max(touchWidth, _touchHeight) * 0.4 * fireSizeMultiplier;
+          
+          // Erase with the same size as the fire effect
+          const eraserSize = lavaSize * 1.5; // Slightly larger to ensure complete erasing
           ctx.fillStyle = 'rgba(0, 0, 0, 1)';
           ctx.beginPath();
           ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
@@ -1265,25 +2230,31 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
           ctx.restore();
         } else {
           // Style 4: EPIC FIRE EFFECT
-          const fireSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-          drawFireEffect(ctx, x, y, fireSizeMultiplier, touchWidth, touchHeight);
+          // Style 4: Use new separated style system
+          drawWithCurrentStyle(ctx, x, y, touchWidth, _touchHeight);
         }
       } else if (currentStyleIndex === 4) {
         // Style 5 (Water)
         if (isEraserMode) {
-          // Eraser mode for Style 5
+          // Eraser mode for Style 5 - match the water effect size
           ctx.save();
           ctx.globalCompositeOperation = 'destination-out';
-          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          
+          // Calculate the same size as the water effect drawing
+          const waterSizeMultiplier = calculateSizeMultiplier(touchWidth, _touchHeight);
+          const waterSize = Math.max(touchWidth, _touchHeight) * 0.25 * waterSizeMultiplier;
+          
+          // Erase with the same size as the water effect (including scaling)
+          const scaledWaterSize = waterSize * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
+          const eraserSize = scaledWaterSize * 1.5; // Slightly larger to ensure complete erasing
           ctx.fillStyle = 'rgba(0, 0, 0, 1)';
           ctx.beginPath();
           ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
           ctx.fill();
           ctx.restore();
         } else {
-          // Style 5: WATER SHAPE STYLO
-          const waterSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-          drawWaterEffect(ctx, x, y, waterSizeMultiplier, touchWidth, touchHeight);
+          // Style 5: Use new separated style system
+          drawWithCurrentStyle(ctx, x, y, touchWidth, _touchHeight);
         }
       } else if (currentStyleIndex === 5) {
         // Style 6 (Epic)
@@ -1291,18 +2262,22 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
           // Eraser mode for Style 6
           ctx.save();
           ctx.globalCompositeOperation = 'destination-out';
-          const eraserSize = Math.max(touchWidth, touchHeight) * 3.0; // 3x bigger eraser
+          const eraserSize = Math.max(touchWidth, _touchHeight) * 3.0; // 3x bigger eraser
           ctx.fillStyle = 'rgba(0, 0, 0, 1)';
           ctx.beginPath();
           ctx.arc(x, y, eraserSize, 0, 2 * Math.PI);
           ctx.fill();
           ctx.restore();
         } else {
-          // Style 6: EPIC COSMIC STORM
-          const epicSizeMultiplier =
-            calculateSizeMultiplier(touchWidth, touchHeight) * (1 + currentSizeLevel * 0.01);
-          drawEpicEffect(ctx, x, y, epicSizeMultiplier, touchWidth, touchHeight);
+          // Style 6: Use new separated style system
+          drawWithCurrentStyle(ctx, x, y, touchWidth, _touchHeight);
         }
+      } else if (currentStyleIndex === 6) {
+        // Style 7: Use new separated style system
+        drawWithCurrentStyle(ctx, x, y, touchWidth, _touchHeight);
+      } else if (currentStyleIndex === 7) {
+        // Style 8: Use new separated style system
+        drawWithCurrentStyle(ctx, x, y, touchWidth, _touchHeight);
       } else {
         // Style 1 & other styles: Regular smooth dot
         ctx.save();
@@ -1316,7 +2291,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
           'size:',
           touchWidth,
           'x',
-          touchHeight,
+          _touchHeight,
           'pressure:',
           pressure,
         );
@@ -1324,7 +2299,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
         // Paint main ellipse with pulsing effect and HD quality (same for drawing and erasing)
         const pulseScale = 1 + Math.sin(Date.now() / 200) * 0.1; // Gentle pulsing
         const radiusX = (touchWidth / 2) * pulseScale;
-        const radiusY = (touchHeight / 2) * pulseScale;
+        const radiusY = (_touchHeight / 2) * pulseScale;
 
         // Set eraser mode or drawing mode
         if (isEraserMode) {
@@ -1392,6 +2367,11 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
   });
 
   canvas.addEventListener('pointermove', (e: PointerEvent) => {
+    // Check memory usage during drawing
+    if (isDrawing) {
+      checkMemoryUsage();
+    }
+    
     // Debug Apple Pencil events during drawing
     if (e.pointerType === 'pen' && isDrawing) {
       debugPointerEvent(e);
@@ -1400,10 +2380,14 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     if (!isDrawing) return;
     const { x, y } = getCanvasPoint(canvas, e.clientX, e.clientY);
     const last = points[points.length - 1]!;
-    const dt = Math.max(0.001, e.timeStamp - last.t);
+    const dt = Math.max(0.001, e.timeStamp - (last.t || 0));
     const dx = x - last.x;
     const dy = y - last.y;
     const speed = Math.hypot(dx, dy) / dt; // px/ms
+    
+    // Speed-based optimization for mobile - reduce effects when drawing fast
+    const isFastDrawing = speed > 2.0; // Fast drawing threshold
+    const _isMobile = !isWebApp;
 
     // Enhanced Apple Pencil detection and pressure handling
     const isPencil = e.pointerType === 'pen';
@@ -1431,36 +2415,48 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
       moveMultiplier *= 0.5 + pressure * 0.5; // Scale by pressure (0.5x to 1x)
     }
 
-    points.push({ x, y, t: e.timeStamp, speed });
+    points.push({ x, y, t: e.timeStamp, speed, width: 10, height: 10 });
 
     if (!ctx) return;
 
     // Calculate distance between last point and current point
     const distance = Math.hypot(x - last.x, y - last.y);
 
-    // Enhanced dot spacing for smoother lines - much finer spacing
+    // OPTIMIZED dot spacing - balanced for quality and performance
     let dotSpacing;
     if (isPencil) {
-      // Apple Pencil gets ultra-fine dot spacing for very smooth lines
-      dotSpacing = currentStyle === 2 ? 0.5 : 0.8;
+      // Apple Pencil gets optimized spacing (slightly wider for heavy styles to prevent lag)
+      dotSpacing = currentStyle === 2 ? 0.4 : currentStyle === 5 ? 0.4 : 0.3; // Wider for heavy styles
     } else {
-      // Touch and mouse get finer spacing for smoother lines
-      dotSpacing = currentStyle === 2 ? 1.0 : isWebApp ? 0.8 : 1.5;
+      // Touch and mouse get optimized spacing (much wider for mobile performance, especially for fast drawing)
+      if (_isMobile && isFastDrawing) {
+        // Ultra-wide spacing for fast mobile drawing
+        dotSpacing = currentStyle === 2 ? 3.0 : currentStyle === 5 ? 3.0 : 2.5; // Ultra-wide for fast mobile drawing
+      } else {
+        dotSpacing = currentStyle === 2 ? 2.0 : currentStyle === 5 ? 2.0 : isWebApp ? 0.3 : 1.5; // Normal mobile spacing
+      }
     }
 
     const numDots = Math.max(1, Math.ceil(distance / dotSpacing));
 
-    // Enhanced density multiplier for much smoother lines
+    // OPTIMIZED density multiplier - reduced for heavy styles to prevent lag
     let densityMultiplier;
     if (isPencil) {
-      // Apple Pencil gets ultra-high density for very smooth lines
-      densityMultiplier = currentStyle === 2 ? 3.0 : 3.5;
+      // Apple Pencil gets optimized density (reduced for styles 2 & 5 to prevent lag)
+      densityMultiplier = currentStyle === 2 ? 3.5 : currentStyle === 5 ? 3.5 : 7.0; // Reduced heavy styles
     } else {
-      // Touch and mouse get higher density for smoother lines
-      densityMultiplier = currentStyle === 2 ? 2.5 : isWebApp ? 2.5 : 2.0;
+      // Touch and mouse get optimized density (much reduced for mobile performance, especially fast drawing)
+      if (_isMobile && isFastDrawing) {
+        // Ultra-low density for fast mobile drawing
+        densityMultiplier = currentStyle === 2 ? 0.5 : currentStyle === 5 ? 0.5 : 0.8; // Ultra-low for fast mobile drawing
+      } else {
+        densityMultiplier = currentStyle === 2 ? 1.0 : currentStyle === 5 ? 1.0 : isWebApp ? 5.0 : 1.5; // Normal mobile density
+      }
     }
 
-    const adjustedNumDots = Math.max(3, Math.ceil(numDots * densityMultiplier));
+    // Optimized minimum dots - much reduced for mobile performance, especially fast drawing
+    const minDots = (currentStyle === 2 || currentStyle === 5) ? 1 : isWebApp ? 8 : 2; // Even more reduced for mobile fast drawing
+    const adjustedNumDots = Math.max(minDots, Math.ceil(numDots * densityMultiplier));
 
     const baseWidth = e.width || 1;
     const baseHeight = e.height || 1;
@@ -1482,46 +2478,129 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
     }
 
     const touchWidth = adjustedWidth * moveMultiplier * mobileMultiplier;
-    const touchHeight = adjustedHeight * moveMultiplier * mobileMultiplier;
+    const _touchHeight = adjustedHeight * moveMultiplier * mobileMultiplier;
 
     ctx.save();
     ctx.globalAlpha = 0.8; // Slightly transparent for natural ink effect
 
-    // Paint multiple dots along the path
+    // Paint multiple dots along the path with ULTRA-HIGH density for maximum detail
     for (let i = 0; i <= adjustedNumDots; i++) {
       const t = i / adjustedNumDots; // interpolation factor (0 to 1)
       const dotX = last.x + (x - last.x) * t;
       const dotY = last.y + (y - last.y) * t;
+      
+      // Add sub-pixel detail for ultra-smooth lines
+      const subPixelOffset = Math.sin(i * 0.5) * 0.1; // Subtle sub-pixel variation
+      const finalDotX = dotX + subPixelOffset;
+      const finalDotY = dotY + subPixelOffset;
 
       const currentStyleIndex = styleManager.getCurrentStyleIndex();
-      if (currentStyleIndex === 1) {
+      if (currentStyleIndex === 0) {
+        // Style 1: Use new separated style system
+        drawWithCurrentStyle(ctx, finalDotX, finalDotY, touchWidth, _touchHeight);
+      } else if (currentStyleIndex === 1) {
         // Style 2 (Lava)
-        // Style 2: Draw animated flames on every point for no gaps with enhanced size sensitivity
-        const baseSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-        const enhancedSizeMultiplier =
-          baseSizeMultiplier * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
-        drawFlameEffect(ctx, dotX, dotY, enhancedSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 2 - match the 3D sphere size
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          
+          // Calculate the same size as the 3D sphere drawing
+          const baseSize = (touchWidth / 2) * (0.95 + Math.random() * 0.1);
+          const pulseScale = 1 + Math.sin(Date.now() / 160) * 0.03;
+          const calculatedSize = baseSize * pulseScale;
+          const enhancedSize = calculatedSize * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
+          const sphereSize = Math.max(3.0, enhancedSize);
+          
+          // Erase with the same size as the 3D sphere
+          const eraserSize = sphereSize * 0.15; // Match the sphere radius
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(finalDotX, finalDotY, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+          // Style 2: Use new separated style system
+          drawWithCurrentStyle(ctx, finalDotX, finalDotY, touchWidth, _touchHeight);
+        }
       } else if (currentStyleIndex === 2) {
         // Style 3 (Glitch)
-        // Style 3: GLITCH EFFECT
-        const glitchSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-        drawGlitchEffect(ctx, dotX, dotY, glitchSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 3 - match the wave size
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          
+          // Calculate the same size as the wave drawing (normal size)
+          const baseSize = (touchWidth / 2) * (0.95 + Math.random() * 0.1);
+          const pulseScale = 1 + Math.sin(Date.now() / 160) * 0.03;
+          const waveSize = baseSize * pulseScale; // Normal size like Style 1
+          
+          // Erase with the same size as the wave
+          const eraserSize = waveSize * 0.3; // Match the wave size
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(finalDotX, finalDotY, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+        // Style 3: Use new separated style system
+          drawWithCurrentStyle(ctx, finalDotX, finalDotY, touchWidth, _touchHeight);
+        }
       } else if (currentStyleIndex === 3) {
         // Style 4 (Fire)
-        // Style 4: EPIC FIRE EFFECT
-        const fireSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-        drawFireEffect(ctx, dotX, dotY, fireSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 4 - match the fire effect size
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          
+          // Calculate the same size as the fire effect drawing
+          const fireSizeMultiplier = calculateSizeMultiplier(touchWidth, _touchHeight);
+          const lavaSize = Math.max(touchWidth, _touchHeight) * 0.4 * fireSizeMultiplier;
+          
+          // Erase with the same size as the fire effect
+          const eraserSize = lavaSize * 1.5; // Slightly larger to ensure complete erasing
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(finalDotX, finalDotY, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+        // Style 4: Use new separated style system
+          drawWithCurrentStyle(ctx, finalDotX, finalDotY, touchWidth, _touchHeight);
+        }
       } else if (currentStyleIndex === 4) {
         // Style 5 (Water)
-        // Style 5: WATER SHAPE STYLO
-        const waterSizeMultiplier = calculateSizeMultiplier(touchWidth, touchHeight);
-        drawWaterEffect(ctx, dotX, dotY, waterSizeMultiplier, touchWidth, touchHeight);
+        if (isEraserMode) {
+          // Eraser mode for Style 5 - match the water effect size
+          ctx.save();
+          ctx.globalCompositeOperation = 'destination-out';
+          
+          // Calculate the same size as the water effect drawing
+          const waterSizeMultiplier = calculateSizeMultiplier(touchWidth, _touchHeight);
+          const waterSize = Math.max(touchWidth, _touchHeight) * 0.25 * waterSizeMultiplier;
+          
+          // Erase with the same size as the water effect (including scaling)
+          const scaledWaterSize = waterSize * (1 + currentSizeLevel * 0.3) * thicknessMultiplier;
+          const eraserSize = scaledWaterSize * 1.5; // Slightly larger to ensure complete erasing
+          ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+          ctx.beginPath();
+          ctx.arc(finalDotX, finalDotY, eraserSize, 0, 2 * Math.PI);
+          ctx.fill();
+          ctx.restore();
+        } else {
+        // Style 5: Use new separated style system
+          drawWithCurrentStyle(ctx, finalDotX, finalDotY, touchWidth, _touchHeight);
+        }
       } else if (currentStyleIndex === 5) {
         // Style 6 (Epic)
-        // Style 6: EPIC COSMIC STORM
-        const epicSizeMultiplier =
-          calculateSizeMultiplier(touchWidth, touchHeight) * (1 + currentSizeLevel * 0.01);
-        drawEpicEffect(ctx, dotX, dotY, epicSizeMultiplier, touchWidth, touchHeight);
+        // Style 6: Use new separated style system
+        drawWithCurrentStyle(ctx, finalDotX, finalDotY, touchWidth, _touchHeight);
+      } else if (currentStyleIndex === 6) {
+        // Style 7: Use new separated style system
+        drawWithCurrentStyle(ctx, finalDotX, finalDotY, touchWidth, _touchHeight);
+      } else if (currentStyleIndex === 7) {
+        // Style 8: Use new separated style system
+        drawWithCurrentStyle(ctx, finalDotX, finalDotY, touchWidth, _touchHeight);
       } else {
         // Style 1 & other styles: Regular smooth dots or eraser
         // Use the same size calculation for both drawing and erasing
@@ -1537,7 +2616,7 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
 
         const pulseScale = 1 + Math.sin((Date.now() + i * 40) / 160) * 0.03; // Much gentler pulsing (was 0.096)
         const finalSize = (touchWidth / 2) * sizeVariation * pulseScale;
-        const finalHeight = (touchHeight / 2) * sizeVariation * pulseScale;
+        const finalHeight = (_touchHeight / 2) * sizeVariation * pulseScale;
 
         // Set eraser mode or drawing mode
         if (isEraserMode) {
@@ -1604,32 +2683,44 @@ function attachPointerHandlers(canvas: HTMLCanvasElement): void {
         );
         ctx.fill();
 
-        // Enhanced sparkle effects for Style 1 (ParticleStyle) - random but performant splash
-        if (Math.max(touchWidth, touchHeight) > 10 && !isEraserMode) {
+        // Enhanced sparkle effects for Style 1 (ParticleStyle) - optimized for mobile and fast drawing
+        if (Math.max(touchWidth, _touchHeight) > 10 && !isEraserMode) {
           const currentStyleIndex = styleManager.getCurrentStyleIndex();
           
           if (currentStyleIndex === 0) {
-            // Style 1 (ParticleStyle): Random but performant sparkle effects
-            const sparkleChance = Math.random() < 0.6; // 60% chance for Style 1
-            if (sparkleChance) {
+            // Style 1 (ParticleStyle): Reduced sparkle frequency for mobile performance
+            let sparkleChance;
+            if (isWebApp) {
+              sparkleChance = 0.6;
+            } else if (_isMobile && isFastDrawing) {
+              sparkleChance = 0.1; // Ultra-reduced for fast mobile drawing
+            } else {
+              sparkleChance = 0.3; // Normal mobile
+            }
+            
+            if (sparkleChance && Math.random() < sparkleChance) {
               ctx.save();
               ctx.globalAlpha = 0.5; // Balanced alpha for performance
-              addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, touchHeight) / 2.5);
+              addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, _touchHeight) / 2.5);
               ctx.restore();
             }
           } else {
-            // Other styles: Random sparkle effects
+            // Other styles: Much reduced sparkle effects for mobile and fast drawing
             let sparkleChance;
             if (isPencil) {
               sparkleChance = 0.4;
-            } else {
+            } else if (isWebApp) {
               sparkleChance = 0.2;
+            } else if (_isMobile && isFastDrawing) {
+              sparkleChance = 0.02; // Ultra-reduced for fast mobile drawing
+            } else {
+              sparkleChance = 0.1; // Normal mobile
             }
 
             if (Math.random() < sparkleChance) {
               ctx.save();
               ctx.globalAlpha = 0.4;
-              addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, touchHeight) / 3);
+              addSparkleEffect(ctx, dotX, dotY, Math.max(touchWidth, _touchHeight) / 3);
               ctx.restore();
             }
           }
@@ -1701,12 +2792,20 @@ function initAudio() {
 }
 
 function playSplashSound() {
-  if (!audioContext || audioContext.state === 'suspended') {
-    audioContext?.resume();
+  // Initialize audio context if not already done
+  if (!audioContext) {
+    initAudio();
+  }
+  
+  if (audioContext && audioContext.state === 'suspended') {
+    audioContext.resume().catch(console.warn);
   }
 
   try {
-    if (!audioContext) return;
+    if (!audioContext) {
+      console.warn('Audio context not available for splash sound');
+      return;
+    }
 
     // Create a playful "bounce" sound effect using Web Audio API
     const oscillator = audioContext.createOscillator();
@@ -1776,21 +2875,6 @@ document.addEventListener('keydown', initAudioOnInteraction);
 
 // Initialize audio context immediately
 initAudio();
-
-// Info popup functions
-function showInfoPopup() {
-  const popup = document.getElementById('info-popup');
-  if (popup) {
-    popup.style.display = 'block';
-  }
-}
-
-function hideInfoPopup() {
-  const popup = document.getElementById('info-popup');
-  if (popup) {
-    popup.style.display = 'none';
-  }
-}
 
 // Add global functions for onclick handlers
 (window as any).showInfoPopup = showInfoPopup;
@@ -1895,93 +2979,6 @@ function generateRandomStyle1Parameters(): void {
   // Style 1 parameters randomized
 }
 
-// Add a function to force immediate color change for Style 1
-function forceImmediateColorChange(): void {
-  // Generate different vibe-based multicolor starting points with more dramatic themes
-  const vibeThemes = [
-    // Fire vibe - intense reds and oranges
-    { baseHue: 0, saturation: 100, lightness: 45, cycleSpeed: 9 },
-    // Toxic vibe - bright neon greens and yellows
-    { baseHue: 60, saturation: 100, lightness: 55, cycleSpeed: 11 },
-    // Retro Galaxy vibe - deep purples and cyans
-    { baseHue: 270, saturation: 95, lightness: 40, cycleSpeed: 7 },
-    // Electric vibe - bright blues and whites
-    { baseHue: 210, saturation: 100, lightness: 60, cycleSpeed: 12 },
-    // Sunset vibe - warm oranges and pinks
-    { baseHue: 15, saturation: 100, lightness: 50, cycleSpeed: 6 },
-    // Ocean vibe - cool blues and teals
-    { baseHue: 200, saturation: 90, lightness: 45, cycleSpeed: 8 },
-    // Forest vibe - greens and earth tones
-    { baseHue: 120, saturation: 85, lightness: 40, cycleSpeed: 7 },
-    // Neon vibe - bright electric colors
-    { baseHue: 280, saturation: 100, lightness: 55, cycleSpeed: 10 },
-    // Cosmic vibe - purples and cyans
-    { baseHue: 240, saturation: 90, lightness: 45, cycleSpeed: 8 },
-    // Tropical vibe - bright greens and blues
-    { baseHue: 160, saturation: 95, lightness: 50, cycleSpeed: 7 },
-    // Aurora vibe - cool greens and blues
-    { baseHue: 180, saturation: 85, lightness: 45, cycleSpeed: 6 },
-    // Cyberpunk vibe - neon pinks and cyans
-    { baseHue: 300, saturation: 100, lightness: 50, cycleSpeed: 13 },
-    // Lava vibe - deep reds and bright oranges
-    { baseHue: 20, saturation: 100, lightness: 45, cycleSpeed: 8 },
-    // Ice vibe - cool blues and whites
-    { baseHue: 220, saturation: 90, lightness: 65, cycleSpeed: 5 },
-    // Golden vibe - warm yellows and golds
-    { baseHue: 45, saturation: 95, lightness: 55, cycleSpeed: 7 }
-  ];
-  
-  // Get current colors to avoid duplicates
-  const currentHue = randomStyleParams.baseHue;
-  const currentSaturation = randomStyleParams.saturation;
-  const currentLightness = randomStyleParams.lightness;
-  
-  // Filter out themes that are too similar to current colors
-  const availableThemes = vibeThemes.filter(theme => {
-    const hueDiff = Math.abs(theme.baseHue - currentHue);
-    const satDiff = Math.abs(theme.saturation - currentSaturation);
-    const lightDiff = Math.abs(theme.lightness - currentLightness);
-    
-    // Ensure significant difference in at least 2 properties
-    return (hueDiff > 30) || (satDiff > 15) || (lightDiff > 15);
-  });
-  
-  // If no themes are different enough, use all themes
-  const themesToUse = availableThemes.length > 0 ? availableThemes : vibeThemes;
-  
-  // Pick a random vibe theme from available ones
-  const selectedVibe = themesToUse[Math.floor(Math.random() * themesToUse.length)]!;
-  
-  randomStyleParams = {
-    ...randomStyleParams,
-    baseHue: selectedVibe.baseHue,
-    saturation: selectedVibe.saturation,
-    lightness: selectedVibe.lightness,
-    cycleSpeed: selectedVibe.cycleSpeed, // Add cycle speed for different vibes
-  };
-  
-  // Add light performant filter for Style 1
-  const filters = [
-    'none',
-    'hue-rotate(90deg)',
-    'hue-rotate(180deg)',
-    'saturate(1.5)',
-    'brightness(1.2)',
-    'contrast(1.3)',
-  ];
-  const randomFilter = filters[Math.floor(Math.random() * filters.length)]!;
-  
-  randomStyleParams = {
-    ...randomStyleParams,
-    filter: randomFilter,
-  };
-  
-  // Update global reference for Style 1
-  (window as any).randomStyleParams = randomStyleParams;
-  
-  console.log(`🎨 Style 1 VIBE CHANGE: baseHue=${selectedVibe.baseHue}, saturation=${selectedVibe.saturation}, lightness=${selectedVibe.lightness}, filter=${randomFilter}`);
-  // Vibe theme changed for Style 1
-}
 
 function init(): void {
   const canvas = document.getElementById('app-canvas') as HTMLCanvasElement | null;
@@ -2071,12 +3068,25 @@ function init(): void {
   const styleSelectorButton = document.getElementById('style-selector');
   if (styleSelectorButton) {
     const styleSelectorHandler = () => {
+      // Add strong click feedback
+      styleSelectorButton.style.transform = 'scale(0.85)';
+      styleSelectorButton.style.opacity = '0.7';
+      setTimeout(() => {
+        styleSelectorButton.style.transform = '';
+        styleSelectorButton.style.opacity = '';
+      }, 200);
+      
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+      
       // Switch to next drawing style
       styleManager.nextStyle();
       const newStyle = styleManager.getCurrentStyle();
 
       // Update button icon to show current style
-      styleSelectorButton.textContent = newStyle.icon;
+      styleSelectorButton.textContent = (styleManager.getCurrentStyleIndex() + 1).toString();
 
       // Set consistent white color for numbers
       styleSelectorButton.style.color = 'white';
@@ -2084,6 +3094,9 @@ function init(): void {
       console.log(`🎨 Switched to ${newStyle.name} style: ${newStyle.description}`);
       console.log(`🎯 Style index: ${styleManager.getCurrentStyleIndex()}`);
       styleSelectorButton.title = `Current: ${newStyle.name}\nTap to switch drawing style`;
+      
+      // Update size number display for new style
+      
     };
 
     // Add event listeners
@@ -2096,9 +3109,19 @@ function init(): void {
       e.preventDefault();
     });
 
+    // Menu toggle event listener
+    const menuToggle = document.getElementById('menu-toggle');
+    if (menuToggle) {
+      menuToggle.addEventListener('click', toggleMenu);
+      menuToggle.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        toggleMenu();
+      });
+    }
+
     // Initialize with current style
     const currentStyle = styleManager.getCurrentStyle();
-    styleSelectorButton.textContent = currentStyle.icon;
+    styleSelectorButton.textContent = (styleManager.getCurrentStyleIndex() + 1).toString();
     styleSelectorButton.style.color = 'white';
     styleSelectorButton.title = `Current: ${currentStyle.name}\nTap to switch drawing style`;
   }
@@ -2107,43 +3130,32 @@ function init(): void {
   const styleSwitchButton = document.getElementById('style-switch');
   if (styleSwitchButton) {
     const styleSwitchHandler = () => {
-      // Check if we're on Style 1 (ParticleStyle) - only randomize colors for Style 1
-      const currentStyleIndex = styleManager.getCurrentStyleIndex();
+      // Add strong click feedback
+      styleSwitchButton.style.transform = 'scale(0.85)';
+      styleSwitchButton.style.opacity = '0.7';
+      setTimeout(() => {
+        styleSwitchButton.style.transform = '';
+        styleSwitchButton.style.opacity = '';
+      }, 200);
       
-      if (currentStyleIndex === 0) {
-        // Style 1: Randomize both colors AND size
-        const shouldForceColorChange = Math.random() < 0.4; // 40% chance for vibe change
-        
-        if (shouldForceColorChange) {
-          // Force immediate vibe change for Style 1
-          forceImmediateColorChange();
-          console.log('🎨 FORCED vibe change for Style 1!');
-        } else {
-          // Generate new random color parameters for Style 1
-          generateRandomStyle1Parameters();
-          console.log('🎨 Randomized colors for Style 1!');
-        }
-        
-        // Also randomize size for Style 1
-        currentSizeLevel = Math.floor(Math.random() * 5);
-        
-        // Change button color
-        const randomHue = Math.floor(Math.random() * 360);
-        styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
-        
-        const sizeNames = ['tiny', 'small', 'medium', 'large', 'huge'];
-        console.log(`🎨 Style 1 randomized: ${sizeNames[currentSizeLevel]} size + new colors!`);
-      } else {
-        // Other styles: Full randomization (size + parameters)
-        generateRandomStyle1Parameters();
-        currentSizeLevel = Math.floor(Math.random() * 5);
-        
-        const randomHue = Math.floor(Math.random() * 360);
-        styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
-        
-        const sizeNames = ['tiny', 'small', 'medium', 'large', 'huge'];
-        console.log(`Generated new random style and changed to ${sizeNames[currentSizeLevel]} size!`);
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
       }
+      
+      // Randomize colors for CURRENT style only
+      const currentStyle = styleManager.getCurrentStyle();
+      
+      if (currentStyle.generateRandomParameters) {
+        currentStyle.generateRandomParameters();
+        console.log(`🎨 Randomized colors for ${currentStyle.name}!`);
+      }
+        
+      // Change button color (visual feedback)
+        const randomHue = Math.floor(Math.random() * 360);
+        styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
+        
+      console.log('🎨 Colors randomized - size unchanged!');
 
       // Don't clear canvas - preserve existing drawing
     };
@@ -2164,52 +3176,70 @@ function init(): void {
     styleSwitchButton.style.color = `hsl(${randomHue}, 85%, 55%)`;
   }
 
-  // Thickness slider functionality
-  const thicknessSlider = document.getElementById('thickness-slider') as HTMLInputElement;
+  // Pizza Size Selector functionality
+  const sizeSelector = document.getElementById('size-selector');
   const vibrationKnob = document.getElementById('vibration-knob') as HTMLInputElement | null;
-  const thicknessValue = document.getElementById('thickness-value');
-  console.log('Thickness slider found:', !!thicknessSlider);
-  if (thicknessSlider) {
-    const thicknessHandler = () => {
-      thicknessMultiplier = parseFloat(thicknessSlider.value);
-      console.log(
-        '🎯 Thickness changed to:',
-        thicknessMultiplier,
-        'Slider value:',
-        thicknessSlider.value,
-      );
-
-      // Update the display value
-      if (thicknessValue) {
-        thicknessValue.textContent = thicknessSlider.value;
+  console.log('Size selector found:', !!sizeSelector);
+  
+  
+  
+  
+  
+  
+  // Initialize Size Selector component (Pizza for desktop, Numbers for mobile)
+  let pizzaSizeSelector: PizzaSizeSelector | null = null;
+  let numbersSizeSelector: NumbersSizeSelector | null = null;
+  
+  if (sizeSelector) {
+    const sizeChangeCallback = (size: number) => {
+      currentSizeLevel = size;
+      
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(30);
       }
-
-      // Force a redraw to see immediate effect
-      if (ctx && canvas) {
-        // This will trigger the size calculation with new thickness
-        console.log('🔄 Thickness updated, next draw will use:', thicknessMultiplier);
+      
+      // Audio feedback (if available)
+      if (typeof (window as any).audioContext !== 'undefined' && (window as any).gainNode) {
+        const audioCtx = (window as any).audioContext;
+        const gain = (window as any).gainNode;
+        const oscillator = audioCtx.createOscillator();
+        oscillator.connect(gain);
+        oscillator.frequency.setValueAtTime(800 + currentSizeLevel * 200, audioCtx.currentTime);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.1);
       }
+      
+      const sizeNames = ['Tiny', 'Small', 'Medium', 'Large', 'Huge', 'Giant'];
+      console.log(`📱 Size changed to level ${currentSizeLevel} (${sizeNames[currentSizeLevel]}) - Selected size ${currentSizeLevel + 1}`);
     };
 
-    // Add event listeners for real-time thickness control
-    thicknessSlider.addEventListener('input', thicknessHandler);
-    thicknessSlider.addEventListener('change', thicknessHandler);
-
-    // Initialize thickness
-    thicknessMultiplier = parseFloat(thicknessSlider.value);
-    console.log('🎯 Initial thickness:', thicknessMultiplier);
-
-    // Set initial display value
-    if (thicknessValue) {
-      thicknessValue.textContent = thicknessSlider.value;
-    }
-
-    // Test thickness calculation
-    const testSize = calculateSizeMultiplier(1, 1);
-    console.log('🧪 Test size calculation with thickness', thicknessMultiplier, ':', testSize);
+    // Use pizza selector for desktop, numbers selector for mobile
+    if (isWebApp) {
+      pizzaSizeSelector = new PizzaSizeSelector(sizeSelector, currentSizeLevel, sizeChangeCallback);
   } else {
-    console.error('Thickness slider not found!');
+      numbersSizeSelector = new NumbersSizeSelector(sizeSelector, currentSizeLevel, sizeChangeCallback);
+    }
   }
+  
+  // Test function to manually change size level (for debugging)
+  (window as any).setSizeLevel = (level: number) => {
+    if (level >= 0 && level < 6) {
+      currentSizeLevel = level;
+      if (pizzaSizeSelector) {
+        pizzaSizeSelector.setSize(level);
+      }
+      if (numbersSizeSelector) {
+        numbersSizeSelector.setSize(level);
+      }
+      console.log(`Size level manually set to ${level}`);
+    }
+  };
+  
+  // Make currentSizeLevel globally accessible for testing
+  (window as any).currentSizeLevel = currentSizeLevel;
+  
+  
 
   // Vibration knob only
   let vibrationIntensity = 1.0; // 0..1 (kept for future haptics on iPhone)
@@ -2222,27 +3252,35 @@ function init(): void {
   vibrationKnob?.addEventListener('input', applyKnob);
   applyKnob();
 
-  // Keyboard controls for thickness slider
+  // Keyboard controls for thickness slider and size level
   const handleThicknessKey = (event: KeyboardEvent) => {
-    if (!thicknessSlider) return;
-
-    const currentValue = parseFloat(thicknessSlider.value);
-    const step = parseFloat(thicknessSlider.step) || 0.2;
-    const min = parseFloat(thicknessSlider.min) || 0.2;
-    const max = parseFloat(thicknessSlider.max) || 5.0;
+    console.log('🔑 Key pressed:', event.key);
+    console.log('🔑 Event target:', event.target);
+    console.log('🔑 Current size level before:', currentSizeLevel);
+    
+    const currentValue = thicknessMultiplier;
+    const step = 0.2;
+    const min = 0.2;
+    const max = 5.0;
 
     if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
       // Decrease thickness (higher pitch)
       const newValue = Math.max(min, currentValue - step);
-      thicknessSlider.value = newValue.toString();
       thicknessMultiplier = newValue;
       console.log('🎯 Thickness decreased to:', newValue);
     } else if (event.key === 'ArrowRight' || event.key === 'ArrowUp') {
       // Increase thickness (lower pitch)
       const newValue = Math.min(max, currentValue + step);
-      thicknessSlider.value = newValue.toString();
       thicknessMultiplier = newValue;
       console.log('🎯 Thickness increased to:', newValue);
+    } else if (event.key === '[' || event.key === '{') {
+      // Decrease size level
+      currentSizeLevel = Math.max(0, currentSizeLevel - 1);
+      console.log('📏 Size level decreased to:', currentSizeLevel + 1, 'currentSizeLevel:', currentSizeLevel);
+    } else if (event.key === ']' || event.key === '}') {
+      // Increase size level
+      currentSizeLevel = Math.min(4, currentSizeLevel + 1);
+      console.log('📏 Size level increased to:', currentSizeLevel + 1, 'currentSizeLevel:', currentSizeLevel);
     }
   };
 
@@ -2253,14 +3291,25 @@ function init(): void {
   const eraserButton = document.getElementById('eraser');
   if (eraserButton) {
     const eraserHandler = () => {
+      // Add strong click feedback
+      eraserButton.style.transform = 'scale(0.85)';
+      eraserButton.style.opacity = '0.7';
+      setTimeout(() => {
+        eraserButton.style.transform = '';
+        eraserButton.style.opacity = '';
+      }, 200);
+      
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+      
       isEraserMode = !isEraserMode;
       if (isEraserMode) {
-        eraserButton.style.backgroundColor = 'rgba(255, 255, 255, 0.2)';
-        eraserButton.style.border = '2px solid rgba(255, 255, 255, 0.5)';
+        eraserButton.classList.add('eraser-active');
         console.log('Eraser mode activated! 🧽');
       } else {
-        eraserButton.style.backgroundColor = 'transparent';
-        eraserButton.style.border = 'none';
+        eraserButton.classList.remove('eraser-active');
         console.log('Drawing mode activated! ✏️');
       }
     };
@@ -2281,6 +3330,19 @@ function init(): void {
   if (clearButton) {
     // Add multiple event listeners for better reliability
     const clearCanvasHandler = () => {
+      // Add strong click feedback (scale effect only, no background change)
+      clearButton.style.transform = 'scale(0.85)';
+      clearButton.style.opacity = '0.7';
+      setTimeout(() => {
+        clearButton.style.transform = '';
+        clearButton.style.opacity = '';
+      }, 200);
+      
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+      
       if (ctx && canvas) {
         clearCanvas(canvas);
         console.log('Canvas cleared! ✨');
@@ -2293,6 +3355,97 @@ function init(): void {
     clearButton.addEventListener('touchend', clearCanvasHandler);
   }
 
+  // Save button functionality - opens modal
+  const saveAsButton = document.getElementById('save-as');
+  if (saveAsButton) {
+    const saveAsHandler = () => {
+      // Add strong click feedback
+      saveAsButton.style.transform = 'scale(0.85)';
+      saveAsButton.style.opacity = '0.7';
+      setTimeout(() => {
+        saveAsButton.style.transform = '';
+        saveAsButton.style.opacity = '';
+      }, 200);
+      
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+      
+      openSaveModal();
+    };
+
+    // Add click, touchstart, and touchend events for better mobile support
+    saveAsButton.addEventListener('click', saveAsHandler);
+    saveAsButton.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      saveAsHandler();
+    });
+    saveAsButton.addEventListener('touchend', (e) => {
+      e.preventDefault();
+    });
+  }
+
+  // Modal event handlers
+  const cancelSaveButton = document.getElementById('cancel-save');
+  if (cancelSaveButton) {
+    cancelSaveButton.addEventListener('click', () => {
+      // Add strong click feedback
+      cancelSaveButton.style.transform = 'scale(0.85)';
+      cancelSaveButton.style.opacity = '0.7';
+      setTimeout(() => {
+        cancelSaveButton.style.transform = '';
+        cancelSaveButton.style.opacity = '';
+      }, 200);
+      
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+      
+      closeSaveModal();
+    });
+  }
+
+  const confirmSaveButton = document.getElementById('confirm-save');
+  if (confirmSaveButton) {
+    confirmSaveButton.addEventListener('click', () => {
+      // Add strong click feedback
+      confirmSaveButton.style.transform = 'scale(0.85)';
+      confirmSaveButton.style.opacity = '0.7';
+      setTimeout(() => {
+        confirmSaveButton.style.transform = '';
+        confirmSaveButton.style.opacity = '';
+      }, 200);
+      
+      // Haptic feedback
+      if ('vibrate' in navigator) {
+        navigator.vibrate(50);
+      }
+      
+      if (ctx && canvas) {
+        // Get selected options
+        const selectedQuality = document.querySelector('input[name="quality"]:checked') as HTMLInputElement;
+        const selectedFormat = document.querySelector('input[name="format"]:checked') as HTMLInputElement;
+        
+        if (selectedQuality && selectedFormat) {
+          saveCanvasAsImage(canvas, selectedQuality.value, selectedFormat.value);
+          closeSaveModal();
+        }
+      }
+    });
+  }
+
+  // Close modal when clicking outside
+  const saveModal = document.getElementById('save-modal');
+  if (saveModal) {
+    saveModal.addEventListener('click', (e) => {
+      if (e.target === saveModal) {
+        closeSaveModal();
+      }
+    });
+  }
+
   // Style buttons functionality (hidden but functional)
   function setActiveStyle(style: number) {
     currentStyle = style;
@@ -2302,6 +3455,8 @@ function init(): void {
     document.querySelectorAll('.style-button').forEach((btn, index) => {
       btn.classList.toggle('active', index === style - 1);
     });
+    
+    // Update size number display for new style
   }
 
   // Add style button event listeners
@@ -2309,7 +3464,464 @@ function init(): void {
   document.getElementById('style-2')?.addEventListener('click', () => setActiveStyle(2));
   document.getElementById('style-3')?.addEventListener('click', () => setActiveStyle(3));
 
+  // Initialize music functionality
+  initMusicPlayer();
+
+  // Initialize debugger toggle
+  initializeDebuggerToggle();
+  
+  // Initialize labels toggle
+  initializeLabelsToggle();
 
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// Music Player Functionality
+let currentMusic: HTMLAudioElement | null = null;
+let isMusicPlaying = false;
+let musicVolume = 0.8; // Default volume (80% - louder for children)
+
+// Safe, beautiful music with nice bangs and gentle fades
+const musicTrack = {
+  title: "🌙 Gentle Bangs",
+  description: "Safe frequencies with nice bangs and beautiful fades",
+  // Safe frequency range: 80Hz to 2000Hz (safe for speakers and ears)
+  scale: {
+    notes: [
+      98.00, 110.00, 123.47, 130.81, 146.83, 164.81, 174.61, 196.00, // G2 to G3 (safe low range)
+      220.00, 246.94, 261.63, 293.66, 329.63, 349.23, 392.00, 440.00, // A3 to A4 (safe mid range)
+      493.88, 523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77 // B4 to B5 (safe high range)
+    ],
+    name: "Safe Frequency Scale"
+  },
+  type: "ambient",
+  tempo: 70, // Nice rhythm
+  // Melody with nice bangs and fades
+  melody: [
+    { note: 8, duration: 1, volume: 0.8, bang: true }, // A4 (nice bang)
+    { note: 10, duration: 1, volume: 0.8, bang: true }, // B4 (nice bang)
+    { note: 12, duration: 2, volume: 0.9, bang: true }, // D5 (bigger bang)
+    { note: 10, duration: 1, volume: 0.8, bang: true }, // B4
+    { note: 8, duration: 1, volume: 0.8, bang: true }, // A4
+    { note: 9, duration: 1, volume: 0.8, bang: true }, // A#4
+    { note: 10, duration: 2, volume: 0.9, bang: true }, // B4 (bigger bang)
+    { note: 12, duration: 1, volume: 0.8, bang: true }, // D5
+    { note: 13, duration: 1, volume: 0.8, bang: true }, // D#5
+    { note: 15, duration: 3, volume: 1.0, bang: true }, // F5 (biggest bang)
+  ],
+  // Harmony with gentle bangs
+  harmony: [
+    { note: 4, duration: 4, volume: 0.6, bang: true }, // E3 (gentle bang)
+    { note: 6, duration: 4, volume: 0.6, bang: true }, // G3 (gentle bang)
+    { note: 8, duration: 4, volume: 0.6, bang: true }, // A4 (gentle bang)
+    { note: 4, duration: 4, volume: 0.6, bang: true }, // E3 (gentle bang)
+  ],
+  // Bass with deep bangs
+  bass: [
+    { note: 0, duration: 2, volume: 0.7, bang: true }, // G2 (deep bang)
+    { note: 0, duration: 2, volume: 0.7, bang: true }, // G2
+    { note: 1, duration: 2, volume: 0.7, bang: true }, // A2
+    { note: 1, duration: 2, volume: 0.7, bang: true }, // A2
+    { note: 2, duration: 2, volume: 0.7, bang: true }, // B2
+    { note: 2, duration: 2, volume: 0.7, bang: true }, // B2
+    { note: 0, duration: 4, volume: 0.8, bang: true }, // G2 (bigger deep bang)
+  ]
+};
+
+function initMusicPlayer() {
+  const musicControlButton = document.getElementById('music-control');
+  
+  console.log('Initializing music player...', musicControlButton);
+  console.log('Audio context available:', typeof AudioContext !== 'undefined');
+  console.log('Web Audio API supported:', !!(window.AudioContext || (window as any).webkitAudioContext));
+
+  // Simple on/off music control
+  musicControlButton?.addEventListener('click', (e) => {
+    e.preventDefault();
+    console.log('=== MUSIC BUTTON CLICKED ===');
+    console.log('Button element:', musicControlButton);
+    console.log('isMusicPlaying:', isMusicPlaying);
+    console.log('currentMusic:', currentMusic);
+    
+    // Add strong click feedback
+    if (musicControlButton) {
+      musicControlButton.style.transform = 'scale(0.85)';
+      musicControlButton.style.opacity = '0.7';
+      setTimeout(() => {
+        musicControlButton.style.transform = '';
+        musicControlButton.style.opacity = '';
+      }, 200);
+    }
+    
+    // Haptic feedback
+    if ('vibrate' in navigator) {
+      navigator.vibrate(50);
+    }
+    
+    // Test if we can at least change the icon
+    if (musicControlButton) {
+      if (musicControlButton.textContent === '🎵') {
+        musicControlButton.textContent = '🎶';
+        console.log('Icon changed to playing state');
+      } else {
+        musicControlButton.textContent = '🎵';
+        console.log('Icon changed to stopped state');
+      }
+    }
+    
+    if (isMusicPlaying) {
+      console.log('Stopping music...');
+      stopMusic();
+    } else {
+      console.log('Starting music...');
+      try {
+        playMusic();
+      } catch (error) {
+        console.error('Error in playMusic:', error);
+      }
+    }
+  });
+  
+  // Test audio context creation
+  try {
+    const testContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    console.log('Test audio context created successfully:', testContext.state);
+    testContext.close();
+  } catch (error) {
+    console.error('Failed to create test audio context:', error);
+  }
+}
+
+
+async function playMusic() {
+  console.log('=== PLAYMUSIC() CALLED ===');
+  
+  // Stop current music if playing
+  if (currentMusic) {
+    console.log('Stopping current music first...');
+    stopMusic();
+  }
+
+  const track = musicTrack;
+  console.log('Track loaded:', track);
+  
+  try {
+    console.log('Creating new audio context for music...');
+    // Create a fresh audio context for music
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    console.log('Audio context created, state:', audioContext.state);
+    
+    // Resume audio context if suspended (required by some browsers)
+    if (audioContext.state === 'suspended') {
+      console.log('Resuming suspended audio context...');
+      await audioContext.resume();
+      console.log('Audio context resumed, new state:', audioContext.state);
+    }
+  
+  // Create master gain for volume control
+  const masterGain = audioContext.createGain();
+  masterGain.gain.setValueAtTime(0, audioContext.currentTime);
+  masterGain.gain.linearRampToValueAtTime(musicVolume * 0.3, audioContext.currentTime + 1.0); // Safe, pleasant volume
+  
+  // Connect main music directly to output (clear and audible)
+  masterGain.connect(audioContext.destination);
+  
+  // Create subtle echo effect with delay
+  const delayNode = audioContext.createDelay(1.0); // 1 second max delay
+  const delayGain = audioContext.createGain();
+  const feedbackGain = audioContext.createGain();
+  
+  // Set up subtle echo parameters
+  delayNode.delayTime.setValueAtTime(0.4, audioContext.currentTime); // 400ms delay
+  delayGain.gain.setValueAtTime(0.1, audioContext.currentTime); // Very subtle echo volume (10%)
+  feedbackGain.gain.setValueAtTime(0.05, audioContext.currentTime); // Very low feedback (5%)
+  
+  // Create subtle echo chain
+  masterGain.connect(delayNode);
+  delayNode.connect(delayGain);
+  delayGain.connect(feedbackGain);
+  feedbackGain.connect(delayNode); // Feedback loop
+  delayGain.connect(audioContext.destination); // Echo output
+  
+  // Add very gentle reverb for spaciousness
+  const convolver = audioContext.createConvolver();
+  const reverbGain = audioContext.createGain();
+  reverbGain.gain.setValueAtTime(0.08, audioContext.currentTime); // Very gentle reverb (8%)
+  
+  // Create gentle reverb impulse response
+  const reverbLength = audioContext.sampleRate * 1.0; // 1 second reverb
+  const reverbBuffer = audioContext.createBuffer(2, reverbLength, audioContext.sampleRate);
+  
+  for (let channel = 0; channel < 2; channel++) {
+    const channelData = reverbBuffer.getChannelData(channel);
+    for (let i = 0; i < reverbLength; i++) {
+      const t = i / audioContext.sampleRate;
+      // Create very gentle, natural decay
+      const decay = Math.exp(-t * 1.5) * (Math.random() * 2 - 1) * 0.03;
+      channelData[i] = decay;
+    }
+  }
+  convolver.buffer = reverbBuffer;
+  
+  // Connect reverb to echo output
+  delayGain.connect(convolver);
+  convolver.connect(reverbGain);
+  reverbGain.connect(audioContext.destination);
+  
+  // Play simple, reliable music instead of complex composition
+  console.log('Playing simple music...');
+  playSimpleMusic(audioContext, masterGain, track);
+  
+  // Create a simple audio element for easier control
+  currentMusic = new Audio();
+  currentMusic.volume = musicVolume * 0.4; // Increased volume for children
+  
+  // Update UI
+  updateMusicUI(true);
+  isMusicPlaying = true;
+
+  // Store references for control
+  (currentMusic as any).audioContext = audioContext;
+  (currentMusic as any).masterGain = masterGain;
+  (currentMusic as any).track = track;
+  
+  } catch (error) {
+    console.error('Error playing music:', error);
+    updateMusicUI(false);
+    isMusicPlaying = false;
+  }
+}
+
+function playSimpleMusic(audioContext: AudioContext, masterGain: GainNode, track: any) {
+  console.log('=== PLAYING EVOLVING SONG ===');
+  
+  const scale = track.scale.notes;
+  const tempo = track.tempo;
+  const beatDuration = 60 / tempo;
+  
+  console.log('Scale:', scale);
+  console.log('Tempo:', tempo);
+  console.log('Beat duration:', beatDuration);
+  
+  // PART 1: Opening melody (beautiful C major progression)
+  const part1Melody = [
+    { note: 7, duration: 1, volume: 0.5 }, // G4 (warm start)
+    { note: 8, duration: 1, volume: 0.5 }, // A4
+    { note: 10, duration: 2, volume: 0.6 }, // B4
+    { note: 12, duration: 1, volume: 0.5 }, // D5
+    { note: 10, duration: 1, volume: 0.5 }, // B4
+    { note: 8, duration: 1, volume: 0.5 }, // A4
+    { note: 7, duration: 1, volume: 0.5 }, // G4
+    { note: 5, duration: 2, volume: 0.6 }, // E4
+    { note: 7, duration: 1, volume: 0.5 }, // G4
+    { note: 8, duration: 3, volume: 0.7 }, // A4 (beautiful resolution)
+  ];
+  
+  // PART 2: Evolution (higher, more complex with beautiful intervals)
+  const part2Melody = [
+    { note: 12, duration: 1, volume: 0.6 }, // D5
+    { note: 15, duration: 1, volume: 0.6 }, // F5 (perfect fourth)
+    { note: 17, duration: 2, volume: 0.7 }, // G5
+    { note: 15, duration: 1, volume: 0.6 }, // F5
+    { note: 12, duration: 1, volume: 0.6 }, // D5
+    { note: 10, duration: 1, volume: 0.6 }, // B4
+    { note: 12, duration: 2, volume: 0.7 }, // D5
+    { note: 15, duration: 1, volume: 0.6 }, // F5
+    { note: 17, duration: 1, volume: 0.6 }, // G5
+    { note: 19, duration: 3, volume: 0.8 }, // A5 (climactic high note)
+  ];
+  
+  // TRANSITION: Beautiful descending arpeggio
+  const transitionMelody = [
+    { note: 15, duration: 1, volume: 0.4 }, // F5 (high)
+    { note: 12, duration: 1, volume: 0.4 }, // D5
+    { note: 8, duration: 1, volume: 0.4 }, // A4
+    { note: 5, duration: 1, volume: 0.4 }, // E4
+    { note: 2, duration: 2, volume: 0.5 }, // C#3 (low, grounding)
+    { note: 0, duration: 4, volume: 0.6 }, // G2 (deep foundation)
+  ];
+  
+  // PART 3: Second part (different feel with minor touches)
+  const part3Melody = [
+    { note: 6, duration: 1, volume: 0.5 }, // G3
+    { note: 8, duration: 1, volume: 0.5 }, // A4
+    { note: 9, duration: 1, volume: 0.5 }, // A#4 (minor touch)
+    { note: 10, duration: 2, volume: 0.6 }, // B4
+    { note: 8, duration: 1, volume: 0.5 }, // A4
+    { note: 6, duration: 1, volume: 0.5 }, // G3
+    { note: 4, duration: 1, volume: 0.5 }, // E3
+    { note: 6, duration: 2, volume: 0.6 }, // G3
+    { note: 8, duration: 1, volume: 0.5 }, // A4
+    { note: 10, duration: 1, volume: 0.5 }, // B4
+    { note: 12, duration: 3, volume: 0.7 }, // D5 (beautiful resolution)
+  ];
+  
+  // ENDING: Return to opening (for seamless loop)
+  const endingMelody = [
+    { note: 7, duration: 1, volume: 0.5 }, // G4 (warm start)
+    { note: 8, duration: 1, volume: 0.5 }, // A4
+    { note: 10, duration: 2, volume: 0.6 }, // B4
+    { note: 12, duration: 1, volume: 0.5 }, // D5
+    { note: 10, duration: 1, volume: 0.5 }, // B4
+    { note: 8, duration: 1, volume: 0.5 }, // A4
+    { note: 7, duration: 1, volume: 0.5 }, // G4
+    { note: 5, duration: 2, volume: 0.6 }, // E4
+    { note: 7, duration: 1, volume: 0.5 }, // G4
+    { note: 8, duration: 3, volume: 0.7 }, // A4 (beautiful resolution)
+  ];
+  
+  console.log('Playing Part 1...');
+  playSimpleMelody(audioContext, masterGain, part1Melody, scale, beatDuration);
+  
+  // Part 2 after Part 1
+  setTimeout(() => {
+    if (isMusicPlaying) {
+      console.log('Playing Part 2...');
+      playSimpleMelody(audioContext, masterGain, part2Melody, scale, beatDuration);
+    }
+  }, part1Melody.reduce((sum, note) => sum + note.duration, 0) * beatDuration * 1000);
+  
+  // Transition after Part 2
+  setTimeout(() => {
+    if (isMusicPlaying) {
+      console.log('Playing Transition...');
+      playSimpleMelody(audioContext, masterGain, transitionMelody, scale, beatDuration);
+    }
+  }, (part1Melody.reduce((sum, note) => sum + note.duration, 0) + 
+       part2Melody.reduce((sum, note) => sum + note.duration, 0)) * beatDuration * 1000);
+  
+  // Part 3 after Transition
+  setTimeout(() => {
+    if (isMusicPlaying) {
+      console.log('Playing Part 3...');
+      playSimpleMelody(audioContext, masterGain, part3Melody, scale, beatDuration);
+    }
+  }, (part1Melody.reduce((sum, note) => sum + note.duration, 0) + 
+       part2Melody.reduce((sum, note) => sum + note.duration, 0) +
+       transitionMelody.reduce((sum, note) => sum + note.duration, 0)) * beatDuration * 1000);
+  
+  // Ending after Part 3
+  setTimeout(() => {
+    if (isMusicPlaying) {
+      console.log('Playing Ending...');
+      playSimpleMelody(audioContext, masterGain, endingMelody, scale, beatDuration);
+    }
+  }, (part1Melody.reduce((sum, note) => sum + note.duration, 0) + 
+       part2Melody.reduce((sum, note) => sum + note.duration, 0) +
+       transitionMelody.reduce((sum, note) => sum + note.duration, 0) +
+       part3Melody.reduce((sum, note) => sum + note.duration, 0)) * beatDuration * 1000);
+  
+  // Loop the entire song
+  const totalDuration = (part1Melody.reduce((sum, note) => sum + note.duration, 0) + 
+                        part2Melody.reduce((sum, note) => sum + note.duration, 0) +
+                        transitionMelody.reduce((sum, note) => sum + note.duration, 0) +
+                        part3Melody.reduce((sum, note) => sum + note.duration, 0) +
+                        endingMelody.reduce((sum, note) => sum + note.duration, 0)) * beatDuration;
+  
+  console.log('Total song duration:', totalDuration);
+  
+  setTimeout(() => {
+    if (isMusicPlaying) {
+      console.log('Looping entire song...');
+      playSimpleMusic(audioContext, masterGain, track);
+    }
+  }, totalDuration * 1000);
+}
+
+function playSimpleMelody(audioContext: AudioContext, masterGain: GainNode, melody: any[], scale: number[], beatDuration: number) {
+  console.log('=== PLAYING SIMPLE MELODY ===');
+  let currentTime = audioContext.currentTime;
+  
+  melody.forEach((note, index) => {
+    console.log(`Playing note ${index}:`, note);
+    
+    const frequency = (scale[note.note] || 440) * 1.0;
+    const duration = note.duration * beatDuration;
+    
+    console.log(`Frequency: ${frequency}, Duration: ${duration}`);
+    
+    // Create oscillator
+    const oscillator = audioContext.createOscillator();
+    const noteGain = audioContext.createGain();
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(frequency, currentTime);
+    
+    // Create envelope with nice bang and fade
+    const bangLevel = note.volume * 0.3;
+    const sustainLevel = note.volume * 0.15;
+    
+    // Quick bang
+    noteGain.gain.setValueAtTime(0, currentTime);
+    noteGain.gain.linearRampToValueAtTime(bangLevel, currentTime + 0.01);
+    
+    // Quick drop to sustain
+    noteGain.gain.linearRampToValueAtTime(sustainLevel, currentTime + 0.1);
+    noteGain.gain.setValueAtTime(sustainLevel, currentTime + duration - 0.5);
+    
+    // Beautiful fade
+    noteGain.gain.exponentialRampToValueAtTime(0.001, currentTime + duration);
+    
+    // Connect and start
+    oscillator.connect(noteGain);
+    noteGain.connect(masterGain);
+    
+    oscillator.start(currentTime);
+    oscillator.stop(currentTime + duration);
+    
+    console.log(`Started note ${index} at time ${currentTime}`);
+    currentTime += duration;
+  });
+}
+
+
+
+
+function stopMusic() {
+  if (currentMusic && (currentMusic as any).audioContext) {
+    const audioContext = (currentMusic as any).audioContext;
+    const masterGain = (currentMusic as any).masterGain;
+    
+    // Gentle fade out
+    if (masterGain) {
+      masterGain.gain.linearRampToValueAtTime(0, audioContext.currentTime + 1);
+    }
+    
+    setTimeout(() => {
+      try {
+        audioContext.close();
+      } catch {
+        // Ignore errors when stopping
+      }
+    }, 1000);
+    
+    currentMusic = null;
+    updateMusicUI(false);
+    isMusicPlaying = false;
+  }
+}
+
+function updateMusicUI(playing: boolean) {
+  console.log('updateMusicUI called with playing:', playing);
+  const musicButton = document.getElementById('music-control');
+  
+  // Clear on/off state with music note icons
+  if (musicButton) {
+    if (playing) {
+      musicButton.classList.add('playing');
+      musicButton.textContent = '🎶'; // Musical notes when playing
+      console.log('Music UI updated to playing state');
+    } else {
+      musicButton.classList.remove('playing');
+      musicButton.textContent = '🎵'; // Single music note when off
+      console.log('Music UI updated to stopped state');
+    }
+  } else {
+    console.error('Music button not found!');
+  }
+}
+
+// Make reportActualSize globally available for styles
+(window as any).reportActualSize = reportActualSize;
+

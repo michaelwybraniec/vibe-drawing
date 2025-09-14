@@ -1,0 +1,79 @@
+/* Pizza Size Selector Component Styles */
+.pizza-size-selector {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+/* Disable the toolbox hover background effect for pizza selector */
+.pizza-size-selector:hover {
+  background: transparent !important;
+  transform: none !important;
+  opacity: 1 !important;
+}
+
+.pizza {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid #d8a657;
+  transform: rotate(-30deg); /* Rotate so first slice is at the top */
+}
+
+.slice {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* This clip-path creates a 60-degree slice */
+  clip-path: polygon(50% 50%, 100% 0, 100% 50.01%); /* Added 0.01% to prevent a tiny gap */
+  background: #f4a261;
+  opacity: 0.4;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    background 0.15s;
+}
+
+/* Hover effects for color feedback */
+.slice:hover {
+  opacity: 0.7;
+  background: #e76f51;
+}
+
+/* Rotations for each slice */
+.slice.s1 {
+  transform: rotate(0deg);
+}
+.slice.s2 {
+  transform: rotate(60deg);
+}
+.slice.s3 {
+  transform: rotate(120deg);
+}
+.slice.s4 {
+  transform: rotate(180deg);
+}
+.slice.s5 {
+  transform: rotate(240deg);
+}
+.slice.s6 {
+  transform: rotate(300deg);
+}
+
+.slice.active {
+  opacity: 1;
+  background: gold;
+}
+
+/* Hide on mobile - only show on desktop */
+@media (max-width: 768px) {
+  .pizza-size-selector {
+    display: none !important;
+  }
+}

@@ -6,12 +6,24 @@ export class TriangleStyle implements DrawingStyle {
   icon = '7';
 
   private currentVariant = 0;
+  private currentTheme = 0; // 0-4: 5 surprise colors
+  private lastPoint: DrawingPoint | null = null;
+  private drawingSpeed = 1;
   private colorVariants = [
-    { baseHue: 216, saturation: 90, lightness: 50, name: 'Ocean Blue' },
-    { baseHue: 0, saturation: 85, lightness: 55, name: 'Crimson Red' },
-    { baseHue: 120, saturation: 80, lightness: 50, name: 'Forest Green' },
-    { baseHue: 45, saturation: 90, lightness: 60, name: 'Golden Yellow' },
-    { baseHue: 280, saturation: 85, lightness: 55, name: 'Royal Purple' }
+    // Surprise Color 1 - Mystical Purple
+    { baseHue: 280, saturation: 85, lightness: 60, name: 'Mystical Purple' },
+    
+    // Surprise Color 2 - Electric Neon
+    { baseHue: 100, saturation: 100, lightness: 50, name: 'Electric Neon' },
+    
+    // Surprise Color 3 - Sunset Fuchsia
+    { baseHue: 300, saturation: 90, lightness: 65, name: 'Sunset Fuchsia' },
+    
+    // Surprise Color 4 - Ocean Teal
+    { baseHue: 180, saturation: 80, lightness: 55, name: 'Ocean Teal' },
+    
+    // Surprise Color 5 - Fire Red
+    { baseHue: 0, saturation: 95, lightness: 60, name: 'Fire Red' }
   ];
 
   draw(ctx: CanvasRenderingContext2D, point: DrawingPoint, context: StyleContext): void {
@@ -21,8 +33,14 @@ export class TriangleStyle implements DrawingStyle {
     
     // Calculate size multiplier like in onMove
     const sizeMultiplier = this.calculateSizeMultiplier(point, context);
-    const sizeVariation = 1 + Math.random() * 0.2;
-    const finalSize = Math.max(width, height) * sizeVariation * sizeMultiplier;
+    
+    // Calculate pressure-based size (simulate pressure sensitivity)
+    const maxTouch = Math.max(width, height);
+    const normalizedPressure = Math.min(1, Math.max(0.2, maxTouch / 30)); // Normalize to 0.2-1.0
+    
+    const baseSize = 1;
+    const pressureMultiplier = 0.4 + (normalizedPressure * 0.6); // Size changes with pressure (0.4x to 1.0x)
+    const finalSize = maxTouch * baseSize * sizeMultiplier * pressureMultiplier;
     
     ctx.save();
     if (isEraserMode) {
@@ -47,8 +65,10 @@ export class TriangleStyle implements DrawingStyle {
     maxLife: number;
   }> = [];
 
-  onStart(_point: DrawingPoint, _context: StyleContext): void {
+  onStart(point: DrawingPoint, _context: StyleContext): void {
     this.glowTrails = [];
+    this.lastPoint = point;
+    this.drawingSpeed = 1;
   }
 
   onMove(points: DrawingPoint[], context: StyleContext): void {
@@ -77,11 +97,24 @@ export class TriangleStyle implements DrawingStyle {
       const dotX = prevPoint.x + (point.x - prevPoint.x) * t;
       const dotY = prevPoint.y + (point.y - prevPoint.y) * t;
 
-      // Calculate final size
+      // Calculate pressure-based size (simulate pressure sensitivity)
       const touchWidth = point.width || 1;
       const touchHeight = point.height || 1;
-      const sizeVariation = 3.9 + Math.random() * 0.2;
-      const finalSize = Math.max(touchWidth, touchHeight) * sizeVariation * sizeMultiplier;
+      
+      // Use the larger of width or height as pressure indicator
+      const maxTouch = Math.max(touchWidth, touchHeight);
+      const normalizedPressure = Math.min(1, Math.max(0.2, maxTouch / 30)); // Normalize to 0.2-1.0
+      
+      // Debug: log the values to see what we're getting
+      if (Math.random() < 0.01) { // Log occasionally to avoid spam
+        console.log(`Touch: w=${touchWidth.toFixed(1)}, h=${touchHeight.toFixed(1)}, max=${maxTouch.toFixed(1)}, pressure=${normalizedPressure.toFixed(2)}`);
+      }
+      
+      // Calculate final size with pressure variation
+      const baseSize = 3.9;
+      const pressureMultiplier = 0.4 + (normalizedPressure * 0.6); // Size changes with pressure (0.4x to 1.0x)
+      const randomVariation = 0.8 + (Math.random() * 0.4); // Random variation between 0.8x and 1.2x
+      const finalSize = maxTouch * baseSize * sizeMultiplier * pressureMultiplier * randomVariation;
 
       if (isEraserMode) {
         // Eraser: create dark areas
@@ -138,6 +171,8 @@ export class TriangleStyle implements DrawingStyle {
   }
 
   onEnd(_context: StyleContext): void {
+    this.lastPoint = null;
+    this.drawingSpeed = 1;
   }
 
   onClear(_context: StyleContext): void {
@@ -187,7 +222,7 @@ export class TriangleStyle implements DrawingStyle {
         baseMultiplier = 4.2 + normalizedArea * 0.4;
       }
 
-      const sizeVariation = 0.95 + Math.random() * 0.1;
+      const sizeVariation = 0.95; // Remove random variation for consistent size
       const smoothedMultiplier =
         this.lastSizeMultiplier * (1 - this.sizeSmoothingFactor) +
         baseMultiplier * sizeVariation * this.sizeSmoothingFactor;
@@ -211,11 +246,24 @@ export class TriangleStyle implements DrawingStyle {
   }
 
   nextColorVariant(): void {
-    this.currentVariant = (this.currentVariant + 1) % this.colorVariants.length;
+    // Cycle through colors (5 colors total)
+    this.currentTheme = (this.currentTheme + 1) % 5;
+    
+    // Set variant to the color (since each theme has only 1 color)
+    this.currentVariant = this.currentTheme;
+    
+    const colorNames = ['Mystical Purple', 'Electric Neon', 'Sunset Fuchsia', 'Ocean Teal', 'Fire Red'];
+    console.log(`Triangle color changed to: ${colorNames[this.currentTheme]} (variant ${this.currentVariant})`);
   }
 
   resetToDefault(): void {
     this.currentVariant = 0;
+    this.currentTheme = 0;
+  }
+
+  getCurrentVariantName(): string {
+    const colorNames = ['Mystical Purple', 'Electric Neon', 'Sunset Fuchsia', 'Ocean Teal', 'Fire Red'];
+    return colorNames[this.currentTheme] || 'Unknown';
   }
 
   private addSparkle(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {

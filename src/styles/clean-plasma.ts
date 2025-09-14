@@ -1,21 +1,18 @@
 import { DrawingStyle, DrawingPoint, StyleContext } from './baseStyle.js';
 
-export class Style7 implements DrawingStyle {
-  name = 'Plasma Energy';
+export class CleanPlasmaStyle implements DrawingStyle {
+  name = 'Clean Plasma';
   description = 'Swirling plasma energy with dynamic particles';
   
   private currentVariant = 0;
   private colorVariants = [
     { baseHue: 280, plasmaHue: 280, saturation: 100, plasmaSaturation: 100, lightness: 50, plasmaLightness: 70, name: 'Purple Plasma' },
-    { baseHue: 0, plasmaHue: 15, saturation: 100, plasmaSaturation: 95, lightness: 55, plasmaLightness: 75, name: 'Red Energy' },
-    { baseHue: 120, plasmaHue: 140, saturation: 100, plasmaSaturation: 90, lightness: 50, plasmaLightness: 70, name: 'Green Plasma' },
-    { baseHue: 200, plasmaHue: 220, saturation: 100, plasmaSaturation: 95, lightness: 60, plasmaLightness: 80, name: 'Blue Energy' },
-    { baseHue: 60, plasmaHue: 80, saturation: 100, plasmaSaturation: 100, lightness: 65, plasmaLightness: 85, name: 'Yellow Plasma' }
+    { baseHue: 0, plasmaHue: 15, saturation: 100, plasmaSaturation: 95, lightness: 55, plasmaLightness: 75, name: 'Red Energy' }
   ];
   
   private styleParams = {
-    swirlSpeed: 0.003, // Much slower for smoother animation
-    particleCount: 2, // Fewer particles for better performance
+    swirlSpeed: 0.001, // Very slow for smooth animation
+    particleCount: 1, // Only 1 particle for minimal splash
   };
 
   private plasmaTrail: Array<{ x: number; y: number; size: number; color: string; timestamp: number; angle: number }> = [];
@@ -40,9 +37,9 @@ export class Style7 implements DrawingStyle {
     // Plasma colors with swirling effect - use color variants
     const currentVariant = this.colorVariants[this.currentVariant]!;
     const baseHue = currentVariant.baseHue;
-    const plasmaHue = currentVariant.plasmaHue;
+    const _plasmaHue = currentVariant.plasmaHue;
     const swirlSpeed = this.styleParams.swirlSpeed || 0.01;
-    const particleCount = this.styleParams.particleCount || 4;
+    const _particleCount = this.styleParams.particleCount || 4;
 
     // Create plasma swirling effect with multiple frequencies
     const swirl1 = Math.sin(time * swirlSpeed) * 0.4 + 0.6; // Main swirl
@@ -58,8 +55,8 @@ export class Style7 implements DrawingStyle {
     const plasmaPulse = Math.sin(time / 200) * 0.4 + 0.6;
     const animatedSize = plasmaSize * plasmaPulse * combinedSwirl;
 
-    // Add to trail every 100ms for smoother plasma energy
-    if (time - this.lastPlasmaTime > 100) {
+    // Add to trail every 150ms for even smoother plasma energy
+    if (time - this.lastPlasmaTime > 150) {
       this.plasmaTrail.push({
         x,
         y,
@@ -70,8 +67,8 @@ export class Style7 implements DrawingStyle {
       });
       this.lastPlasmaTime = time;
 
-      // Keep only last 4 points for smoother plasma trail
-      if (this.plasmaTrail.length > 4) {
+      // Keep only last 3 points for cleaner plasma trail
+      if (this.plasmaTrail.length > 3) {
         this.plasmaTrail.shift();
       }
     }
@@ -87,52 +84,17 @@ export class Style7 implements DrawingStyle {
       // Normal drawing mode
       ctx.globalCompositeOperation = 'source-over';
 
-      // Create swirling plasma particles
-      const swirlAngle = time * swirlSpeed;
-      const particleRadius = animatedSize * 0.8;
-      
-      for (let i = 0; i < particleCount; i++) {
-        const particleAngle = swirlAngle + (i * Math.PI * 2) / particleCount;
-        const particleX = x + Math.cos(particleAngle) * particleRadius * (0.3 + i * 0.2);
-        const particleY = y + Math.sin(particleAngle) * particleRadius * (0.3 + i * 0.2);
-        const particleSize = animatedSize * (0.4 + i * 0.15);
-        
-        // Plasma particle - flat, no gradient
-        const particleHue = (plasmaHue + i * 40) % 360;
-        ctx.globalAlpha = (0.8 - i * 0.1) * combinedSwirl;
-        ctx.fillStyle = `hsl(${particleHue}, ${currentVariant.plasmaSaturation}%, ${80 + combinedSwirl * 15}%)`;
-        ctx.beginPath();
-        ctx.arc(particleX, particleY, particleSize, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Particle highlight
-        ctx.globalAlpha = 0.6 * combinedSwirl;
-        ctx.fillStyle = `hsl(${particleHue}, 100%, 90%)`;
-        ctx.beginPath();
-        ctx.arc(particleX - particleSize * 0.3, particleY - particleSize * 0.3, particleSize * 0.3, 0, 2 * Math.PI);
-        ctx.fill();
-      }
+      // No swirling particles - clean plasma only
 
-      // Main plasma core
-      const coreCutChance = 0.05; // 5% chance main core is cut (less chaotic)
-      if (Math.random() > coreCutChance) {
-        // Main plasma core - flat, no gradient
-        ctx.globalAlpha = 0.9 * combinedSwirl;
-        ctx.fillStyle = `hsl(${baseHue}, ${currentVariant.saturation}%, ${80 + combinedSwirl * 15}%)`;
-        ctx.beginPath();
-        ctx.arc(x, y, animatedSize * 0.8, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Core highlight
-        ctx.globalAlpha = 0.7 * combinedSwirl;
-        ctx.fillStyle = `hsl(${baseHue}, 100%, 95%)`;
-        ctx.beginPath();
-        ctx.arc(x - animatedSize * 0.2, y - animatedSize * 0.2, animatedSize * 0.25, 0, 2 * Math.PI);
-        ctx.fill();
-      }
+      // Main plasma core - flat, no gradients
+      ctx.globalAlpha = 0.9 * combinedSwirl;
+      ctx.fillStyle = `hsl(${baseHue}, ${currentVariant.saturation}%, ${currentVariant.lightness + combinedSwirl * 15}%)`;
+      ctx.beginPath();
+      ctx.arc(x, y, animatedSize * 0.8, 0, 2 * Math.PI);
+      ctx.fill();
 
       // Draw swirling plasma trail
-      this.plasmaTrail.slice(-4).forEach((point, _index) => {
+      this.plasmaTrail.slice(-3).forEach((point, _index) => {
         const age = time - point.timestamp;
         if (age < 500) {
           const fadeProgress = age / 500;
@@ -150,20 +112,7 @@ export class Style7 implements DrawingStyle {
         }
       });
 
-      // Add occasional plasma sparkles (less frequent)
-      if (Math.random() < 0.1) {
-        ctx.globalAlpha = 0.8 * combinedSwirl;
-        ctx.fillStyle = `hsl(${plasmaHue + 60}, 100%, 90%)`;
-        ctx.beginPath();
-        ctx.arc(
-          x + (Math.random() - 0.5) * plasmaSize * 1.5,
-          y + (Math.random() - 0.5) * plasmaSize * 1.5,
-          2,
-          0,
-          2 * Math.PI,
-        );
-        ctx.fill();
-      }
+      // No sparkles - completely clean plasma
     }
 
     // Clean up old trail points
@@ -178,5 +127,10 @@ export class Style7 implements DrawingStyle {
 
   resetToDefault(): void {
     this.currentVariant = 0;
+  }
+
+  getCurrentVariantName(): string {
+    const currentVariant = this.colorVariants[this.currentVariant]!;
+    return currentVariant.name;
   }
 }

@@ -3011,6 +3011,8 @@ function initFullScreen() {
 
   // Update button state based on current fullscreen status
   function updateFullscreenButton() {
+    if (!fullscreenButton) return;
+    
     const isFullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement);
     
     if (isFullscreen) {

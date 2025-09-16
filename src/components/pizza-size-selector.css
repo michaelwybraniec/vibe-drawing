@@ -26,8 +26,8 @@
 
 .pizza {
   position: relative;
-  width: 50%; /* Smaller to match other icons */
-  height: 50%; /* Smaller to match other icons */
+  width: 40%; /* Even smaller to match other icons better */
+  height: 40%; /* Even smaller to match other icons better */
   border-radius: 50%;
   border: 2px solid #d8a657;
   transform: rotate(-30deg); /* Rotate so first slice is at the top */

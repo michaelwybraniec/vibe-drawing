@@ -3002,8 +3002,23 @@ function initFullScreen() {
     return;
   }
 
+  // Enhanced fullscreen support detection with debugging
+  const fullscreenSupport = {
+    standard: !!document.fullscreenEnabled,
+    webkit: !!(document as any).webkitFullscreenEnabled,
+    moz: !!(document as any).mozFullScreenEnabled,
+    ms: !!(document as any).msFullscreenEnabled
+  };
+
+  console.log('Fullscreen support detection:', fullscreenSupport);
+  console.log('User agent:', navigator.userAgent);
+  
+  // Detect Brave browser
+  const isBrave = !!(navigator as any).brave && (navigator as any).brave.isBrave;
+  console.log('Is Brave browser:', isBrave);
+
   // Check if fullscreen is supported
-  if (!document.fullscreenEnabled && !(document as any).webkitFullscreenEnabled && !(document as any).mozFullScreenEnabled && !(document as any).msFullscreenEnabled) {
+  if (!fullscreenSupport.standard && !fullscreenSupport.webkit && !fullscreenSupport.moz && !fullscreenSupport.ms) {
     console.warn('Full screen not supported in this browser');
     fullscreenButton.style.display = 'none';
     return;
@@ -3024,45 +3039,98 @@ function initFullScreen() {
     }
   }
 
-  // Toggle fullscreen
+  // Toggle fullscreen with enhanced error handling
   function toggleFullscreen() {
     const isFullscreen = !!(document.fullscreenElement || (document as any).webkitFullscreenElement || (document as any).mozFullScreenElement || (document as any).msFullscreenElement);
     
+    console.log('Current fullscreen state:', isFullscreen);
+    
     if (isFullscreen) {
       // Exit fullscreen
+      console.log('Attempting to exit fullscreen...');
       if (document.exitFullscreen) {
-        document.exitFullscreen();
+        document.exitFullscreen().catch(err => {
+          console.error('Error exiting fullscreen (standard):', err);
+        });
       } else if ((document as any).webkitExitFullscreen) {
         (document as any).webkitExitFullscreen();
       } else if ((document as any).mozCancelFullScreen) {
         (document as any).mozCancelFullScreen();
       } else if ((document as any).msExitFullscreen) {
         (document as any).msExitFullscreen();
+      } else {
+        console.error('No exit fullscreen method available');
       }
     } else {
       // Enter fullscreen
+      console.log('Attempting to enter fullscreen...');
       const element = document.documentElement;
-      if (element.requestFullscreen) {
-        element.requestFullscreen();
-      } else if ((element as any).webkitRequestFullscreen) {
-        (element as any).webkitRequestFullscreen();
-      } else if ((element as any).mozRequestFullScreen) {
-        (element as any).mozRequestFullScreen();
-      } else if ((element as any).msRequestFullscreen) {
-        (element as any).msRequestFullscreen();
-      }
+      
+      // Try different approaches based on browser
+      const tryFullscreen = async () => {
+        try {
+          if (element.requestFullscreen) {
+            await element.requestFullscreen();
+            console.log('Fullscreen entered successfully (standard)');
+          } else if ((element as any).webkitRequestFullscreen) {
+            (element as any).webkitRequestFullscreen();
+            console.log('Fullscreen entered successfully (webkit)');
+          } else if ((element as any).mozRequestFullScreen) {
+            (element as any).mozRequestFullScreen();
+            console.log('Fullscreen entered successfully (moz)');
+          } else if ((element as any).msRequestFullscreen) {
+            (element as any).msRequestFullscreen();
+            console.log('Fullscreen entered successfully (ms)');
+          } else {
+            console.error('No request fullscreen method available');
+          }
+        } catch (err) {
+          console.error('Error entering fullscreen:', err);
+          
+          // For Brave browser, try alternative approach
+          if (isBrave) {
+            console.log('Trying Brave-specific fullscreen approach...');
+            try {
+              // Try with different element
+              const appElement = document.getElementById('app');
+              if (appElement && appElement.requestFullscreen) {
+                await appElement.requestFullscreen();
+                console.log('Fullscreen entered successfully with app element');
+              }
+            } catch (braveErr) {
+              console.error('Brave-specific fullscreen failed:', braveErr);
+            }
+          }
+        }
+      };
+      
+      tryFullscreen();
     }
   }
 
-  // Add event listeners
+  // Add event listeners with user gesture validation
   fullscreenButton.addEventListener('click', (e) => {
     e.preventDefault();
-    toggleFullscreen();
+    console.log('Fullscreen button clicked');
+    
+    // Ensure this is a user gesture
+    if (e.isTrusted) {
+      toggleFullscreen();
+    } else {
+      console.warn('Fullscreen request not from user gesture');
+    }
   });
 
   fullscreenButton.addEventListener('touchstart', (e) => {
     e.preventDefault();
-    toggleFullscreen();
+    console.log('Fullscreen button touched');
+    
+    // Ensure this is a user gesture
+    if (e.isTrusted) {
+      toggleFullscreen();
+    } else {
+      console.warn('Fullscreen request not from user gesture');
+    }
   });
 
   // Listen for fullscreen changes

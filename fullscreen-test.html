@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fullscreen Test - Brave Browser</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background: #151e35;
+        color: white;
+      }
+      .test-container {
+        max-width: 800px;
+        margin: 0 auto;
+      }
+      button {
+        background: #4ecdc4;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        margin: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+      }
+      button:hover {
+        background: #45b7aa;
+      }
+      .status {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 15px;
+        border-radius: 5px;
+        margin: 10px 0;
+      }
+      .error {
+        background: rgba(255, 0, 0, 0.2);
+        border: 1px solid red;
+      }
+      .success {
+        background: rgba(0, 255, 0, 0.2);
+        border: 1px solid green;
+      }
+      .info {
+        background: rgba(0, 0, 255, 0.2);
+        border: 1px solid blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="test-container">
+      <h1>Fullscreen Test for Brave Browser</h1>
+
+      <div id="status" class="status info">
+        <h3>Browser Information</h3>
+        <div id="browser-info"></div>
+      </div>
+
+      <div id="fullscreen-status" class="status">
+        <h3>Fullscreen Status</h3>
+        <div id="fullscreen-info"></div>
+      </div>
+
+      <div>
+        <button id="test-fullscreen">Test Fullscreen</button>
+        <button id="test-exit">Exit Fullscreen</button>
+        <button id="test-app-element">Test with App Element</button>
+        <button id="clear-logs">Clear Logs</button>
+      </div>
+
+      <div id="logs" class="status">
+        <h3>Console Logs</h3>
+        <div id="log-content"></div>
+      </div>
+    </div>
+
+    <script>
+      // Override console.log to display in the page
+      const originalLog = console.log;
+      const originalError = console.error;
+      const originalWarn = console.warn;
+
+      function addLog(type, message) {
+        const logContent = document.getElementById('log-content');
+        const timestamp = new Date().toLocaleTimeString();
+        const logEntry = document.createElement('div');
+        logEntry.innerHTML = `<strong>[${timestamp}] ${type}:</strong> ${message}`;
+        logContent.appendChild(logEntry);
+        logContent.scrollTop = logContent.scrollHeight;
+      }
+
+      console.log = function (...args) {
+        originalLog.apply(console, args);
+        addLog('LOG', args.join(' '));
+      };
+
+      console.error = function (...args) {
+        originalError.apply(console, args);
+        addLog('ERROR', args.join(' '));
+      };
+
+      console.warn = function (...args) {
+        originalWarn.apply(console, args);
+        addLog('WARN', args.join(' '));
+      };
+
+      // Initialize page
+      function init() {
+        // Browser detection
+        const userAgent = navigator.userAgent;
+        const isBrave = !!(navigator.brave && navigator.brave.isBrave);
+
+        document.getElementById('browser-info').innerHTML = `
+                <p><strong>User Agent:</strong> ${userAgent}</p>
+                <p><strong>Is Brave:</strong> ${isBrave}</p>
+                <p><strong>Platform:</strong> ${navigator.platform}</p>
+            `;
+
+        // Fullscreen support detection
+        const fullscreenSupport = {
+          standard: !!document.fullscreenEnabled,
+          webkit: !!document.webkitFullscreenEnabled,
+          moz: !!document.mozFullScreenEnabled,
+          ms: !!document.msFullscreenEnabled,
+        };
+
+        document.getElementById('fullscreen-info').innerHTML = `
+                <p><strong>Standard:</strong> ${fullscreenSupport.standard}</p>
+                <p><strong>Webkit:</strong> ${fullscreenSupport.webkit}</p>
+                <p><strong>Mozilla:</strong> ${fullscreenSupport.moz}</p>
+                <p><strong>MS:</strong> ${fullscreenSupport.ms}</p>
+            `;
+
+        console.log('Fullscreen support:', fullscreenSupport);
+        console.log('Browser detection complete');
+      }
+
+      // Test fullscreen functionality
+      async function testFullscreen() {
+        console.log('Testing fullscreen...');
+
+        try {
+          const element = document.documentElement;
+
+          if (element.requestFullscreen) {
+            await element.requestFullscreen();
+            console.log('Fullscreen entered successfully (standard)');
+          } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+            console.log('Fullscreen entered successfully (webkit)');
+          } else if (element.mozRequestFullScreen) {
+            element.mozRequestFullScreen();
+            console.log('Fullscreen entered successfully (moz)');
+          } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
+            console.log('Fullscreen entered successfully (ms)');
+          } else {
+            console.error('No request fullscreen method available');
+          }
+        } catch (err) {
+          console.error('Fullscreen error:', err);
+        }
+      }
+
+      // Test with app element
+      async function testAppElement() {
+        console.log('Testing fullscreen with app element...');
+
+        // Create a test element
+        const testElement = document.createElement('div');
+        testElement.id = 'test-app';
+        testElement.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                background: #ff6b6b;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                color: white;
+            `;
+        testElement.textContent = 'Test Fullscreen Element';
+        document.body.appendChild(testElement);
+
+        try {
+          if (testElement.requestFullscreen) {
+            await testElement.requestFullscreen();
+            console.log('App element fullscreen successful');
+          } else {
+            console.error('App element requestFullscreen not available');
+          }
+        } catch (err) {
+          console.error('App element fullscreen error:', err);
+        }
+      }
+
+      // Exit fullscreen
+      function exitFullscreen() {
+        console.log('Exiting fullscreen...');
+
+        if (document.exitFullscreen) {
+          document.exitFullscreen().catch((err) => {
+            console.error('Error exiting fullscreen (standard):', err);
+          });
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        } else {
+          console.error('No exit fullscreen method available');
+        }
+      }
+
+      // Clear logs
+      function clearLogs() {
+        document.getElementById('log-content').innerHTML = '';
+      }
+
+      // Event listeners
+      document.getElementById('test-fullscreen').addEventListener('click', testFullscreen);
+      document.getElementById('test-exit').addEventListener('click', exitFullscreen);
+      document.getElementById('test-app-element').addEventListener('click', testAppElement);
+      document.getElementById('clear-logs').addEventListener('click', clearLogs);
+
+      // Listen for fullscreen changes
+      document.addEventListener('fullscreenchange', () => {
+        console.log('Fullscreen change event fired');
+        updateFullscreenStatus();
+      });
+
+      document.addEventListener('webkitfullscreenchange', () => {
+        console.log('Webkit fullscreen change event fired');
+        updateFullscreenStatus();
+      });
+
+      document.addEventListener('mozfullscreenchange', () => {
+        console.log('Moz fullscreen change event fired');
+        updateFullscreenStatus();
+      });
+
+      document.addEventListener('MSFullscreenChange', () => {
+        console.log('MS fullscreen change event fired');
+        updateFullscreenStatus();
+      });
+
+      // Update fullscreen status
+      function updateFullscreenStatus() {
+        const isFullscreen = !!(
+          document.fullscreenElement ||
+          document.webkitFullscreenElement ||
+          document.mozFullScreenElement ||
+          document.msFullscreenElement
+        );
+
+        const statusDiv = document.getElementById('fullscreen-status');
+        if (isFullscreen) {
+          statusDiv.className = 'status success';
+          statusDiv.innerHTML = '<h3>Fullscreen Status: ACTIVE</h3>';
+        } else {
+          statusDiv.className = 'status';
+          statusDiv.innerHTML = '<h3>Fullscreen Status: INACTIVE</h3>';
+        }
+
+        console.log('Fullscreen status updated:', isFullscreen);
+      }
+
+      // Initialize on load
+      document.addEventListener('DOMContentLoaded', init);
+    </script>
+  </body>
+</html>

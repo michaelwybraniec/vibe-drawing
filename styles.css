@@ -1296,6 +1296,37 @@ body {
   }
 }
 
+/* Full Screen Button - matches info button style */
+.fullscreen-button {
+  background: transparent !important;
+  border: none !important;
+  color: rgba(255, 255, 255, 0.39) !important;
+  border-radius: 50% !important;
+  opacity: 0.8 !important;
+  transition: all 0.3s ease !important;
+  text-align: center !important;
+  line-height: 1 !important;
+  font-size: 1.8em !important;
+}
+
+.fullscreen-button:hover {
+  opacity: 1 !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  transform: scale(1.05) !important;
+}
+
+.fullscreen-button:active {
+  opacity: 0.7 !important;
+  transform: scale(0.95) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.fullscreen-button.fullscreen-active {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: 2px solid rgba(255, 255, 255, 0.5) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
 .style-buttons-container {
   position: fixed;
   bottom: 100px;
@@ -1844,7 +1875,7 @@ body {
     transform: translateX(-50%);
     width: auto;
     max-width: calc(100vw - 20px);
-    /* Grid layout for mobile - 7 columns */
+    /* Grid layout for mobile - 7 columns (save button hidden like info button) */
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
@@ -1880,7 +1911,7 @@ body {
     bottom: 8px;
     gap: 3px;
     padding: 6px 16px;
-    /* Keep grid layout for small screens - 7 columns */
+    /* Keep grid layout for small screens - 7 columns (save button hidden like info button) */
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     justify-items: center;
